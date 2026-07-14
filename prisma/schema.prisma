@@ -64,6 +64,22 @@ enum AiRunStatus {
   FAILED
 }
 
+enum KnowledgeStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum KnowledgeVisibility {
+  INTERNAL
+  REQUESTER
+}
+
+enum KnowledgeSourceType {
+  TICKET
+  MANUAL
+}
+
 model Tenant {
   id        String   @id @default(uuid())
   name      String
@@ -98,6 +114,8 @@ model User {
   ticketMessages   TicketMessage[]
   ticketEvents     TicketEvent[]
   aiRuns           AiRun[]
+  knowledgeArticles KnowledgeArticle[] @relation("KnowledgeCreator")
+  publishedKnowledge KnowledgeArticle[] @relation("KnowledgePublisher")
 
   @@map("users")
   @@unique([tenantId, email])
@@ -122,6 +140,7 @@ model Workspace {
   ticketMessages TicketMessage[]
   ticketEvents TicketEvent[]
   aiRuns       AiRun[]
+  knowledgeArticles KnowledgeArticle[]
 
   @@map("workspaces")
   @@unique([tenantId, slug])
@@ -194,6 +213,7 @@ model Ticket {
   messages  TicketMessage[]
   events    TicketEvent[]
   aiRuns    AiRun[]
+  knowledgeArticles KnowledgeArticle[]
 
   @@map("tickets")
   @@unique([workspaceId, number])
@@ -274,4 +294,36 @@ model AiRun {
   @@index([workspaceId, ticketId])
   @@index([workspaceId, action])
   @@index([actorId])
+}
+
+model KnowledgeArticle {
+  id             String              @id @default(uuid())
+  workspaceId    String              @map("workspace_id")
+  sourceTicketId String?             @map("source_ticket_id")
+  sourceType     KnowledgeSourceType @default(MANUAL) @map("source_type")
+  title          String
+  problem        String
+  resolution     String
+  verification   String
+  rollback       String?
+  status         KnowledgeStatus     @default(DRAFT)
+  visibility     KnowledgeVisibility @default(INTERNAL)
+  createdById    String              @map("created_by_id")
+  publishedById  String?             @map("published_by_id")
+  publishedAt    DateTime?           @map("published_at")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  sourceTicket Ticket?   @relation(fields: [sourceTicketId], references: [id], onDelete: SetNull)
+  createdBy    User      @relation("KnowledgeCreator", fields: [createdById], references: [id])
+  publishedBy  User?     @relation("KnowledgePublisher", fields: [publishedById], references: [id])
+
+  @@map("knowledge_articles")
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@index([workspaceId, visibility])
+  @@index([workspaceId, sourceTicketId])
+  @@index([createdById])
+  @@index([publishedById])
 }

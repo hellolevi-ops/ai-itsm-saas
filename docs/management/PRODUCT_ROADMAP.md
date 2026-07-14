@@ -20,8 +20,16 @@ Status: ACCEPTED_LOCALLY
 
 Goal: AI Gateway, mock provider, prompt registry, structured output, ticket summary, classification, priority suggestion, reply draft, confidence, audit, and safety tests.
 
-## M3-M11
+## M3 - Knowledge and Self-Service
 
-Status: M3_NEXT
+Status: ACCEPTED_LOCALLY
 
-Continue in the order defined by the control document: knowledge/self-service, service management basics, first China channel, PLG activation, plans/entitlements, security/ops, compliance preparation, beta readiness, and Release Candidate.
+Goal: Knowledge articles, draft generation from resolved tickets, staff publish workflow, requester-safe self-service list/search, and tenant isolation tests.
+
+Out of scope: paid model provider, external vector database, bulk import, complex CMS workflow, and production release.
+
+## M4-M11
+
+Status: M4_NEXT
+
+Continue in the order defined by the control document: service management basics, first China channel, PLG activation, plans/entitlements, security/ops, compliance preparation, beta readiness, and Release Candidate.

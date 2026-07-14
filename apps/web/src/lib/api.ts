@@ -17,6 +17,8 @@ import type {
   TicketDetailResponse,
   TicketAiSuggestionResponse,
   TicketMessageResponse,
+  KnowledgeDraftResponse,
+  ListKnowledgeResponse,
 } from '@/types/api';
 
 const apiClient = axios.create({
@@ -149,6 +151,37 @@ export const ticketApi = {
   ): Promise<ApiResponse<TicketAiSuggestionResponse>> {
     const response = await apiClient.post<ApiResponse<TicketAiSuggestionResponse>>(
       `/workspaces/${workspaceId}/tickets/${ticketId}/ai-suggestions`,
+    );
+    return response.data;
+  },
+
+  async createKnowledgeDraft(
+    workspaceId: string,
+    ticketId: string,
+  ): Promise<ApiResponse<KnowledgeDraftResponse>> {
+    const response = await apiClient.post<ApiResponse<KnowledgeDraftResponse>>(
+      `/workspaces/${workspaceId}/tickets/${ticketId}/knowledge-drafts`,
+    );
+    return response.data;
+  },
+};
+
+export const knowledgeApi = {
+  async list(workspaceId: string, q?: string): Promise<ApiResponse<ListKnowledgeResponse>> {
+    const response = await apiClient.get<ApiResponse<ListKnowledgeResponse>>(
+      `/workspaces/${workspaceId}/knowledge`,
+      { params: q ? { q } : undefined },
+    );
+    return response.data;
+  },
+
+  async publish(
+    workspaceId: string,
+    articleId: string,
+  ): Promise<ApiResponse<KnowledgeDraftResponse>> {
+    const response = await apiClient.post<ApiResponse<KnowledgeDraftResponse>>(
+      `/workspaces/${workspaceId}/knowledge/${articleId}/publish`,
+      { visibility: 'REQUESTER' },
     );
     return response.data;
   },

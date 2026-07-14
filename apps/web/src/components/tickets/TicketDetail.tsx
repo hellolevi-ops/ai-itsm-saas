@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ticketApi, extractApiError } from '@/lib/api';
+import { knowledgeApi, ticketApi, extractApiError } from '@/lib/api';
 import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import type {
   Ticket,
   TicketAiSuggestion,
   TicketEvent,
+  KnowledgeArticle,
   TicketMessage,
   TicketStatus,
 } from '@/types/api';
@@ -31,6 +32,11 @@ export function TicketDetail({ workspaceId, ticket, messages, events }: TicketDe
   const [isChangingStatus, setIsChangingStatus] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<TicketAiSuggestion | null>(null);
   const [isGeneratingSuggestion, setIsGeneratingSuggestion] = useState(false);
+  const [knowledgeDraft, setKnowledgeDraft] = useState<KnowledgeArticle | null>(null);
+  const [isCreatingKnowledgeDraft, setIsCreatingKnowledgeDraft] = useState(false);
+  const [isPublishingKnowledge, setIsPublishingKnowledge] = useState(false);
+  const canCreateKnowledgeDraft =
+    currentTicket.status === 'RESOLVED' || currentTicket.status === 'CLOSED';
 
   const addMessage = async () => {
     if (!body.trim()) return;
@@ -75,6 +81,33 @@ export function TicketDetail({ workspaceId, ticket, messages, events }: TicketDe
       setError(extractApiError(err));
     } finally {
       setIsGeneratingSuggestion(false);
+    }
+  };
+
+  const createKnowledgeDraft = async () => {
+    setError(null);
+    setIsCreatingKnowledgeDraft(true);
+    try {
+      const response = await ticketApi.createKnowledgeDraft(workspaceId, currentTicket.id);
+      setKnowledgeDraft(response.data.article);
+    } catch (err) {
+      setError(extractApiError(err));
+    } finally {
+      setIsCreatingKnowledgeDraft(false);
+    }
+  };
+
+  const publishKnowledgeDraft = async () => {
+    if (!knowledgeDraft) return;
+    setError(null);
+    setIsPublishingKnowledge(true);
+    try {
+      const response = await knowledgeApi.publish(workspaceId, knowledgeDraft.id);
+      setKnowledgeDraft(response.data.article);
+    } catch (err) {
+      setError(extractApiError(err));
+    } finally {
+      setIsPublishingKnowledge(false);
     }
   };
 
@@ -185,6 +218,42 @@ export function TicketDetail({ workspaceId, ticket, messages, events }: TicketDe
                 <div className="border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
                   Human review required before sending or changing ticket fields.
                 </div>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="border border-gray-200 bg-white p-5">
+          <h2 className="text-sm font-semibold text-gray-900">Knowledge draft</h2>
+          <p className="mt-1 text-xs text-gray-500">
+            Create an internal draft from this resolved ticket.
+          </p>
+          <Button
+            type="button"
+            variant="secondary"
+            className="mt-4 w-full"
+            onClick={createKnowledgeDraft}
+            loading={isCreatingKnowledgeDraft}
+            disabled={!canCreateKnowledgeDraft}
+          >
+            Create draft
+          </Button>
+          {knowledgeDraft && (
+            <div className="mt-4 border border-gray-200 p-3 text-sm">
+              <div className="text-xs font-medium uppercase text-gray-500">
+                {knowledgeDraft.status} 路 {knowledgeDraft.visibility}
+              </div>
+              <p className="mt-1 font-medium text-gray-900">{knowledgeDraft.title}</p>
+              <p className="mt-2 text-gray-700">{knowledgeDraft.resolution}</p>
+              {knowledgeDraft.status !== 'PUBLISHED' && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 w-full"
+                  onClick={publishKnowledgeDraft}
+                  loading={isPublishingKnowledge}
+                >
+                  Publish
+                </Button>
               )}
             </div>
           )}

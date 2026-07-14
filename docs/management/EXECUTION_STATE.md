@@ -1,11 +1,11 @@
 # Execution State
 
-- Last updated: 2026-07-15 00:38 Asia/Shanghai
+- Last updated: 2026-07-15 01:25 Asia/Shanghai
 - Current branch: local snapshot plus GitHub branch `codex/m0-takeover-baseline`; base branch `develop`
-- Current commit: GitHub branch commit `ca2ab7868b9605c8628bc7a28ff5f47721507958`; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
-- Current phase: Phase 0 / Phase 1 takeover
-- Current milestone: M2 - AI-assisted tickets
-- Current milestone status: ACCEPTED_LOCALLY - M2 AI Gateway, mock provider, structured suggestions, audit storage, web panel and E2E gates passed; PR/CI review remains before merge
+- Current commit: GitHub branch includes M2 at `5f73c2b347ea36858a44bbfb2e2d7c1d59f75360`; local snapshot includes M3 pending push; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
+- Current phase: Milestone implementation after takeover
+- Current milestone: M4 - Service management basics
+- Current milestone status: NEXT - M3 knowledge and self-service is accepted locally; PR/CI review remains before merge
 - Completed tasks:
   - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_自主接管与商业化开发总控执行书.md`.
   - Inspected the requested workspace path.
@@ -64,9 +64,20 @@
   - Added backend M2 tests for structured suggestions, risk handling, audit record creation, requester ownership and fail-closed membership.
   - Added web ticket detail AI suggestion panel and MSW support.
   - Extended Playwright E2E to verify AI suggestion generation and human-review messaging.
+  - Created `docs/contracts/KNOWLEDGE_API.md`.
+  - Created `docs/tasks/M3-knowledge-self-service.md`.
+  - Added Prisma `KnowledgeArticle` model and migration `20260715013000_add_knowledge_articles`.
+  - Implemented `src/modules/knowledge/**` with ticket draft generation, staff publish, requester-safe list/detail and workspace-scoped repository methods.
+  - Added `POST /api/v1/workspaces/:workspaceId/tickets/:ticketId/knowledge-drafts`.
+  - Added `GET /api/v1/workspaces/:workspaceId/knowledge`.
+  - Added `GET /api/v1/workspaces/:workspaceId/knowledge/:articleId`.
+  - Added `POST /api/v1/workspaces/:workspaceId/knowledge/:articleId/publish`.
+  - Added backend M3 tests for staff-only drafting, resolved/closed gate, internal-note exclusion, requester visibility and workspace-scoped repository access.
+  - Added web ticket detail draft/publish controls and `/knowledge` self-service list/search page.
+  - Extended Playwright E2E to verify draft creation, publish and self-service knowledge search.
 - Active tasks:
-  - Push M2 AI-assisted ticket implementation and validation evidence to draft PR #2.
-  - Start M3 knowledge and self-service contract after PR #2 is updated.
+  - Push M3 knowledge/self-service implementation and validation evidence to draft PR #2.
+  - Start M4 service management basics contract after PR #2 is updated.
 - Blocked tasks:
   - `git fetch --all --tags --prune`
   - Local branch, remote and working tree checks
@@ -102,6 +113,8 @@
   - `cd apps/web; npm test`
   - `cd apps/web; npm run build`
   - `cd apps/web; npm run test:e2e`
+  - M3 temporary PostgreSQL migration validation for four migrations
+  - `psql` table inspection for `knowledge_articles`, `ai_runs`, `tickets` and `ticket_events`
   - `cd apps/web; npm audit --audit-level=moderate`
   - M2 temporary PostgreSQL migration validation for three migrations
   - GitHub REST API git refs, blobs, tree, commit and pull request creation for `codex/m0-takeover-baseline`
@@ -173,15 +186,26 @@
   - Web Vitest tests passed after M2 implementation: 66/66.
   - Web Playwright E2E passed after M2 implementation: 1/1.
   - Secret scan after M2 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
+  - Prisma schema validates after M3 knowledge article model.
+  - M3 migration validation passed: migrations `20260714113121_init`, `20260714230500_add_ticket_loop`, `20260715004500_add_ai_runs` and `20260715013000_add_knowledge_articles` applied to an empty PostgreSQL 18 database.
+  - M3 migration created table `knowledge_articles`.
+  - Root typecheck passed after M3 implementation.
+  - Root lint passed after M3 implementation.
+  - Root Jest tests passed after M3 implementation: 104/104.
+  - Root build passed after M3 implementation.
+  - Web lint, typecheck, Vitest, build and E2E passed after M3 implementation.
+  - Web Vitest tests passed after M3 implementation: 68/68.
+  - Web Playwright E2E passed after M3 implementation: 1/1.
+  - Secret scan after M3 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
 - Open P0 issues:
   - None for executable source validation.
 - Open P1 issues:
   - P1-ENV-001: Git CLI is unavailable in PATH; Git phase checks and commits cannot run locally.
   - P1-ENV-003: Local source snapshot has no `.git` metadata.
-  - P1-SEC-001: Web npm audit reports Next transitive PostCSS moderate advisory; forced npm fix is destructive and requires framework/security review.
+  - P1-SEC-002: Web npm audit reports Next transitive PostCSS moderate advisory; forced npm fix is destructive and requires framework/security review.
 - External dependencies:
   - Local Git installation or a working Git-capable environment.
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Push current M2 implementation to PR #2, then begin M3 knowledge and self-service contract planning.
+  - Push current M3 implementation to PR #2, then begin M4 service management basics contract planning.

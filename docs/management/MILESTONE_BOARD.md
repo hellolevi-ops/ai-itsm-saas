@@ -5,8 +5,8 @@
 | M0 Takeover and baseline security | ACCEPTED | Repository recovered; `develop` baseline verified; draft PR #2 created; typecheck/lint/tests/build/migration validation passed. | Keep PR #2 draft until review/CI policy is decided. |
 | M1 Minimal ticket loop | ACCEPTED_LOCALLY | Backend module, web submit/queue/detail flows, unit tests and Playwright E2E are in place; local gates passed. | Keep PR #2 draft until CI/review policy is decided. |
 | M2 AI-assisted tickets | ACCEPTED_LOCALLY | AI Gateway, mock provider, structured suggestion endpoint, `ai_runs` audit, web panel, unit tests and E2E are in place; local gates passed. | Keep PR #2 draft until CI/review policy is decided. |
-| M3 Knowledge and self-service | NEXT | Ticket and AI suggestion baselines are available. | Draft knowledge model, approval workflow and AI citation contract. |
-| M4 Service management basics | NOT_STARTED | No catalog/SLA/service management implementation yet. | M3 accepted. |
+| M3 Knowledge and self-service | ACCEPTED_LOCALLY | Knowledge article model, draft-from-ticket API, publish API, requester-safe list/detail rules, web draft/publish/search flow, unit tests, E2E and migration validation passed. | Keep PR #2 draft until CI/review policy is decided. |
+| M4 Service management basics | NEXT | Core ticket, AI suggestion and knowledge baselines are available. | Draft service catalog Lite, request template and SLA contract. |
 | M5 First China channel | NOT_STARTED | No channel adapter implementation yet. | M4 accepted. |
 | M6 PLG activation and team spread | NOT_STARTED | Signup foundation exists, activation loop incomplete. | M5 accepted. |
 | M7 Plans, entitlements and commercial flow | NOT_STARTED | No entitlement or order domain implementation yet. | M6 accepted. |

@@ -64,6 +64,25 @@ type MockTicketEvent = {
   created_at: string;
 };
 
+type MockKnowledgeArticle = {
+  id: string;
+  workspace_id: string;
+  source_ticket_id: string | null;
+  source_type: 'TICKET' | 'MANUAL';
+  title: string;
+  problem: string;
+  resolution: string;
+  verification: string;
+  rollback: string | null;
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  visibility: 'INTERNAL' | 'REQUESTER';
+  created_by_id: string;
+  published_by_id: string | null;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 function loadMockMap<T>(key: string): Map<string, T> {
   if (typeof localStorage === 'undefined') return new Map();
 
@@ -86,6 +105,7 @@ const workspaceMembers = loadMockMap<string[]>('msw:workspaceMembers');
 const tickets = loadMockMap<MockTicket>('msw:tickets');
 const ticketMessages = loadMockMap<MockTicketMessage[]>('msw:ticketMessages');
 const ticketEvents = loadMockMap<MockTicketEvent[]>('msw:ticketEvents');
+const knowledgeArticles = loadMockMap<MockKnowledgeArticle>('msw:knowledgeArticles');
 
 function getUserFromRequest(request: Request) {
   const authHeader = request.headers.get('Authorization');
@@ -634,6 +654,188 @@ export const handlers = [
           },
           suggestion,
         },
+        request_id: generateRequestId(),
+      });
+    },
+  ),
+
+  http.post(
+    '/api/v1/workspaces/:workspaceId/tickets/:ticketId/knowledge-drafts',
+    async ({ request, params }) => {
+      await delay(200);
+      const user = getUserFromRequest(request);
+      const workspaceId = params.workspaceId as string;
+      const ticketId = params.ticketId as string;
+      if (!user || !isWorkspaceMember(workspaceId, user.id)) {
+        return HttpResponse.json(
+          {
+            error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+            request_id: generateRequestId(),
+          },
+          { status: user ? 403 : 401 },
+        );
+      }
+      const ticket = tickets.get(ticketId);
+      if (!ticket || ticket.workspace_id !== workspaceId) {
+        return HttpResponse.json(
+          {
+            error: { code: 'TICKET_NOT_FOUND', message: 'Ticket not found' },
+            request_id: generateRequestId(),
+          },
+          { status: 404 },
+        );
+      }
+      if (ticket.status !== 'RESOLVED' && ticket.status !== 'CLOSED') {
+        return HttpResponse.json(
+          {
+            error: {
+              code: 'KNOWLEDGE_DRAFT_REQUIRES_RESOLVED_TICKET',
+              message: 'Knowledge drafts require a resolved or closed ticket',
+            },
+            request_id: generateRequestId(),
+          },
+          { status: 409 },
+        );
+      }
+
+      const existing = Array.from(knowledgeArticles.values()).find(
+        (article) =>
+          article.workspace_id === workspaceId &&
+          article.source_ticket_id === ticketId &&
+          article.status !== 'ARCHIVED',
+      );
+      if (existing) {
+        return HttpResponse.json({
+          data: { article: existing },
+          request_id: generateRequestId(),
+        });
+      }
+
+      const now = new Date().toISOString();
+      const publicAgentReply = [...(ticketMessages.get(ticketId) || [])]
+        .reverse()
+        .find(
+          (message) => message.visibility === 'PUBLIC' && message.author_id !== ticket.requester_id,
+        );
+      const article = {
+        id: generateId(),
+        workspace_id: workspaceId,
+        source_ticket_id: ticketId,
+        source_type: 'TICKET' as const,
+        title: `How to resolve: ${ticket.title}`,
+        problem: ticket.description,
+        resolution:
+          publicAgentReply?.body ||
+          'Resolution details need owner review before this article can be published.',
+        verification:
+          'Confirm the requester can complete the affected workflow and no new error is reported.',
+        rollback: 'Reopen the source ticket if the requester reports the issue is not resolved.',
+        status: 'DRAFT' as const,
+        visibility: 'INTERNAL' as const,
+        created_by_id: user.id,
+        published_by_id: null,
+        published_at: null,
+        created_at: now,
+        updated_at: now,
+      };
+      knowledgeArticles.set(article.id, article);
+      persistMockMap('msw:knowledgeArticles', knowledgeArticles);
+
+      return HttpResponse.json({
+        data: { article },
+        request_id: generateRequestId(),
+      });
+    },
+  ),
+
+  http.get('/api/v1/workspaces/:workspaceId/knowledge', async ({ request, params }) => {
+    await delay(200);
+    const user = getUserFromRequest(request);
+    const workspaceId = params.workspaceId as string;
+    if (!user || !isWorkspaceMember(workspaceId, user.id)) {
+      return HttpResponse.json(
+        {
+          error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+          request_id: generateRequestId(),
+        },
+        { status: user ? 403 : 401 },
+      );
+    }
+
+    const q = new URL(request.url).searchParams.get('q')?.toLowerCase();
+    const articles = Array.from(knowledgeArticles.values())
+      .filter(
+        (article) =>
+          article.workspace_id === workspaceId &&
+          article.status === 'PUBLISHED' &&
+          article.visibility === 'REQUESTER' &&
+          (!q ||
+            article.title.toLowerCase().includes(q) ||
+            article.problem.toLowerCase().includes(q) ||
+            article.resolution.toLowerCase().includes(q)),
+      )
+      .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+
+    return HttpResponse.json({
+      data: { articles, page: 1, page_size: 20 },
+      request_id: generateRequestId(),
+    });
+  }),
+
+  http.post(
+    '/api/v1/workspaces/:workspaceId/knowledge/:articleId/publish',
+    async ({ request, params }) => {
+      await delay(200);
+      const user = getUserFromRequest(request);
+      const workspaceId = params.workspaceId as string;
+      const articleId = params.articleId as string;
+      if (!user || !isWorkspaceMember(workspaceId, user.id)) {
+        return HttpResponse.json(
+          {
+            error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+            request_id: generateRequestId(),
+          },
+          { status: user ? 403 : 401 },
+        );
+      }
+
+      const article = knowledgeArticles.get(articleId);
+      if (!article || article.workspace_id !== workspaceId) {
+        return HttpResponse.json(
+          {
+            error: { code: 'KNOWLEDGE_NOT_FOUND', message: 'Knowledge article not found' },
+            request_id: generateRequestId(),
+          },
+          { status: 404 },
+        );
+      }
+      if (article.status === 'ARCHIVED') {
+        return HttpResponse.json(
+          {
+            error: {
+              code: 'KNOWLEDGE_ARCHIVED',
+              message: 'Archived knowledge cannot be published',
+            },
+            request_id: generateRequestId(),
+          },
+          { status: 409 },
+        );
+      }
+
+      const now = new Date().toISOString();
+      const updated = {
+        ...article,
+        status: 'PUBLISHED' as const,
+        visibility: 'REQUESTER' as const,
+        published_by_id: user.id,
+        published_at: now,
+        updated_at: now,
+      };
+      knowledgeArticles.set(articleId, updated);
+      persistMockMap('msw:knowledgeArticles', knowledgeArticles);
+
+      return HttpResponse.json({
+        data: { article: updated },
         request_id: generateRequestId(),
       });
     },

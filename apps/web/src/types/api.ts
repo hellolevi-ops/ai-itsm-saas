@@ -197,3 +197,36 @@ export interface TicketAiSuggestionResponse {
   ai_run: AiRunSummary;
   suggestion: TicketAiSuggestion;
 }
+
+export type KnowledgeStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+
+export type KnowledgeVisibility = 'INTERNAL' | 'REQUESTER';
+
+export interface KnowledgeArticle {
+  id: string;
+  workspace_id: string;
+  source_ticket_id: string | null;
+  source_type: 'TICKET' | 'MANUAL';
+  title: string;
+  problem: string;
+  resolution: string;
+  verification: string;
+  rollback: string | null;
+  status: KnowledgeStatus;
+  visibility: KnowledgeVisibility;
+  created_by_id: string;
+  published_by_id: string | null;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface KnowledgeDraftResponse {
+  article: KnowledgeArticle;
+}
+
+export interface ListKnowledgeResponse {
+  articles: KnowledgeArticle[];
+  page: number;
+  page_size: number;
+}

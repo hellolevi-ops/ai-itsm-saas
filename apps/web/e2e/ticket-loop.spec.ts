@@ -85,4 +85,17 @@ test('requester can submit, track, reply to and progress a ticket', async ({ pag
 
   await page.getByRole('button', { name: 'Start work' }).click();
   await expect(page.getByText('IN_PROGRESS')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Resolve' }).click();
+  await expect(page.getByText('RESOLVED')).toBeVisible();
+  await page.getByRole('button', { name: 'Create draft' }).click();
+  await expect(page.getByText('How to resolve: VPN access is unavailable')).toBeVisible();
+  await expect(page.getByText('DRAFT 路 INTERNAL')).toBeVisible();
+  await page.getByRole('button', { name: 'Publish' }).click();
+  await expect(page.getByText('PUBLISHED 路 REQUESTER')).toBeVisible();
+
+  await page.goto('/knowledge');
+  await expect(page.getByRole('heading', { name: 'Knowledge' })).toBeVisible();
+  await page.getByPlaceholder('Search knowledge').fill('VPN');
+  await expect(page.getByText('How to resolve: VPN access is unavailable')).toBeVisible();
 });

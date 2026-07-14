@@ -15,15 +15,19 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@/lib/api', () => ({
+  knowledgeApi: {
+    publish: vi.fn(),
+  },
   ticketApi: {
     addMessage: vi.fn(),
     changeStatus: vi.fn(),
     generateSuggestions: vi.fn(),
+    createKnowledgeDraft: vi.fn(),
   },
   extractApiError: () => 'Request failed',
 }));
 
-import { ticketApi } from '@/lib/api';
+import { knowledgeApi, ticketApi } from '@/lib/api';
 
 const ticket: Ticket = {
   id: 'ticket-1',
@@ -170,5 +174,109 @@ describe('TicketDetail', () => {
     expect(screen.getByText('Please confirm the affected application.')).toBeInTheDocument();
     expect(screen.getByText('P2')).toBeInTheDocument();
     expect(screen.getByText(/Human review required/)).toBeInTheDocument();
+  });
+
+  it('creates a knowledge draft from the ticket', async () => {
+    const user = userEvent.setup();
+    const mockCreateKnowledgeDraft = ticketApi.createKnowledgeDraft as Mock;
+    const resolvedTicket = { ...ticket, status: 'RESOLVED' as const };
+    mockCreateKnowledgeDraft.mockResolvedValue({
+      data: {
+        article: {
+          id: 'article-1',
+          workspace_id: 'ws-1',
+          source_ticket_id: 'ticket-1',
+          source_type: 'TICKET',
+          title: 'How to resolve: Payroll access issue',
+          problem: 'Unable to access payroll portal.',
+          resolution: 'Reset access and confirm the requester can sign in.',
+          verification: 'Confirm the requester can complete the affected workflow.',
+          rollback: 'Reopen the source ticket if needed.',
+          status: 'DRAFT',
+          visibility: 'INTERNAL',
+          created_by_id: 'agent-1',
+          published_by_id: null,
+          published_at: null,
+          created_at: '2026-07-15T00:00:00.000Z',
+          updated_at: '2026-07-15T00:00:00.000Z',
+        },
+      },
+      request_id: 'req-1',
+    });
+
+    render(
+      <TicketDetail
+        workspaceId="ws-1"
+        ticket={resolvedTicket}
+        messages={messages}
+        events={events}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /Create draft/ }));
+
+    await waitFor(() => {
+      expect(mockCreateKnowledgeDraft).toHaveBeenCalledWith('ws-1', 'ticket-1');
+    });
+    expect(screen.getByText('How to resolve: Payroll access issue')).toBeInTheDocument();
+    expect(screen.getByText('Reset access and confirm the requester can sign in.')).toBeInTheDocument();
+  });
+
+  it('publishes a generated knowledge draft', async () => {
+    const user = userEvent.setup();
+    const mockCreateKnowledgeDraft = ticketApi.createKnowledgeDraft as Mock;
+    const mockPublish = knowledgeApi.publish as Mock;
+    const resolvedTicket = { ...ticket, status: 'RESOLVED' as const };
+    const article = {
+      id: 'article-1',
+      workspace_id: 'ws-1',
+      source_ticket_id: 'ticket-1',
+      source_type: 'TICKET',
+      title: 'How to resolve: Payroll access issue',
+      problem: 'Unable to access payroll portal.',
+      resolution: 'Reset access and confirm the requester can sign in.',
+      verification: 'Confirm the requester can complete the affected workflow.',
+      rollback: 'Reopen the source ticket if needed.',
+      status: 'DRAFT',
+      visibility: 'INTERNAL',
+      created_by_id: 'agent-1',
+      published_by_id: null,
+      published_at: null,
+      created_at: '2026-07-15T00:00:00.000Z',
+      updated_at: '2026-07-15T00:00:00.000Z',
+    };
+    mockCreateKnowledgeDraft.mockResolvedValue({
+      data: { article },
+      request_id: 'req-1',
+    });
+    mockPublish.mockResolvedValue({
+      data: {
+        article: {
+          ...article,
+          status: 'PUBLISHED',
+          visibility: 'REQUESTER',
+          published_by_id: 'agent-1',
+          published_at: '2026-07-15T00:05:00.000Z',
+        },
+      },
+      request_id: 'req-2',
+    });
+
+    render(
+      <TicketDetail
+        workspaceId="ws-1"
+        ticket={resolvedTicket}
+        messages={messages}
+        events={events}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /Create draft/ }));
+    await user.click(await screen.findByRole('button', { name: /Publish/ }));
+
+    await waitFor(() => {
+      expect(mockPublish).toHaveBeenCalledWith('ws-1', 'article-1');
+    });
+    expect(screen.getByText('PUBLISHED 路 REQUESTER')).toBeInTheDocument();
   });
 });
