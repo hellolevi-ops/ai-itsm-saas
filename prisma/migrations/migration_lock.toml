@@ -1,0 +1,5 @@
+# This file is managed by Prisma Migrate and should be tracked in source control.
+# It contains the migration history for the database.
+
+[migrations]
+20260714000000_init = "init"
