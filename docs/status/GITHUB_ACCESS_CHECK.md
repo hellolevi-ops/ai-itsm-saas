@@ -319,9 +319,11 @@ Validation evidence after M11:
 | Secret scan | PASS, no committed GitHub/OpenAI token found |
 | GitHub Actions CI on `8bd2cc737298156be53b5554efd54fd190ad8a16` | FAIL, root Jest service-catalog SLA test used runner-local UTC instead of configured working-hours timezone |
 | GitHub Actions CI on `32ff9d07cdeb281bc68da2fab7487bc0f0ab4919` | FAIL, root Jest passed; web Playwright exposed a brittle knowledge-draft status text assertion tied to a corrupted separator character |
+| GitHub Actions CI on `4002192d1559c6547431ea2dee23c5592f08060c` | FAIL, E2E fix was functionally correct but two edited lines carried CRLF characters that Linux Prettier rejected |
 | Local UTC reproduction after CI fix | PASS, root Jest 152/152 tests |
 | Local post-fix root build | PASS |
 | Local web post-fix typecheck/lint/Vitest/build/E2E | PASS, Vitest 69/69 and Playwright 1/1 |
+| Local post-format root lint and web E2E | PASS |
 
 Security and release note:
 
@@ -331,3 +333,4 @@ Security and release note:
 - Production release, main merge, paid external resources, irreversible migrations and final legal judgment were not performed.
 - CI fix note: SLA due-date calculation now derives wall-clock working time from `WorkspaceWorkingHours.timezone`, avoiding process-local timezone drift between Asia/Shanghai development machines and UTC CI runners.
 - E2E fix note: knowledge draft status display now uses an ASCII separator and `data-testid="knowledge-draft-status"` so Playwright verifies status and visibility semantics instead of a corrupted separator glyph.
+- Formatting fix note: Prettier normalized the edited web ticket files before the final CI rerun.
