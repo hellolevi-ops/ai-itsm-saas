@@ -12,6 +12,14 @@ import { TicketActor } from '@/modules/ticket/ticket.service';
 import { CreateRequestTemplateDto, CreateServiceCatalogItemDto } from './dto/service-catalog.dto';
 import { ServiceCatalogRepository } from './repositories/service-catalog.repository';
 
+type ZonedMinute = {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+};
+
 @Injectable()
 export class ServiceCatalogService {
   private readonly staffRoles: RoleType[] = [RoleType.OWNER, RoleType.ADMIN, RoleType.AGENT];
@@ -116,52 +124,138 @@ export class ServiceCatalogService {
     workingHours: WorkspaceWorkingHours,
   ): Date {
     let remaining = minutes;
-    let cursor = new Date(start);
+    let cursor = this.toZonedMinute(start, workingHours.timezone);
     let guard = 0;
     while (remaining > 0 && guard < 370) {
       guard += 1;
       cursor = this.normalizeToWorkingTime(cursor, workingHours);
-      const endOfDay = new Date(cursor);
-      endOfDay.setHours(0, workingHours.endMinuteOfDay, 0, 0);
-      const available = Math.max(0, Math.floor((endOfDay.getTime() - cursor.getTime()) / 60_000));
+      const currentMinute = cursor.hour * 60 + cursor.minute;
+      const available = Math.max(0, workingHours.endMinuteOfDay - currentMinute);
       if (remaining <= available) {
-        return new Date(cursor.getTime() + remaining * 60_000);
+        return this.fromZonedMinute(this.addWallMinutes(cursor, remaining), workingHours.timezone);
       }
       remaining -= available;
-      cursor = new Date(endOfDay.getTime() + 60_000);
+      cursor = this.addWallMinutes(
+        {
+          ...cursor,
+          hour: Math.floor(workingHours.endMinuteOfDay / 60),
+          minute: workingHours.endMinuteOfDay % 60,
+        },
+        1,
+      );
     }
-    return cursor;
+    return this.fromZonedMinute(cursor, workingHours.timezone);
   }
 
-  private normalizeToWorkingTime(date: Date, workingHours: WorkspaceWorkingHours): Date {
-    const cursor = new Date(date);
+  private normalizeToWorkingTime(
+    date: ZonedMinute,
+    workingHours: WorkspaceWorkingHours,
+  ): ZonedMinute {
+    let cursor = { ...date };
     while (!this.isWorkingDate(cursor, workingHours)) {
-      cursor.setDate(cursor.getDate() + 1);
-      cursor.setHours(0, workingHours.startMinuteOfDay, 0, 0);
+      cursor = this.addWallMinutes(
+        {
+          year: cursor.year,
+          month: cursor.month,
+          day: cursor.day,
+          hour: 0,
+          minute: 0,
+        },
+        24 * 60,
+      );
+      cursor.hour = Math.floor(workingHours.startMinuteOfDay / 60);
+      cursor.minute = workingHours.startMinuteOfDay % 60;
     }
-    const currentMinute = cursor.getHours() * 60 + cursor.getMinutes();
+    const currentMinute = cursor.hour * 60 + cursor.minute;
     if (currentMinute < workingHours.startMinuteOfDay) {
-      cursor.setHours(0, workingHours.startMinuteOfDay, 0, 0);
+      cursor.hour = Math.floor(workingHours.startMinuteOfDay / 60);
+      cursor.minute = workingHours.startMinuteOfDay % 60;
       return cursor;
     }
     if (currentMinute >= workingHours.endMinuteOfDay) {
-      cursor.setDate(cursor.getDate() + 1);
-      cursor.setHours(0, workingHours.startMinuteOfDay, 0, 0);
+      cursor = this.addWallMinutes(
+        {
+          year: cursor.year,
+          month: cursor.month,
+          day: cursor.day,
+          hour: Math.floor(workingHours.startMinuteOfDay / 60),
+          minute: workingHours.startMinuteOfDay % 60,
+        },
+        24 * 60,
+      );
       return this.normalizeToWorkingTime(cursor, workingHours);
     }
     return cursor;
   }
 
-  private isWorkingDate(date: Date, workingHours: WorkspaceWorkingHours): boolean {
-    const isoDay = date.getDay() === 0 ? 7 : date.getDay();
+  private isWorkingDate(date: ZonedMinute, workingHours: WorkspaceWorkingHours): boolean {
+    const utcDate = new Date(Date.UTC(date.year, date.month - 1, date.day));
+    const isoDay = utcDate.getUTCDay() === 0 ? 7 : utcDate.getUTCDay();
     if (!workingHours.workdays.includes(isoDay)) {
       return false;
     }
-    const day = date.toISOString().slice(0, 10);
+    const day = this.toDateKey(date);
     const holidays = Array.isArray(workingHours.holidayDates)
       ? (workingHours.holidayDates as string[])
       : [];
     return !holidays.includes(day);
+  }
+
+  private toZonedMinute(date: Date, timeZone: string): ZonedMinute {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(date);
+    const value = (type: string) => Number(parts.find((part) => part.type === type)?.value);
+    return {
+      year: value('year'),
+      month: value('month'),
+      day: value('day'),
+      hour: value('hour'),
+      minute: value('minute'),
+    };
+  }
+
+  private fromZonedMinute(date: ZonedMinute, timeZone: string): Date {
+    const targetWallTime = Date.UTC(date.year, date.month - 1, date.day, date.hour, date.minute);
+    let instant = new Date(targetWallTime);
+    for (let i = 0; i < 2; i += 1) {
+      const observed = this.toZonedMinute(instant, timeZone);
+      const observedWallTime = Date.UTC(
+        observed.year,
+        observed.month - 1,
+        observed.day,
+        observed.hour,
+        observed.minute,
+      );
+      instant = new Date(instant.getTime() + targetWallTime - observedWallTime);
+    }
+    return instant;
+  }
+
+  private addWallMinutes(date: ZonedMinute, minutes: number): ZonedMinute {
+    const utc = new Date(Date.UTC(date.year, date.month - 1, date.day, date.hour, date.minute));
+    utc.setUTCMinutes(utc.getUTCMinutes() + minutes);
+    return {
+      year: utc.getUTCFullYear(),
+      month: utc.getUTCMonth() + 1,
+      day: utc.getUTCDate(),
+      hour: utc.getUTCHours(),
+      minute: utc.getUTCMinutes(),
+    };
+  }
+
+  private toDateKey(date: ZonedMinute): string {
+    return [
+      String(date.year).padStart(4, '0'),
+      String(date.month).padStart(2, '0'),
+      String(date.day).padStart(2, '0'),
+    ].join('-');
   }
 
   private async requireMember(workspaceId: string, actor: TicketActor): Promise<RoleType> {
