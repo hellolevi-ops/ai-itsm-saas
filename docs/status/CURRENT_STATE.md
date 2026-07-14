@@ -56,6 +56,7 @@ Validation:
 - Web Vitest tests: PASS, 58/58
 - Web build: PASS
 - Total automated tests: PASS, 136/136
+- M1 backend baseline after schema/guard changes: PASS, 79/79 backend tests
 
 ## Key Modules
 
@@ -63,6 +64,16 @@ Validation:
 - `src/modules/workspace/` - Workspace and tenant management
 - `apps/web/` - Next.js frontend application
 - `prisma/` - Database schema and migrations
+- `docs/contracts/TICKET_API.md` - M1 ticket API and permission contract
+
+## M1 Progress
+
+- Ticket contract: drafted and frozen for implementation.
+- Ticket task file: created.
+- Prisma models: `Ticket`, `TicketMessage`, `TicketEvent`.
+- Migration: `20260714230500_add_ticket_loop`.
+- Empty database migration validation: PASS for both migrations.
+- Workspace context security: moved from middleware registration to guard-stage validation after JWT auth.
 
 ## Tech Stack
 

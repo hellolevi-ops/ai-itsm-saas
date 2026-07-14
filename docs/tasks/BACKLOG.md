@@ -11,7 +11,9 @@
 - Update draft PR #2 with live migration evidence and final M0 status.
 - Resolve Jest ESM config warning.
 - Add CI workflow for root and web gates if absent.
-- Begin M1 ticket domain contract and implementation tasks.
+- Implement M1 backend ticket module with mandatory workspace filters.
+- Implement M1 frontend ticket submit, queue and detail flows.
+- Add M1 negative cross-tenant/cross-workspace ticket tests.
 
 ## P2
 

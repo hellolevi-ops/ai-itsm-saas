@@ -1,11 +1,11 @@
 # Execution State
 
-- Last updated: 2026-07-14 23:04 Asia/Shanghai
+- Last updated: 2026-07-14 23:20 Asia/Shanghai
 - Current branch: local snapshot plus GitHub branch `codex/m0-takeover-baseline`; base branch `develop`
 - Current commit: GitHub branch commit `ca2ab7868b9605c8628bc7a28ff5f47721507958`; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
 - Current phase: Phase 0 / Phase 1 takeover
-- Current milestone: M0 - Takeover and baseline security
-- Current milestone status: ACCEPTED_WITH_RISK - source recovered, PR opened, quality gates passed, and temporary DB migration validation passed
+- Current milestone: M1 - Minimal ticket loop
+- Current milestone status: IN_PROGRESS - M1 contract frozen and backend data model/security foundation started
 - Completed tasks:
   - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_???????????????.md`.
   - Inspected the requested workspace path.
@@ -39,9 +39,17 @@
   - Applied migration `20260714113121_init` to an empty temporary database.
   - Verified `prisma migrate status` reports schema up to date.
   - Stopped and removed the temporary PostgreSQL cluster.
+  - Created `docs/contracts/TICKET_API.md`.
+  - Created `docs/tasks/M1-minimal-ticket-loop.md`.
+  - Added Prisma ticket, ticket message and ticket event models.
+  - Added migration `20260714230500_add_ticket_loop`.
+  - Validated both migrations against an empty temporary PostgreSQL database.
+  - Moved trusted workspace context validation from middleware registration into `WorkspaceRoleGuard`.
+  - Added guard tests for route workspace context, cross-tenant rejection and role checks.
 - Active tasks:
-  - Update draft PR #2 with live migration evidence and final M0 status.
-  - Start M1 ticket domain contract and implementation planning.
+  - Push M1 contract/model/security foundation to draft PR #2.
+  - Implement `src/modules/ticket/**` service, repository, controller and tests.
+  - Implement web ticket submit, queue and detail flows.
 - Blocked tasks:
   - `git fetch --all --tags --prune`
   - Local branch, remote and working tree checks
@@ -79,6 +87,11 @@
   - `prisma migrate deploy`
   - `prisma migrate status`
   - `psql` table inspection
+  - `npm run prisma:generate`
+  - M1 temporary PostgreSQL migration validation for two migrations
+  - `npm run typecheck`
+  - `npm run lint:check`
+  - `npm test -- --runInBand`
 - Latest validation results:
   - `git` is not recognized in the current PowerShell PATH.
   - `gh` is not available in the current PowerShell PATH.
@@ -103,6 +116,11 @@
   - Draft PR #2 opened against `develop`.
   - Temporary PostgreSQL migration validation passed: migration `20260714113121_init` applied to empty database and schema reported up to date.
   - Temporary PostgreSQL cluster was stopped and removed.
+  - M1 migration validation passed: migrations `20260714113121_init` and `20260714230500_add_ticket_loop` applied to empty database and schema reported up to date.
+  - M1 migration created tables `tickets`, `ticket_messages` and `ticket_events`.
+  - Root typecheck passed after M1 schema and guard changes.
+  - Root lint passed after M1 schema and guard changes.
+  - Root Jest tests passed after M1 schema and guard changes: 79/79.
 - Open P0 issues:
   - None for executable source validation.
 - Open P1 issues:
@@ -114,4 +132,4 @@
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Push the updated M0 migration evidence to PR #2, then begin M1 ticket-loop contract freezing.
+  - Push current M1 foundation changes to PR #2, then implement the ticket backend module with mandatory workspace filters and negative isolation tests.

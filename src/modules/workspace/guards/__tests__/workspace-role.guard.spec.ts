@@ -1,21 +1,26 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { RoleType } from '@prisma/client';
 import { WorkspaceRoleGuard } from '../workspace-role.guard';
 import { WorkspaceMemberService } from '../../services/workspace-member.service';
-import { RoleType } from '@prisma/client';
+import { WorkspaceService } from '../../services/workspace.service';
 
 describe('WorkspaceRoleGuard', () => {
   let guard: WorkspaceRoleGuard;
   let reflector: jest.Mocked<Reflector>;
   let memberService: jest.Mocked<WorkspaceMemberService>;
+  let workspaceService: jest.Mocked<WorkspaceService>;
 
-  const createMockExecutionContext = (tenantContext?: any, user?: any): ExecutionContext =>
+  const createContext = (request: Record<string, any>): ExecutionContext =>
     ({
       switchToHttp: () => ({
         getRequest: () => ({
-          tenantContext,
-          user: user || { id: 'user-001', tenantId: 'tenant-001' },
+          params: {},
+          headers: {},
+          query: {},
+          method: 'GET',
+          ...request,
         }),
       }),
       getHandler: () => ({}),
@@ -39,225 +44,186 @@ describe('WorkspaceRoleGuard', () => {
             findByIdWithRole: jest.fn(),
           },
         },
+        {
+          provide: WorkspaceService,
+          useValue: {
+            findById: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     guard = module.get<WorkspaceRoleGuard>(WorkspaceRoleGuard);
     reflector = module.get(Reflector) as jest.Mocked<Reflector>;
     memberService = module.get(WorkspaceMemberService) as jest.Mocked<WorkspaceMemberService>;
+    workspaceService = module.get(WorkspaceService) as jest.Mocked<WorkspaceService>;
+
+    workspaceService.findById.mockResolvedValue({ id: 'ws-001', tenantId: 'tenant-001' } as any);
+    memberService.findByUserIdAndWorkspaceId.mockResolvedValue({ id: 'member-001' } as any);
+    memberService.findByIdWithRole.mockResolvedValue({
+      id: 'member-001',
+      role: { roleType: RoleType.ADMIN },
+    } as any);
   });
 
   describe('when no roles are required', () => {
-    it('should allow access', async () => {
+    it('allows anonymous public routes', async () => {
       reflector.getAllAndOverride.mockReturnValue(undefined);
-      const context = createMockExecutionContext({ workspaceId: 'ws-001', userId: 'user-001' });
 
-      const result = await guard.canActivate(context);
+      await expect(guard.canActivate(createContext({ user: undefined }))).resolves.toBe(true);
+    });
+
+    it('validates membership when a workspace route is present', async () => {
+      reflector.getAllAndOverride.mockReturnValue(undefined);
+
+      const result = await guard.canActivate(
+        createContext({
+          user: { id: 'user-001', tenantId: 'tenant-001' },
+          params: { workspaceId: 'ws-001' },
+        }),
+      );
 
       expect(result).toBe(true);
+      expect(workspaceService.findById).toHaveBeenCalledWith('ws-001');
+      expect(memberService.findByUserIdAndWorkspaceId).toHaveBeenCalledWith('user-001', 'ws-001');
     });
   });
 
   describe('when tenant context is missing', () => {
-    it('should allow POST requests without workspaceId', async () => {
+    it('allows POST requests without workspaceId for workspace creation', async () => {
       reflector.getAllAndOverride.mockReturnValue([RoleType.ADMIN]);
-      const context = {
-        switchToHttp: () => ({
-          getRequest: () => ({
-            tenantContext: undefined,
-            user: { id: 'user-001', tenantId: 'tenant-001' },
-            method: 'POST',
-          }),
-        }),
-        getHandler: () => ({}),
-        getClass: () => ({}),
-      } as ExecutionContext;
 
-      const result = await guard.canActivate(context);
+      const result = await guard.canActivate(
+        createContext({
+          user: { id: 'user-001', tenantId: 'tenant-001' },
+          method: 'POST',
+        }),
+      );
 
       expect(result).toBe(true);
     });
 
-    it('should throw ForbiddenException for non-POST requests without workspaceId', async () => {
+    it('throws ForbiddenException for non-POST requests without workspaceId', async () => {
       reflector.getAllAndOverride.mockReturnValue([RoleType.ADMIN]);
-      const context = {
-        switchToHttp: () => ({
-          getRequest: () => ({
-            tenantContext: undefined,
+
+      await expect(
+        guard.canActivate(
+          createContext({
             user: { id: 'user-001', tenantId: 'tenant-001' },
             method: 'GET',
           }),
-        }),
-        getHandler: () => ({}),
-        getClass: () => ({}),
-      } as ExecutionContext;
-
-      expect(async () => {
-        await guard.canActivate(context);
-      }).rejects.toMatchObject({
-        message: 'Tenant context required',
-      });
+        ),
+      ).rejects.toThrow(new ForbiddenException('Tenant context required'));
     });
   });
 
-  describe('when user is not a workspace member', () => {
-    it('should throw ForbiddenException', async () => {
+  describe('workspace and role validation', () => {
+    it('rejects workspace from another tenant', async () => {
+      reflector.getAllAndOverride.mockReturnValue([RoleType.ADMIN]);
+      workspaceService.findById.mockResolvedValue({ id: 'ws-001', tenantId: 'tenant-002' } as any);
+
+      await expect(
+        guard.canActivate(
+          createContext({
+            user: { id: 'user-001', tenantId: 'tenant-001' },
+            params: { workspaceId: 'ws-001' },
+          }),
+        ),
+      ).rejects.toThrow(new ForbiddenException('Invalid workspace or cross-tenant access denied'));
+    });
+
+    it('rejects access when user is not a workspace member', async () => {
       reflector.getAllAndOverride.mockReturnValue([RoleType.ADMIN]);
       memberService.findByUserIdAndWorkspaceId.mockResolvedValue(null);
-      const context = {
-        switchToHttp: () => ({
-          getRequest: () => ({
-            tenantContext: { workspaceId: 'ws-001', userId: 'user-001' },
+
+      await expect(
+        guard.canActivate(
+          createContext({
             user: { id: 'user-001', tenantId: 'tenant-001' },
-            method: 'GET',
+            params: { workspaceId: 'ws-001' },
           }),
-        }),
-        getHandler: () => ({}),
-        getClass: () => ({}),
-      } as ExecutionContext;
-
-      await expect(guard.canActivate(context)).rejects.toThrow(
-        new ForbiddenException('User is not a member of this workspace'),
-      );
+        ),
+      ).rejects.toThrow(new ForbiddenException('User is not a member of this workspace'));
     });
-  });
 
-  describe('roleType comparison (not roleId)', () => {
-    it('should reject when roleType does not match required RoleType', async () => {
+    it('rejects when roleType does not match required RoleType', async () => {
       reflector.getAllAndOverride.mockReturnValue([RoleType.OWNER]);
-      memberService.findByUserIdAndWorkspaceId.mockResolvedValue({ id: 'member-001' } as any);
       memberService.findByIdWithRole.mockResolvedValue({
         id: 'member-001',
         role: { roleType: RoleType.ADMIN },
       } as any);
-      const context = {
-        switchToHttp: () => ({
-          getRequest: () => ({
-            tenantContext: { workspaceId: 'ws-001', userId: 'user-001' },
-            user: { id: 'user-001', tenantId: 'tenant-001' },
-            method: 'GET',
-          }),
-        }),
-        getHandler: () => ({}),
-        getClass: () => ({}),
-      } as ExecutionContext;
 
-      await expect(guard.canActivate(context)).rejects.toThrow(
-        new ForbiddenException('Insufficient workspace role'),
-      );
+      await expect(
+        guard.canActivate(
+          createContext({
+            user: { id: 'user-001', tenantId: 'tenant-001' },
+            params: { workspaceId: 'ws-001' },
+          }),
+        ),
+      ).rejects.toThrow(new ForbiddenException('Insufficient workspace role'));
     });
 
-    it('should allow when roleType matches required RoleType', async () => {
+    it('allows when roleType matches required RoleType', async () => {
       reflector.getAllAndOverride.mockReturnValue([RoleType.ADMIN]);
-      memberService.findByUserIdAndWorkspaceId.mockResolvedValue({ id: 'member-001' } as any);
-      memberService.findByIdWithRole.mockResolvedValue({
-        id: 'member-001',
-        role: { roleType: RoleType.ADMIN },
-      } as any);
-      const context = {
-        switchToHttp: () => ({
-          getRequest: () => ({
-            tenantContext: { workspaceId: 'ws-001', userId: 'user-001' },
+
+      await expect(
+        guard.canActivate(
+          createContext({
             user: { id: 'user-001', tenantId: 'tenant-001' },
-            method: 'GET',
+            params: { workspaceId: 'ws-001' },
           }),
-        }),
-        getHandler: () => ({}),
-        getClass: () => ({}),
-      } as ExecutionContext;
-
-      const result = await guard.canActivate(context);
-
-      expect(result).toBe(true);
+        ),
+      ).resolves.toBe(true);
     });
 
-    it('should compare roleType (enum) not roleId (UUID)', async () => {
+    it('compares roleType enum instead of roleId', async () => {
       reflector.getAllAndOverride.mockReturnValue([RoleType.ADMIN]);
-      memberService.findByUserIdAndWorkspaceId.mockResolvedValue({ id: 'member-001' } as any);
-
-      // Same roleId but different roleType -> should fail
-      memberService.findByIdWithRole.mockResolvedValue({
+      memberService.findByIdWithRole.mockResolvedValueOnce({
         id: 'member-001',
         roleId: 'some-uuid',
         role: { roleType: RoleType.AGENT },
       } as any);
 
-      const context = {
-        switchToHttp: () => ({
-          getRequest: () => ({
-            tenantContext: { workspaceId: 'ws-001', userId: 'user-001' },
+      await expect(
+        guard.canActivate(
+          createContext({
             user: { id: 'user-001', tenantId: 'tenant-001' },
-            method: 'GET',
+            params: { workspaceId: 'ws-001' },
           }),
-        }),
-        getHandler: () => ({}),
-        getClass: () => ({}),
-      } as ExecutionContext;
-      await expect(guard.canActivate(context)).rejects.toThrow(
-        new ForbiddenException('Insufficient workspace role'),
-      );
+        ),
+      ).rejects.toThrow(new ForbiddenException('Insufficient workspace role'));
 
-      // Same roleId but matching roleType -> should succeed
-      memberService.findByIdWithRole.mockResolvedValue({
+      memberService.findByIdWithRole.mockResolvedValueOnce({
         id: 'member-001',
         roleId: 'some-uuid',
         role: { roleType: RoleType.ADMIN },
       } as any);
 
-      const result = await guard.canActivate(context);
-      expect(result).toBe(true);
+      await expect(
+        guard.canActivate(
+          createContext({
+            user: { id: 'user-001', tenantId: 'tenant-001' },
+            params: { workspaceId: 'ws-001' },
+          }),
+        ),
+      ).resolves.toBe(true);
     });
 
-    it('should throw when member role relation is missing', async () => {
+    it('throws when member role relation is missing', async () => {
       reflector.getAllAndOverride.mockReturnValue([RoleType.ADMIN]);
-      memberService.findByUserIdAndWorkspaceId.mockResolvedValue({ id: 'member-001' } as any);
       memberService.findByIdWithRole.mockResolvedValue({
         id: 'member-001',
         role: undefined,
       } as any);
-      const context = {
-        switchToHttp: () => ({
-          getRequest: () => ({
-            tenantContext: { workspaceId: 'ws-001', userId: 'user-001' },
+
+      await expect(
+        guard.canActivate(
+          createContext({
             user: { id: 'user-001', tenantId: 'tenant-001' },
-            method: 'GET',
+            params: { workspaceId: 'ws-001' },
           }),
-        }),
-        getHandler: () => ({}),
-        getClass: () => ({}),
-      } as ExecutionContext;
-
-      await expect(guard.canActivate(context)).rejects.toThrow(
-        new ForbiddenException('Member role not found'),
-      );
-    });
-  });
-
-  describe('cross-workspace access', () => {
-    it('should reject access to a workspace the user does not belong to', async () => {
-      reflector.getAllAndOverride.mockReturnValue([RoleType.ADMIN]);
-      // User is a member of ws-002, but trying to access ws-001
-      memberService.findByUserIdAndWorkspaceId.mockImplementation((userId, workspaceId) => {
-        if (workspaceId === 'ws-002') {
-          return Promise.resolve({ id: 'member-001' } as any);
-        }
-        return Promise.resolve(null);
-      });
-      const context = {
-        switchToHttp: () => ({
-          getRequest: () => ({
-            tenantContext: { workspaceId: 'ws-001', userId: 'user-001' },
-            user: { id: 'user-001', tenantId: 'tenant-001' },
-            method: 'GET',
-          }),
-        }),
-        getHandler: () => ({}),
-        getClass: () => ({}),
-      } as ExecutionContext;
-
-      await expect(guard.canActivate(context)).rejects.toThrow(
-        new ForbiddenException('User is not a member of this workspace'),
-      );
+        ),
+      ).rejects.toThrow(new ForbiddenException('Member role not found'));
     });
   });
 });

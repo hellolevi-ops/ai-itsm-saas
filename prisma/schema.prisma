@@ -20,6 +20,41 @@ enum RoleType {
   REQUESTER
 }
 
+enum TicketSource {
+  WEB
+}
+
+enum TicketStatus {
+  NEW
+  TRIAGE
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  REOPENED
+}
+
+enum TicketPriority {
+  P1
+  P2
+  P3
+  P4
+}
+
+enum TicketMessageVisibility {
+  PUBLIC
+  INTERNAL
+}
+
+enum TicketEventType {
+  CREATED
+  UPDATED
+  ASSIGNED
+  MESSAGE_ADDED
+  STATUS_CHANGED
+  CLOSED
+  REOPENED
+}
+
 model Tenant {
   id        String   @id @default(uuid())
   name      String
@@ -47,6 +82,12 @@ model User {
 
   tenant           Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   workspaceMembers WorkspaceMember[]
+  requestedTickets Ticket[] @relation("TicketRequester")
+  assignedTickets  Ticket[] @relation("TicketAssignee")
+  createdTickets   Ticket[] @relation("TicketCreator")
+  updatedTickets   Ticket[] @relation("TicketUpdater")
+  ticketMessages   TicketMessage[]
+  ticketEvents     TicketEvent[]
 
   @@map("users")
   @@unique([tenantId, email])
@@ -67,6 +108,9 @@ model Workspace {
   tenant  Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   members WorkspaceMember[]
   roles   Role[]
+  tickets Ticket[]
+  ticketMessages TicketMessage[]
+  ticketEvents TicketEvent[]
 
   @@map("workspaces")
   @@unique([tenantId, slug])
@@ -109,4 +153,82 @@ model Role {
   @@map("roles")
   @@unique([workspaceId, name])
   @@index([workspaceId])
+}
+
+model Ticket {
+  id          String         @id @default(uuid())
+  workspaceId String         @map("workspace_id")
+  number      String
+  title       String
+  description String
+  source      TicketSource   @default(WEB)
+  status      TicketStatus   @default(NEW)
+  priority    TicketPriority @default(P3)
+  category    String?
+  requesterId String         @map("requester_id")
+  assigneeId  String?        @map("assignee_id")
+  createdById String         @map("created_by_id")
+  updatedById String?        @map("updated_by_id")
+  resolvedAt  DateTime?      @map("resolved_at")
+  closedAt    DateTime?      @map("closed_at")
+  reopenCount Int            @default(0) @map("reopen_count")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  requester User      @relation("TicketRequester", fields: [requesterId], references: [id])
+  assignee  User?     @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  createdBy User      @relation("TicketCreator", fields: [createdById], references: [id])
+  updatedBy User?     @relation("TicketUpdater", fields: [updatedById], references: [id])
+  messages  TicketMessage[]
+  events    TicketEvent[]
+
+  @@map("tickets")
+  @@unique([workspaceId, number])
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@index([workspaceId, assigneeId])
+  @@index([workspaceId, requesterId])
+  @@index([createdAt])
+}
+
+model TicketMessage {
+  id          String                  @id @default(uuid())
+  workspaceId String                  @map("workspace_id")
+  ticketId    String                  @map("ticket_id")
+  authorId    String                  @map("author_id")
+  visibility  TicketMessageVisibility @default(PUBLIC)
+  body        String
+  createdAt   DateTime                @default(now()) @map("created_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  ticket    Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    User      @relation(fields: [authorId], references: [id])
+
+  @@map("ticket_messages")
+  @@index([workspaceId])
+  @@index([ticketId])
+  @@index([authorId])
+}
+
+model TicketEvent {
+  id          String          @id @default(uuid())
+  workspaceId String          @map("workspace_id")
+  ticketId    String          @map("ticket_id")
+  actorId     String?         @map("actor_id")
+  type        TicketEventType
+  fromValue   String?         @map("from_value")
+  toValue     String?         @map("to_value")
+  metadata    Json?
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  ticket    Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actor     User?     @relation(fields: [actorId], references: [id])
+
+  @@map("ticket_events")
+  @@index([workspaceId])
+  @@index([ticketId])
+  @@index([actorId])
+  @@index([type])
 }

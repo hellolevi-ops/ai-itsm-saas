@@ -3,7 +3,7 @@
 | Milestone | Status | Evidence | Next Gate |
 |---|---|---|---|
 | M0 Takeover and baseline security | ACCEPTED | Repository recovered; `develop` baseline verified; draft PR #2 created; typecheck/lint/tests/build/migration validation passed. | Keep PR #2 draft until review/CI policy is decided. |
-| M1 Minimal ticket loop | PLANNING | M0 accepted; ticket domain not implemented yet. | Freeze ticket domain/API/permissions contract, then implement backend and frontend. |
+| M1 Minimal ticket loop | IN_PROGRESS | Ticket contract and task file created; Prisma ticket models and migration added; workspace guard context fixed. | Implement backend ticket module and negative isolation tests. |
 | M2 AI-assisted tickets | NOT_STARTED | No ticket domain baseline yet. | M1 accepted. |
 | M3 Knowledge and self-service | NOT_STARTED | No knowledge domain implementation yet. | M2 accepted. |
 | M4 Service management basics | NOT_STARTED | No catalog/SLA/service management implementation yet. | M3 accepted. |
