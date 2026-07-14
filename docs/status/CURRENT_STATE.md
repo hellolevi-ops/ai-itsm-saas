@@ -56,7 +56,7 @@ Validation:
 - Web Vitest tests: PASS, 58/58
 - Web build: PASS
 - Total automated tests: PASS, 136/136
-- M1 backend baseline after schema/guard changes: PASS, 79/79 backend tests
+- M1 backend ticket module: PASS, 88/88 backend tests
 
 ## Key Modules
 
@@ -74,6 +74,8 @@ Validation:
 - Migration: `20260714230500_add_ticket_loop`.
 - Empty database migration validation: PASS for both migrations.
 - Workspace context security: moved from middleware registration to guard-stage validation after JWT auth.
+- Backend ticket API/service/repository: implemented.
+- Ticket negative tests: requester cannot view another requester ticket, requester cannot create internal note, invalid transitions fail, assignee must be eligible same-workspace staff, repository reads/lists require `workspaceId`.
 
 ## Tech Stack
 

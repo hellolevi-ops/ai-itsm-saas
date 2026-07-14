@@ -1,11 +1,11 @@
 # Execution State
 
-- Last updated: 2026-07-14 23:20 Asia/Shanghai
+- Last updated: 2026-07-14 23:42 Asia/Shanghai
 - Current branch: local snapshot plus GitHub branch `codex/m0-takeover-baseline`; base branch `develop`
 - Current commit: GitHub branch commit `ca2ab7868b9605c8628bc7a28ff5f47721507958`; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
 - Current phase: Phase 0 / Phase 1 takeover
 - Current milestone: M1 - Minimal ticket loop
-- Current milestone status: IN_PROGRESS - M1 contract frozen and backend data model/security foundation started
+- Current milestone status: IN_PROGRESS - M1 backend ticket API/service/repository implemented and tested
 - Completed tasks:
   - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_???????????????.md`.
   - Inspected the requested workspace path.
@@ -46,9 +46,13 @@
   - Validated both migrations against an empty temporary PostgreSQL database.
   - Moved trusted workspace context validation from middleware registration into `WorkspaceRoleGuard`.
   - Added guard tests for route workspace context, cross-tenant rejection and role checks.
+  - Implemented `src/modules/ticket/**` backend module.
+  - Added ticket DTOs, controller, service, repository and module wiring.
+  - Added global `ValidationPipe` in `main.ts`.
+  - Added service tests for requester restrictions, internal-note visibility, assignee eligibility and status transitions.
+  - Added repository tests proving `workspaceId` is mandatory for ticket reads/lists.
 - Active tasks:
-  - Push M1 contract/model/security foundation to draft PR #2.
-  - Implement `src/modules/ticket/**` service, repository, controller and tests.
+  - Push M1 backend ticket implementation to draft PR #2.
   - Implement web ticket submit, queue and detail flows.
 - Blocked tasks:
   - `git fetch --all --tags --prune`
@@ -76,6 +80,8 @@
   - `npm run typecheck`
   - `npm run lint:check`
   - `npm test -- --runInBand`
+  - `npm test -- --runInBand src/modules/ticket`
+  - `npm run build`
   - `npm run build`
   - `cd apps/web; npm ci`
   - `cd apps/web; npm run typecheck`
@@ -121,6 +127,9 @@
   - Root typecheck passed after M1 schema and guard changes.
   - Root lint passed after M1 schema and guard changes.
   - Root Jest tests passed after M1 schema and guard changes: 79/79.
+  - Ticket-specific Jest tests passed: 9/9.
+  - Root Jest tests passed after ticket backend implementation: 88/88.
+  - Root build passed after ticket backend implementation.
 - Open P0 issues:
   - None for executable source validation.
 - Open P1 issues:
@@ -132,4 +141,4 @@
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Push current M1 foundation changes to PR #2, then implement the ticket backend module with mandatory workspace filters and negative isolation tests.
+  - Push current M1 backend implementation to PR #2, then implement web ticket submit, queue and detail flows against `TICKET_API.md`.
