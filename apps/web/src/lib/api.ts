@@ -8,7 +8,14 @@ import type {
   CreateWorkspaceResponse,
   GetWorkspacesResponse,
   GetMeResponse,
+  AddTicketMessageRequest,
   ApiResponse,
+  ChangeTicketStatusRequest,
+  CreateTicketRequest,
+  CreateTicketResponse,
+  ListTicketsResponse,
+  TicketDetailResponse,
+  TicketMessageResponse,
 } from '@/types/api';
 
 const apiClient = axios.create({
@@ -65,6 +72,57 @@ export const workspaceApi = {
 
   async list(): Promise<ApiResponse<GetWorkspacesResponse>> {
     const response = await apiClient.get<ApiResponse<GetWorkspacesResponse>>('/workspaces');
+    return response.data;
+  },
+};
+
+export const ticketApi = {
+  async create(
+    workspaceId: string,
+    data: CreateTicketRequest,
+  ): Promise<ApiResponse<CreateTicketResponse>> {
+    const response = await apiClient.post<ApiResponse<CreateTicketResponse>>(
+      `/workspaces/${workspaceId}/tickets`,
+      data,
+    );
+    return response.data;
+  },
+
+  async list(workspaceId: string): Promise<ApiResponse<ListTicketsResponse>> {
+    const response = await apiClient.get<ApiResponse<ListTicketsResponse>>(
+      `/workspaces/${workspaceId}/tickets`,
+    );
+    return response.data;
+  },
+
+  async detail(workspaceId: string, ticketId: string): Promise<ApiResponse<TicketDetailResponse>> {
+    const response = await apiClient.get<ApiResponse<TicketDetailResponse>>(
+      `/workspaces/${workspaceId}/tickets/${ticketId}`,
+    );
+    return response.data;
+  },
+
+  async addMessage(
+    workspaceId: string,
+    ticketId: string,
+    data: AddTicketMessageRequest,
+  ): Promise<ApiResponse<TicketMessageResponse>> {
+    const response = await apiClient.post<ApiResponse<TicketMessageResponse>>(
+      `/workspaces/${workspaceId}/tickets/${ticketId}/messages`,
+      data,
+    );
+    return response.data;
+  },
+
+  async changeStatus(
+    workspaceId: string,
+    ticketId: string,
+    data: ChangeTicketStatusRequest,
+  ): Promise<ApiResponse<CreateTicketResponse>> {
+    const response = await apiClient.post<ApiResponse<CreateTicketResponse>>(
+      `/workspaces/${workspaceId}/tickets/${ticketId}/status`,
+      data,
+    );
     return response.data;
   },
 };

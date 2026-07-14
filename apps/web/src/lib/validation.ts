@@ -39,3 +39,20 @@ export const createWorkspaceSchema = z.object({
 });
 
 export type CreateWorkspaceFormData = z.infer<typeof createWorkspaceSchema>;
+
+export const ticketCreateSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(1, 'Title is required')
+    .max(120, 'Title must be 120 characters or less'),
+  description: z
+    .string()
+    .trim()
+    .min(1, 'Description is required')
+    .max(10000, 'Description must be 10000 characters or less'),
+  priority: z.enum(['P1', 'P2', 'P3', 'P4']),
+  category: z.string().trim().max(80, 'Category must be 80 characters or less').optional(),
+});
+
+export type TicketCreateFormData = z.infer<typeof ticketCreateSchema>;

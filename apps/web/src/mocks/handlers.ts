@@ -26,6 +26,63 @@ const workspaces = new Map<
   }
 >();
 const workspaceMembers = new Map<string, string[]>();
+const tickets = new Map<
+  string,
+  {
+    id: string;
+    workspace_id: string;
+    number: string;
+    title: string;
+    description: string;
+    source: 'WEB';
+    status: 'NEW' | 'TRIAGE' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED' | 'REOPENED';
+    priority: 'P1' | 'P2' | 'P3' | 'P4';
+    category: string | null;
+    requester_id: string;
+    assignee_id: string | null;
+    created_at: string;
+    updated_at: string;
+    resolved_at: string | null;
+    closed_at: string | null;
+    reopen_count: number;
+  }
+>();
+const ticketMessages = new Map<
+  string,
+  {
+    id: string;
+    ticket_id: string;
+    author_id: string;
+    visibility: 'PUBLIC' | 'INTERNAL';
+    body: string;
+    created_at: string;
+  }[]
+>();
+const ticketEvents = new Map<
+  string,
+  {
+    id: string;
+    type: string;
+    actor_id: string | null;
+    from_value: string | null;
+    to_value: string | null;
+    created_at: string;
+  }[]
+>();
+
+function getUserFromRequest(request: Request) {
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+  const token = authHeader.replace('Bearer ', '');
+  const userId = token.replace('mock_access_token_', '');
+  return users.get(userId) || null;
+}
+
+function isWorkspaceMember(workspaceId: string, userId: string) {
+  return (workspaceMembers.get(workspaceId) || []).includes(userId);
+}
 
 export const handlers = [
   http.post('/api/v1/auth/register', async ({ request }) => {
@@ -365,4 +422,232 @@ export const handlers = [
       request_id: generateRequestId(),
     });
   }),
+
+  http.post('/api/v1/workspaces/:workspaceId/tickets', async ({ request, params }) => {
+    await delay(300);
+    const user = getUserFromRequest(request);
+    const workspaceId = params.workspaceId as string;
+    if (!user || !isWorkspaceMember(workspaceId, user.id)) {
+      return HttpResponse.json(
+        {
+          error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+          request_id: generateRequestId(),
+        },
+        { status: user ? 403 : 401 },
+      );
+    }
+
+    const body = (await request.json()) as {
+      title: string;
+      description: string;
+      priority?: 'P1' | 'P2' | 'P3' | 'P4';
+      category?: string;
+    };
+    const workspaceTickets = Array.from(tickets.values()).filter(
+      (ticket) => ticket.workspace_id === workspaceId,
+    );
+    const now = new Date().toISOString();
+    const ticket = {
+      id: generateId(),
+      workspace_id: workspaceId,
+      number: `TCK-${String(workspaceTickets.length + 1).padStart(6, '0')}`,
+      title: body.title,
+      description: body.description,
+      source: 'WEB' as const,
+      status: 'NEW' as const,
+      priority: body.priority || 'P3',
+      category: body.category || null,
+      requester_id: user.id,
+      assignee_id: null,
+      created_at: now,
+      updated_at: now,
+      resolved_at: null,
+      closed_at: null,
+      reopen_count: 0,
+    };
+    tickets.set(ticket.id, ticket);
+    ticketMessages.set(ticket.id, []);
+    ticketEvents.set(ticket.id, [
+      {
+        id: generateId(),
+        type: 'CREATED',
+        actor_id: user.id,
+        from_value: null,
+        to_value: ticket.number,
+        created_at: now,
+      },
+    ]);
+
+    return HttpResponse.json(
+      { data: { ticket }, request_id: generateRequestId() },
+      { status: 201 },
+    );
+  }),
+
+  http.get('/api/v1/workspaces/:workspaceId/tickets', async ({ request, params }) => {
+    await delay(200);
+    const user = getUserFromRequest(request);
+    const workspaceId = params.workspaceId as string;
+    if (!user || !isWorkspaceMember(workspaceId, user.id)) {
+      return HttpResponse.json(
+        {
+          error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+          request_id: generateRequestId(),
+        },
+        { status: user ? 403 : 401 },
+      );
+    }
+
+    const workspaceTickets = Array.from(tickets.values())
+      .filter((ticket) => ticket.workspace_id === workspaceId)
+      .sort((a, b) => b.created_at.localeCompare(a.created_at));
+
+    return HttpResponse.json({
+      data: { tickets: workspaceTickets, page: 1, page_size: 20 },
+      request_id: generateRequestId(),
+    });
+  }),
+
+  http.get('/api/v1/workspaces/:workspaceId/tickets/:ticketId', async ({ request, params }) => {
+    await delay(200);
+    const user = getUserFromRequest(request);
+    const workspaceId = params.workspaceId as string;
+    const ticketId = params.ticketId as string;
+    if (!user || !isWorkspaceMember(workspaceId, user.id)) {
+      return HttpResponse.json(
+        {
+          error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+          request_id: generateRequestId(),
+        },
+        { status: user ? 403 : 401 },
+      );
+    }
+
+    const ticket = tickets.get(ticketId);
+    if (!ticket || ticket.workspace_id !== workspaceId) {
+      return HttpResponse.json(
+        {
+          error: { code: 'TICKET_NOT_FOUND', message: 'Ticket not found' },
+          request_id: generateRequestId(),
+        },
+        { status: 404 },
+      );
+    }
+
+    return HttpResponse.json({
+      data: {
+        ticket,
+        messages: ticketMessages.get(ticketId) || [],
+        events: ticketEvents.get(ticketId) || [],
+      },
+      request_id: generateRequestId(),
+    });
+  }),
+
+  http.post(
+    '/api/v1/workspaces/:workspaceId/tickets/:ticketId/messages',
+    async ({ request, params }) => {
+      await delay(200);
+      const user = getUserFromRequest(request);
+      const workspaceId = params.workspaceId as string;
+      const ticketId = params.ticketId as string;
+      if (!user || !isWorkspaceMember(workspaceId, user.id)) {
+        return HttpResponse.json(
+          {
+            error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+            request_id: generateRequestId(),
+          },
+          { status: user ? 403 : 401 },
+        );
+      }
+      const ticket = tickets.get(ticketId);
+      if (!ticket || ticket.workspace_id !== workspaceId) {
+        return HttpResponse.json(
+          {
+            error: { code: 'TICKET_NOT_FOUND', message: 'Ticket not found' },
+            request_id: generateRequestId(),
+          },
+          { status: 404 },
+        );
+      }
+      const body = (await request.json()) as {
+        visibility: 'PUBLIC' | 'INTERNAL';
+        body: string;
+      };
+      const now = new Date().toISOString();
+      const message = {
+        id: generateId(),
+        ticket_id: ticketId,
+        author_id: user.id,
+        visibility: body.visibility,
+        body: body.body,
+        created_at: now,
+      };
+      ticketMessages.set(ticketId, [...(ticketMessages.get(ticketId) || []), message]);
+      ticketEvents.set(ticketId, [
+        ...(ticketEvents.get(ticketId) || []),
+        {
+          id: generateId(),
+          type: 'MESSAGE_ADDED',
+          actor_id: user.id,
+          from_value: null,
+          to_value: body.visibility,
+          created_at: now,
+        },
+      ]);
+      return HttpResponse.json({ data: { message }, request_id: generateRequestId() });
+    },
+  ),
+
+  http.post(
+    '/api/v1/workspaces/:workspaceId/tickets/:ticketId/status',
+    async ({ request, params }) => {
+      await delay(200);
+      const user = getUserFromRequest(request);
+      const workspaceId = params.workspaceId as string;
+      const ticketId = params.ticketId as string;
+      if (!user || !isWorkspaceMember(workspaceId, user.id)) {
+        return HttpResponse.json(
+          {
+            error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+            request_id: generateRequestId(),
+          },
+          { status: user ? 403 : 401 },
+        );
+      }
+      const ticket = tickets.get(ticketId);
+      if (!ticket || ticket.workspace_id !== workspaceId) {
+        return HttpResponse.json(
+          {
+            error: { code: 'TICKET_NOT_FOUND', message: 'Ticket not found' },
+            request_id: generateRequestId(),
+          },
+          { status: 404 },
+        );
+      }
+      const body = (await request.json()) as { status: typeof ticket.status; reason?: string };
+      const now = new Date().toISOString();
+      const updated = {
+        ...ticket,
+        status: body.status,
+        updated_at: now,
+        resolved_at: body.status === 'RESOLVED' ? now : ticket.resolved_at,
+        closed_at: body.status === 'CLOSED' ? now : ticket.closed_at,
+        reopen_count: body.status === 'REOPENED' ? ticket.reopen_count + 1 : ticket.reopen_count,
+      };
+      tickets.set(ticketId, updated);
+      ticketEvents.set(ticketId, [
+        ...(ticketEvents.get(ticketId) || []),
+        {
+          id: generateId(),
+          type: body.status === 'CLOSED' ? 'CLOSED' : 'STATUS_CHANGED',
+          actor_id: user.id,
+          from_value: ticket.status,
+          to_value: body.status,
+          created_at: now,
+        },
+      ]);
+      return HttpResponse.json({ data: { ticket: updated }, request_id: generateRequestId() });
+    },
+  ),
 ];

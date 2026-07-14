@@ -8,7 +8,7 @@
 | Base Branch | `develop` |
 | Base Commit | `3b20d49bd68c836ba059e50426ec07b371b04c40` |
 | Codex Branch | `codex/m0-takeover-baseline` |
-| Codex Commit | `ca2ab7868b9605c8628bc7a28ff5f47721507958` |
+| Codex Commit | PR branch `codex/m0-takeover-baseline` includes M1 backend and web implementation |
 | Draft PR | `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2` |
 | Database | PostgreSQL |
 | Build Status | PASS |
@@ -25,14 +25,14 @@
 
 ## Migration Status
 
-Latest migration: `20260714113121_init`
+Latest migration: `20260714230500_add_ticket_loop`
 
 Validation:
 
 - Empty temporary PostgreSQL 18 database migration: PASS
 - `prisma migrate deploy`: PASS
 - `prisma migrate status`: PASS, schema up to date
-- Tables created: `_prisma_migrations`, `roles`, `tenants`, `users`, `workspace_members`, `workspaces`
+- Tables created: `_prisma_migrations`, `roles`, `tenants`, `users`, `workspace_members`, `workspaces`, `tickets`, `ticket_messages`, `ticket_events`
 
 ## Available Features
 
@@ -44,19 +44,22 @@ Validation:
 - Workspace membership and role-based access control
 - Protected API endpoints with JWT authentication
 - Runtime JWT secret now requires `JWT_SECRET`; no hardcoded fallback secret remains
+- Ticket submit, queue, detail, public/internal message and status-change backend APIs
+- Web ticket submit, queue and detail screens backed by the ticket API client and MSW development handlers
 
 ## Quality Baseline
 
 - Root typecheck: PASS
 - Root lint: PASS
-- Root Jest tests: PASS, 78/78
+- Root Jest tests: PASS, 88/88
 - Root build: PASS
 - Web typecheck: PASS
 - Web lint: PASS
-- Web Vitest tests: PASS, 58/58
+- Web Vitest tests: PASS, 65/65
 - Web build: PASS
-- Total automated tests: PASS, 136/136
+- Total automated tests: PASS, 153/153
 - M1 backend ticket module: PASS, 88/88 backend tests
+- M1 web ticket components: PASS, 65/65 frontend tests
 
 ## Key Modules
 
@@ -76,6 +79,9 @@ Validation:
 - Workspace context security: moved from middleware registration to guard-stage validation after JWT auth.
 - Backend ticket API/service/repository: implemented.
 - Ticket negative tests: requester cannot view another requester ticket, requester cannot create internal note, invalid transitions fail, assignee must be eligible same-workspace staff, repository reads/lists require `workspaceId`.
+- Frontend ticket API client, MSW handlers, submit form, queue and detail UI: implemented.
+- Frontend tests cover create redirect, validation, queue links, detail rendering, message add and status change.
+- Remaining M1 hardening: browser-level E2E and optional controller/integration coverage.
 
 ## Tech Stack
 

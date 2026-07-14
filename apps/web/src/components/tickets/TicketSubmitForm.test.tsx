@@ -1,0 +1,72 @@
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { TicketSubmitForm } from './TicketSubmitForm';
+
+const mockPush = vi.fn();
+
+vi.mock('next/navigation', () => ({
+  useRouter() {
+    return {
+      push: mockPush,
+      refresh: vi.fn(),
+    };
+  },
+}));
+
+vi.mock('@/lib/api', () => ({
+  ticketApi: {
+    create: vi.fn(),
+  },
+  extractApiError: () => 'Request failed',
+}));
+
+import { ticketApi } from '@/lib/api';
+
+describe('TicketSubmitForm', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('creates a ticket and redirects to its detail page', async () => {
+    const user = userEvent.setup();
+    const mockCreate = ticketApi.create as Mock;
+    mockCreate.mockResolvedValue({
+      data: {
+        ticket: {
+          id: 'ticket-1',
+        },
+      },
+      request_id: 'req-1',
+    });
+
+    render(<TicketSubmitForm workspaceId="ws-1" />);
+
+    await user.type(screen.getByLabelText(/Title/), 'VPN is down');
+    await user.type(screen.getByLabelText(/Description/), 'Remote users cannot connect.');
+    await user.selectOptions(screen.getByLabelText(/Priority/), 'P2');
+    await user.type(screen.getByLabelText(/Category/), 'network');
+    await user.click(screen.getByRole('button', { name: /Submit ticket/ }));
+
+    await waitFor(() => {
+      expect(mockCreate).toHaveBeenCalledWith('ws-1', {
+        title: 'VPN is down',
+        description: 'Remote users cannot connect.',
+        priority: 'P2',
+        category: 'network',
+      });
+    });
+    expect(mockPush).toHaveBeenCalledWith('/workspaces/ws-1/tickets/ticket-1');
+  });
+
+  it('shows validation feedback for missing title and description', async () => {
+    const user = userEvent.setup();
+
+    render(<TicketSubmitForm workspaceId="ws-1" />);
+
+    await user.click(screen.getByRole('button', { name: /Submit ticket/ }));
+
+    expect(await screen.findByText('Title is required')).toBeInTheDocument();
+    expect(await screen.findByText('Description is required')).toBeInTheDocument();
+  });
+});

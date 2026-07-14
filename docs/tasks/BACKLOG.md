@@ -11,7 +11,6 @@
 - Update draft PR #2 with live migration evidence and final M0 status.
 - Resolve Jest ESM config warning.
 - Add CI workflow for root and web gates if absent.
-- Implement M1 frontend ticket submit, queue and detail flows.
 - Add browser-level M1 E2E for requester submit and agent close flow.
 - Broaden M1 backend tests from service/repository unit coverage to controller/integration coverage.
 

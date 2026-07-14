@@ -1,13 +1,13 @@
 # Execution State
 
-- Last updated: 2026-07-14 23:42 Asia/Shanghai
+- Last updated: 2026-07-14 23:56 Asia/Shanghai
 - Current branch: local snapshot plus GitHub branch `codex/m0-takeover-baseline`; base branch `develop`
 - Current commit: GitHub branch commit `ca2ab7868b9605c8628bc7a28ff5f47721507958`; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
 - Current phase: Phase 0 / Phase 1 takeover
 - Current milestone: M1 - Minimal ticket loop
-- Current milestone status: IN_PROGRESS - M1 backend ticket API/service/repository implemented and tested
+- Current milestone status: IN_PROGRESS - M1 minimal ticket loop implemented across backend and web; browser-level E2E remains
 - Completed tasks:
-  - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_???????????????.md`.
+  - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_自主接管与商业化开发总控执行书.md`.
   - Inspected the requested workspace path.
   - Verified the requested workspace initially contained no project files or `.git` directory.
   - Searched local candidate paths under `Documents`, `Desktop`, `Downloads`, Trae project directories and Trae snapshots.
@@ -51,9 +51,12 @@
   - Added global `ValidationPipe` in `main.ts`.
   - Added service tests for requester restrictions, internal-note visibility, assignee eligibility and status transitions.
   - Added repository tests proving `workspaceId` is mandatory for ticket reads/lists.
+  - Implemented M1 web ticket submit, queue and detail pages.
+  - Added frontend ticket API client methods and MSW handlers for create/list/detail/message/status flows.
+  - Added frontend ticket component tests for submit redirect, queue links, conversation rendering, message add and status change.
 - Active tasks:
-  - Push M1 backend ticket implementation to draft PR #2.
-  - Implement web ticket submit, queue and detail flows.
+  - Push M1 frontend ticket loop implementation and validation evidence to draft PR #2.
+  - Add browser-level M1 E2E for requester submit and agent close flow.
 - Blocked tasks:
   - `git fetch --all --tags --prune`
   - Local branch, remote and working tree checks
@@ -130,6 +133,15 @@
   - Ticket-specific Jest tests passed: 9/9.
   - Root Jest tests passed after ticket backend implementation: 88/88.
   - Root build passed after ticket backend implementation.
+  - Root typecheck passed after M1 web implementation.
+  - Root lint passed after M1 web implementation.
+  - Root Jest tests passed after M1 web implementation: 88/88.
+  - Root build passed after M1 web implementation.
+  - Web typecheck passed after M1 web implementation.
+  - Web lint passed after M1 web implementation.
+  - Web Vitest tests passed after M1 web implementation: 65/65.
+  - Web Next build passed after M1 web implementation.
+  - Secret scan after M1 web implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
 - Open P0 issues:
   - None for executable source validation.
 - Open P1 issues:
@@ -141,4 +153,4 @@
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Push current M1 backend implementation to PR #2, then implement web ticket submit, queue and detail flows against `TICKET_API.md`.
+  - Push current M1 frontend implementation to PR #2, then add browser-level E2E for the requester submit and agent resolution flow.
