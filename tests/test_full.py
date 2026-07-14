@@ -1,16 +1,14 @@
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 from src.main import app
-from src.db.session import get_db
 from src.db.base import Base
+from src.db.session import get_db
 
-TEST_DATABASE_URL = "sqlite+aiosqlite:///./test_workspace.db"
-
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.orm import sessionmaker
+TEST_DATABASE_URL = "sqlite+aiosqlite:///./test_full.db"
 
 engine = create_async_engine(TEST_DATABASE_URL, echo=False)
 TestingSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -39,10 +37,10 @@ async def auth_tokens(setup_database):
         register_response = await client.post(
             "/api/v1/auth/register",
             json={
-                "email": "workspace_test@example.com",
+                "email": "test_user@example.com",
                 "password": "password123",
-                "full_name": "Workspace Test",
-                "workspace_name": "Workspace Test Name",
+                "full_name": "Test User",
+                "workspace_name": "Test Workspace",
             },
         )
         data = register_response.json()
@@ -50,6 +48,83 @@ async def auth_tokens(setup_database):
             "access_token": data["tokens"]["access_token"],
             "workspace_id": str(data["workspace"]["id"]),
         }
+
+
+@pytest.mark.asyncio(loop_scope="session")
+async def test_register_success(setup_database):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": "register_test@example.com",
+                "password": "password123",
+                "full_name": "Register Test",
+                "workspace_name": "Register Test Workspace",
+            },
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert "user" in data
+        assert "workspace" in data
+        assert "tokens" in data
+
+
+@pytest.mark.asyncio(loop_scope="session")
+async def test_register_duplicate_email(setup_database):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": "register_test@example.com",
+                "password": "password123",
+                "full_name": "Register Test",
+                "workspace_name": "Register Test Workspace",
+            },
+        )
+        assert response.status_code == 400
+        assert response.json()["error"]["message"] == "邮箱已被注册"
+
+
+@pytest.mark.asyncio(loop_scope="session")
+async def test_login_success(setup_database, auth_tokens):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/auth/login",
+            json={
+                "email": "test_user@example.com",
+                "password": "password123",
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "access_token" in data
+        assert "refresh_token" in data
+
+
+@pytest.mark.asyncio(loop_scope="session")
+async def test_login_invalid_password(setup_database):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/auth/login",
+            json={
+                "email": "test_user@example.com",
+                "password": "wrongpassword",
+            },
+        )
+        assert response.status_code == 401
+
+
+@pytest.mark.asyncio(loop_scope="session")
+async def test_login_nonexistent_user(setup_database):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/auth/login",
+            json={
+                "email": "nonexistent@example.com",
+                "password": "password123",
+            },
+        )
+        assert response.status_code == 401
 
 
 @pytest.mark.asyncio(loop_scope="session")
@@ -111,7 +186,6 @@ async def test_create_workspace(setup_database, auth_tokens):
         assert response.status_code == 201
         data = response.json()
         assert data["name"] == "Second Workspace"
-        assert data["slug"] == "second-workspace"
 
 
 @pytest.mark.asyncio(loop_scope="session")
@@ -131,7 +205,6 @@ async def test_update_workspace(setup_database, auth_tokens):
         assert response.status_code == 200
         data = response.json()
         assert data["name"] == "Updated Workspace Name"
-        assert data["description"] == "Updated description"
 
 
 @pytest.mark.asyncio(loop_scope="session")

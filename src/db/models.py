@@ -44,7 +44,7 @@ class Workspace(Base):
     owner_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("users.id"), nullable=False)
 
     owner: Mapped["User"] = relationship(foreign_keys=[owner_id])
-    members: Mapped[list["WorkspaceMember"]] = relationship(back_populates="workspace")
+    members: Mapped[list["WorkspaceMember"]] = relationship(back_populates="workspace", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<Workspace(id={self.id}, name={self.name})>"
