@@ -1,6 +1,6 @@
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.main import app
@@ -35,7 +35,7 @@ async def setup_database():
 
 @pytest_asyncio.fixture(scope="module")
 async def auth_tokens(setup_database):
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         register_response = await client.post(
             "/api/v1/auth/register",
             json={
@@ -54,7 +54,7 @@ async def auth_tokens(setup_database):
 
 @pytest.mark.asyncio(loop_scope="session")
 async def test_get_user_workspaces(setup_database, auth_tokens):
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.get(
             "/api/v1/workspaces/",
             headers={"Authorization": f"Bearer {auth_tokens['access_token']}"},
@@ -67,7 +67,7 @@ async def test_get_user_workspaces(setup_database, auth_tokens):
 
 @pytest.mark.asyncio(loop_scope="session")
 async def test_get_workspace(setup_database, auth_tokens):
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.get(
             f"/api/v1/workspaces/{auth_tokens['workspace_id']}",
             headers={
@@ -82,7 +82,7 @@ async def test_get_workspace(setup_database, auth_tokens):
 
 @pytest.mark.asyncio(loop_scope="session")
 async def test_get_workspace_members(setup_database, auth_tokens):
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.get(
             f"/api/v1/workspaces/{auth_tokens['workspace_id']}/members",
             headers={
@@ -98,7 +98,7 @@ async def test_get_workspace_members(setup_database, auth_tokens):
 
 @pytest.mark.asyncio(loop_scope="session")
 async def test_create_workspace(setup_database, auth_tokens):
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post(
             "/api/v1/workspaces/",
             headers={"Authorization": f"Bearer {auth_tokens['access_token']}"},
@@ -116,7 +116,7 @@ async def test_create_workspace(setup_database, auth_tokens):
 
 @pytest.mark.asyncio(loop_scope="session")
 async def test_update_workspace(setup_database, auth_tokens):
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.put(
             f"/api/v1/workspaces/{auth_tokens['workspace_id']}",
             headers={
@@ -136,7 +136,7 @@ async def test_update_workspace(setup_database, auth_tokens):
 
 @pytest.mark.asyncio(loop_scope="session")
 async def test_delete_workspace(setup_database, auth_tokens):
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         create_response = await client.post(
             "/api/v1/workspaces/",
             headers={"Authorization": f"Bearer {auth_tokens['access_token']}"},

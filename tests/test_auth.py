@@ -1,6 +1,6 @@
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -33,7 +33,7 @@ async def setup_database():
 
 @pytest.mark.asyncio(loop_scope="session")
 async def test_register_success(setup_database):
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post(
             "/api/v1/auth/register",
             json={
@@ -54,7 +54,7 @@ async def test_register_success(setup_database):
 
 @pytest.mark.asyncio(loop_scope="session")
 async def test_register_duplicate_email(setup_database):
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post(
             "/api/v1/auth/register",
             json={
@@ -70,7 +70,7 @@ async def test_register_duplicate_email(setup_database):
 
 @pytest.mark.asyncio(loop_scope="session")
 async def test_login_success(setup_database):
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post(
             "/api/v1/auth/login",
             json={
@@ -87,7 +87,7 @@ async def test_login_success(setup_database):
 
 @pytest.mark.asyncio(loop_scope="session")
 async def test_login_invalid_password(setup_database):
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post(
             "/api/v1/auth/login",
             json={
@@ -101,7 +101,7 @@ async def test_login_invalid_password(setup_database):
 
 @pytest.mark.asyncio(loop_scope="session")
 async def test_login_nonexistent_user(setup_database):
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post(
             "/api/v1/auth/login",
             json={

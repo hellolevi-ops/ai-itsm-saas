@@ -23,7 +23,7 @@ class WorkspaceResponse(BaseModel):
     id: uuid.UUID = Field(..., description="工作区ID")
     name: str = Field(..., description="工作区名称")
     slug: str = Field(..., description="工作区别名")
-    description: str = Field(None, description="工作区描述")
+    description: str | None = Field(None, description="工作区描述")
     timezone: str = Field(..., description="时区")
     language: str = Field(..., description="语言")
     is_active: bool = Field(..., description="是否活跃")
@@ -31,8 +31,7 @@ class WorkspaceResponse(BaseModel):
     created_at: datetime = Field(..., description="创建时间")
     updated_at: datetime = Field(..., description="更新时间")
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class WorkspaceMemberResponse(BaseModel):
@@ -42,5 +41,4 @@ class WorkspaceMemberResponse(BaseModel):
     joined_at: datetime = Field(..., description="加入时间")
     is_active: bool = Field(..., description="是否活跃")
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}

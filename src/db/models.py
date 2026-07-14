@@ -64,7 +64,7 @@ class WorkspaceMember(Base):
     user: Mapped["User"] = relationship(back_populates="workspaces")
 
     __table_args__ = (
-        {"unique_constraint": ["workspace_id", "user_id"]},
+        None,
     )
 
     def __repr__(self) -> str:

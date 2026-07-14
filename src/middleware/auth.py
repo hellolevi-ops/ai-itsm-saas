@@ -1,3 +1,4 @@
+import uuid
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status, Request
@@ -30,12 +31,13 @@ async def get_tenant_context(
     auth_service = AuthService(db)
     user = await auth_service.get_current_user(token)
 
-    workspace_id = request.headers.get("X-Workspace-Id")
-    if not workspace_id:
+    workspace_id_str = request.headers.get("X-Workspace-Id")
+    if not workspace_id_str:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="缺少 X-Workspace-Id 头"
         )
+    workspace_id = uuid.UUID(workspace_id_str)
 
     role = await auth_service.get_user_workspace_role(user.id, workspace_id)
 
