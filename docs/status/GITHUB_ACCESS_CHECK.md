@@ -318,8 +318,10 @@ Validation evidence after M11:
 | Temporary PostgreSQL migration validation | PASS, 9 migrations through `20260715065000_add_beta_readiness` |
 | Secret scan | PASS, no committed GitHub/OpenAI token found |
 | GitHub Actions CI on `8bd2cc737298156be53b5554efd54fd190ad8a16` | FAIL, root Jest service-catalog SLA test used runner-local UTC instead of configured working-hours timezone |
+| GitHub Actions CI on `32ff9d07cdeb281bc68da2fab7487bc0f0ab4919` | FAIL, root Jest passed; web Playwright exposed a brittle knowledge-draft status text assertion tied to a corrupted separator character |
 | Local UTC reproduction after CI fix | PASS, root Jest 152/152 tests |
 | Local post-fix root build | PASS |
+| Local web post-fix typecheck/lint/Vitest/build/E2E | PASS, Vitest 69/69 and Playwright 1/1 |
 
 Security and release note:
 
@@ -328,3 +330,4 @@ Security and release note:
 - Web `npm audit --audit-level=moderate` still reports 2 moderate Next/PostCSS findings; `npm audit fix --force` would downgrade Next to 9.3.3 and was not applied.
 - Production release, main merge, paid external resources, irreversible migrations and final legal judgment were not performed.
 - CI fix note: SLA due-date calculation now derives wall-clock working time from `WorkspaceWorkingHours.timezone`, avoiding process-local timezone drift between Asia/Shanghai development machines and UTC CI runners.
+- E2E fix note: knowledge draft status display now uses an ASCII separator and `data-testid="knowledge-draft-status"` so Playwright verifies status and visibility semantics instead of a corrupted separator glyph.
