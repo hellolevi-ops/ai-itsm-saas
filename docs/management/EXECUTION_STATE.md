@@ -7,7 +7,7 @@
 - Current milestone: M11 - Release Candidate preparation
 - Current milestone status: ACCEPTED_LOCALLY - RC package, CI workflow, RC artifact check, RC center, regression matrix and production-release hold are in place; production release remains blocked pending human/external actions
 - Completed tasks:
-  - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_???????????????.md`.
+  - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_鑷富鎺ョ涓庡晢涓氬寲寮€鍙戞€绘帶鎵ц涔?md`.
   - Inspected the requested workspace path.
   - Verified the requested workspace initially contained no project files or `.git` directory.
   - Searched local candidate paths under `Documents`, `Desktop`, `Downloads`, Trae project directories and Trae snapshots.
@@ -137,7 +137,7 @@
 - Added web `/release-candidate` center, MSW support and E2E coverage.
 - Added `.github/workflows/ci.yml`, `scripts/rc-check.mjs` and `npm run rc:check`.
 - Active tasks:
-  - Validate and push M11 RC package to PR #2.
+  - Push M11 remote CI timezone fix to PR #2 and verify GitHub Actions.
 - Blocked tasks:
   - `git fetch --all --tags --prune`
   - Local branch, remote and working tree checks
@@ -364,6 +364,8 @@
 - Web Playwright E2E passed after M11 implementation: 1/1.
 - M11 migration validation passed: nine migrations through `20260715065000_add_beta_readiness` applied to an empty PostgreSQL 18 database.
 - Secret scan after M11 implementation found no user-provided GitHub/OpenAI token in repository files.
+- GitHub Actions CI initially failed on the service-catalog SLA unit test because M4 due-date calculation used the process-local timezone; fixed by deriving wall-clock working time from `WorkspaceWorkingHours.timezone`.
+- Post-fix UTC validation passed: root Jest 152/152 tests, root lint, root typecheck, `npm run rc:check` and root build.
 - Web Playwright E2E passed after M4 implementation: 1/1.
 - Secret scan after M4 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
 - Open P0 issues:
@@ -378,4 +380,4 @@
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Push M11 RC package and validation evidence to PR #2, then pause with human/external production-release hold items.
+  - Push M11 remote CI timezone fix to PR #2, verify GitHub Actions, then pause with human/external production-release hold items.
