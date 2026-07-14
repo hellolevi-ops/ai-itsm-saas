@@ -203,6 +203,31 @@ type MockPaymentOrder = {
   updated_at: string;
 };
 
+type MockBetaFeatureFlag = {
+  id: string;
+  workspace_id: string;
+  key: string;
+  enabled: boolean;
+  description: string;
+  changed_by_user_id: string | null;
+  changed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type MockBetaFeedback = {
+  id: string;
+  workspace_id: string;
+  reporter_id: string;
+  type: 'FEEDBACK' | 'BUG' | 'INTERVIEW_NOTE';
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  title: string;
+  description: string;
+  status: 'OPEN' | 'TRIAGED' | 'CLOSED';
+  created_at: string;
+  updated_at: string;
+};
+
 function loadMockMap<T>(key: string): Map<string, T> {
   if (typeof localStorage === 'undefined') return new Map();
 
@@ -233,6 +258,58 @@ const channelInboundMessages = loadMockMap<MockChannelInboundMessage>('msw:chann
 const workspaceInvitations = loadMockMap<MockWorkspaceInvitation>('msw:workspaceInvitations');
 const workspaceSubscriptions = loadMockMap<MockWorkspaceSubscription>('msw:workspaceSubscriptions');
 const paymentOrders = loadMockMap<MockPaymentOrder>('msw:paymentOrders');
+const betaFeatureFlags = loadMockMap<MockBetaFeatureFlag>('msw:betaFeatureFlags');
+const betaFeedback = loadMockMap<MockBetaFeedback>('msw:betaFeedback');
+
+const betaFlagDefinitions = [
+  {
+    key: 'beta_ticket_ai_suggestions',
+    description: 'Enable mock AI ticket suggestions for beta workspaces.',
+    default_enabled: true,
+  },
+  {
+    key: 'beta_wecom_channel_mock',
+    description: 'Enable the WeCom mock inbound channel for beta channel validation.',
+    default_enabled: true,
+  },
+  {
+    key: 'beta_billing_manual_orders',
+    description: 'Enable manual order and activation flow for beta payment validation.',
+    default_enabled: false,
+  },
+  {
+    key: 'beta_feedback_intake',
+    description: 'Enable workspace beta feedback and bug intake.',
+    default_enabled: true,
+  },
+];
+
+const betaDocuments = [
+  {
+    slug: 'beta-guide',
+    title: 'Beta Guide',
+    repository_path: 'docs/beta/BETA_GUIDE.md',
+    summary: 'Workspace setup, invitation, feature scope and safe-use expectations.',
+  },
+  {
+    slug: 'release-notes-draft',
+    title: 'Release Notes Draft',
+    repository_path: 'docs/beta/RELEASE_NOTES_DRAFT.md',
+    summary: 'M0-M10 capabilities, known limits and non-production caveats.',
+  },
+  {
+    slug: 'support-process',
+    title: 'Customer Support Process',
+    repository_path: 'docs/beta/SUPPORT_PROCESS.md',
+    summary: 'Support intake, severity, response ownership and escalation path.',
+  },
+  {
+    slug: 'exit-criteria',
+    title: 'Beta Exit Criteria',
+    repository_path: 'docs/beta/EXIT_CRITERIA.md',
+    summary: 'Objective gates before release-candidate work can begin.',
+  },
+];
 
 const complianceDocuments = [
   {
@@ -490,7 +567,209 @@ function assertCanCreateTicket(workspaceId: string) {
   return usage.monthly_tickets_used < plan.limits.monthly_tickets;
 }
 
+function betaPackage(workspaceId?: string) {
+  const workspaceFeedback = workspaceId
+    ? Array.from(betaFeedback.values()).filter((item) => item.workspace_id === workspaceId)
+    : [];
+  const flags = workspaceId
+    ? betaFlagDefinitions.map((definition) => {
+        const override = Array.from(betaFeatureFlags.values()).find(
+          (flag) => flag.workspace_id === workspaceId && flag.key === definition.key,
+        );
+        return {
+          key: definition.key,
+          description: definition.description,
+          enabled: override?.enabled ?? definition.default_enabled,
+          default_enabled: definition.default_enabled,
+          changed_by_user_id: override?.changed_by_user_id ?? null,
+          changed_at: override?.changed_at ?? null,
+        };
+      })
+    : undefined;
+
+  return {
+    package_version: 'm10-beta-readiness-2026-07-15',
+    status: 'INTERNAL_BETA_READY',
+    environment: 'pre_release_test',
+    production_release: false,
+    paid_external_resources_required: false,
+    external_customer_recruiting_required: true,
+    last_updated_at: '2026-07-15T06:50:00.000+08:00',
+    seed_workspace: {
+      recommended_name: 'Acme Ops Beta',
+      recommended_slug: 'acme-ops-beta',
+      default_timezone: 'Asia/Shanghai',
+      recommended_roles: ['OWNER', 'ADMIN', 'AGENT', 'REQUESTER'],
+    },
+    invitation_controls: {
+      mode: 'workspace_invitation_link',
+      whitelist_required_for_real_design_partners: true,
+      existing_endpoint: '/api/v1/workspaces/:workspaceId/invitations',
+    },
+    documents: betaDocuments,
+    exit_criteria: [
+      'At least 3 design partner workspaces complete ticket intake, AI suggestion review, knowledge publish and channel intake tests.',
+      'All HIGH or CRITICAL beta bugs are triaged with owner, workaround and target milestone.',
+      'Manual payment validation is documented without activating production billing automation.',
+      'Legal/compliance drafts are professionally reviewed before any production release.',
+      'Release candidate verification passes backend, web, E2E and PostgreSQL migration checks.',
+    ],
+    ...(workspaceId
+      ? {
+          workspace_id: workspaceId,
+          feature_flags: flags,
+          feedback: workspaceFeedback.sort((a, b) => b.created_at.localeCompare(a.created_at)),
+          feedback_summary: {
+            total: workspaceFeedback.length,
+            open: workspaceFeedback.filter((item) => item.status === 'OPEN').length,
+            bugs: workspaceFeedback.filter((item) => item.type === 'BUG').length,
+            high_or_critical: workspaceFeedback.filter(
+              (item) => item.severity === 'HIGH' || item.severity === 'CRITICAL',
+            ).length,
+          },
+        }
+      : {}),
+  };
+}
+
 export const handlers = [
+  http.get('/api/v1/beta/public', async () => {
+    return HttpResponse.json({
+      data: betaPackage(),
+      request_id: generateRequestId(),
+    });
+  }),
+
+  http.get('/api/v1/workspaces/:workspaceId/beta', async ({ request, params }) => {
+    await delay(200);
+    const user = getUserFromRequest(request);
+    const workspaceId = params.workspaceId as string;
+    if (!user || !isWorkspaceMember(workspaceId, user.id)) {
+      return HttpResponse.json(
+        {
+          error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+          request_id: generateRequestId(),
+        },
+        { status: user ? 403 : 401 },
+      );
+    }
+
+    return HttpResponse.json({
+      data: betaPackage(workspaceId),
+      request_id: generateRequestId(),
+    });
+  }),
+
+  http.post('/api/v1/workspaces/:workspaceId/beta/feedback', async ({ request, params }) => {
+    await delay(200);
+    const user = getUserFromRequest(request);
+    const workspaceId = params.workspaceId as string;
+    if (!user || !isWorkspaceMember(workspaceId, user.id)) {
+      return HttpResponse.json(
+        {
+          error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+          request_id: generateRequestId(),
+        },
+        { status: user ? 403 : 401 },
+      );
+    }
+
+    const body = (await request.json()) as {
+      type: MockBetaFeedback['type'];
+      severity?: MockBetaFeedback['severity'];
+      title: string;
+      description: string;
+    };
+    const now = new Date().toISOString();
+    const feedback = {
+      id: generateId(),
+      workspace_id: workspaceId,
+      reporter_id: user.id,
+      type: body.type,
+      severity: body.severity || 'MEDIUM',
+      title: body.title.trim(),
+      description: body.description.trim(),
+      status: 'OPEN' as const,
+      created_at: now,
+      updated_at: now,
+    };
+    betaFeedback.set(feedback.id, feedback);
+    persistMockMap('msw:betaFeedback', betaFeedback);
+
+    return HttpResponse.json(
+      {
+        data: { feedback },
+        request_id: generateRequestId(),
+      },
+      { status: 201 },
+    );
+  }),
+
+  http.post(
+    '/api/v1/workspaces/:workspaceId/beta/feature-flags/:key',
+    async ({ request, params }) => {
+      await delay(200);
+      const user = getUserFromRequest(request);
+      const workspaceId = params.workspaceId as string;
+      const workspace = workspaces.get(workspaceId);
+      const key = params.key as string;
+      if (!user || !workspace || !isWorkspaceMember(workspaceId, user.id)) {
+        return HttpResponse.json(
+          {
+            error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+            request_id: generateRequestId(),
+          },
+          { status: user ? 403 : 401 },
+        );
+      }
+      if (workspace.owner_id !== user.id) {
+        return HttpResponse.json(
+          {
+            error: {
+              code: 'FORBIDDEN',
+              message: 'Only workspace owners can manage beta flags in mock mode',
+            },
+            request_id: generateRequestId(),
+          },
+          { status: 403 },
+        );
+      }
+      const definition = betaFlagDefinitions.find((flag) => flag.key === key);
+      if (!definition) {
+        return HttpResponse.json(
+          {
+            error: { code: 'UNKNOWN_BETA_FLAG', message: 'Unknown beta feature flag' },
+            request_id: generateRequestId(),
+          },
+          { status: 400 },
+        );
+      }
+      const body = (await request.json()) as { enabled: boolean };
+      const now = new Date().toISOString();
+      const existing = Array.from(betaFeatureFlags.values()).find(
+        (flag) => flag.workspace_id === workspaceId && flag.key === key,
+      );
+      const flag = {
+        id: existing?.id || generateId(),
+        workspace_id: workspaceId,
+        key,
+        enabled: body.enabled,
+        description: definition.description,
+        changed_by_user_id: user.id,
+        changed_at: now,
+        created_at: existing?.created_at || now,
+        updated_at: now,
+      };
+      betaFeatureFlags.set(flag.id, flag);
+      persistMockMap('msw:betaFeatureFlags', betaFeatureFlags);
+
+      return HttpResponse.json({
+        data: { feature_flag: flag },
+        request_id: generateRequestId(),
+      });
+    },
+  ),
+
   http.get('/api/v1/compliance/public', async () => {
     return HttpResponse.json({
       data: {
@@ -555,7 +834,7 @@ export const handlers = [
         {
           error: {
             code: 'EMAIL_ALREADY_EXISTS',
-            message: '该邮箱已被注册',
+            message: '???????',
             details: { email: body.email },
           },
           request_id: generateRequestId(),
@@ -614,7 +893,7 @@ export const handlers = [
         {
           error: {
             code: 'USER_NOT_FOUND',
-            message: '用户不存在',
+            message: '?????',
             details: { email: body.email },
           },
           request_id: generateRequestId(),
@@ -628,7 +907,7 @@ export const handlers = [
         {
           error: {
             code: 'INVALID_CREDENTIALS',
-            message: '邮箱或密码错误',
+            message: '???????',
           },
           request_id: generateRequestId(),
         },
@@ -676,7 +955,7 @@ export const handlers = [
         {
           error: {
             code: 'UNAUTHORIZED',
-            message: '未登录',
+            message: '???',
           },
           request_id: generateRequestId(),
         },
@@ -693,7 +972,7 @@ export const handlers = [
         {
           error: {
             code: 'UNAUTHORIZED',
-            message: '令牌无效',
+            message: '????',
           },
           request_id: generateRequestId(),
         },
@@ -736,7 +1015,7 @@ export const handlers = [
         {
           error: {
             code: 'UNAUTHORIZED',
-            message: '未登录',
+            message: '???',
           },
           request_id: generateRequestId(),
         },
@@ -753,7 +1032,7 @@ export const handlers = [
         {
           error: {
             code: 'UNAUTHORIZED',
-            message: '令牌无效',
+            message: '????',
           },
           request_id: generateRequestId(),
         },
@@ -777,7 +1056,7 @@ export const handlers = [
         {
           error: {
             code: 'SLUG_ALREADY_EXISTS',
-            message: '该工作区简称已被占用',
+            message: '??????????',
             details: { slug: body.slug },
           },
           request_id: generateRequestId(),
@@ -830,7 +1109,7 @@ export const handlers = [
         {
           error: {
             code: 'UNAUTHORIZED',
-            message: '未登录',
+            message: '???',
           },
           request_id: generateRequestId(),
         },
@@ -847,7 +1126,7 @@ export const handlers = [
         {
           error: {
             code: 'UNAUTHORIZED',
-            message: '令牌无效',
+            message: '????',
           },
           request_id: generateRequestId(),
         },

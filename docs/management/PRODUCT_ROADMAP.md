@@ -76,8 +76,16 @@ Goal: Draft China-market compliance materials for professional review and expose
 
 Out of scope: final legal judgment, ICP/public-security/MLPS filings, paid external legal resources, production legal copy approval and production release.
 
-## M10-M11
+## M10 - Beta Readiness
 
-Status: M10_NEXT
+Status: ACCEPTED_LOCALLY
 
-Continue in the order defined by the control document: beta readiness and Release Candidate.
+Goal: Pre-release beta environment definition, seed workspace guidance, invitation/whitelist boundaries, feature flags, feedback and bug intake, release notes, beta guide, support process, interview outline, reset runbook and exit criteria.
+
+Out of scope: production release, paid external resources, real customer recruiting automation, real payment provider, final legal judgment and irreversible production migration.
+
+## M11 - Release Candidate
+
+Status: NEXT
+
+Continue in the order defined by the control document: prepare Release Candidate gates without production release.

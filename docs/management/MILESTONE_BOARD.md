@@ -12,5 +12,5 @@
 | M7 Plans, entitlements and commercial flow | ACCEPTED_LOCALLY | Billing plan catalog, workspace subscriptions, manual orders, quota enforcement, web billing page, unit tests, E2E and migration validation passed. | Keep PR #2 draft until CI/review policy is decided. |
 | M8 Security, reliability and operations | ACCEPTED_LOCALLY | Health probes, database readiness check, request id middleware, security headers, unit tests and E2E are in place; local gates passed. | Keep PR #2 draft until CI/review policy is decided. |
 | M9 China compliance preparation | ACCEPTED_LOCALLY | Compliance drafts, public compliance API, `/legal` compliance center and E2E coverage are in place; all materials are marked draft-only and professional-review-required. | Keep PR #2 draft until CI/review policy is decided. |
-| M10 Beta readiness | NEXT | No beta environment or feedback loop yet. | Prepare beta readiness without production release. |
-| M11 Release Candidate | NOT_STARTED | Requires all prior milestones and human production approval. | M10 accepted. |
+| M10 Beta readiness | ACCEPTED_LOCALLY | Beta package API, workspace feature flags, feedback/bug intake, `/beta` console, beta docs and E2E coverage are in place; production release remains blocked. | Keep PR #2 draft until CI/review policy is decided. |
+| M11 Release Candidate | NEXT | Requires all prior milestones and human production approval. | Prepare RC gates without production release. |

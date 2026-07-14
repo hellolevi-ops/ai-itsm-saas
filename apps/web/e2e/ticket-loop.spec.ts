@@ -84,6 +84,39 @@ test('requester can submit, track, reply to and progress a ticket', async ({ pag
   await expect(page.getByTestId('billing-overview')).toContainText('Team');
   await expect(page.getByTestId('billing-overview')).toContainText('1000');
 
+  await page.goto('/beta');
+  await expect(page.getByRole('heading', { name: 'Beta Readiness' })).toBeVisible();
+  await expect(page.getByTestId('beta-readiness')).toContainText('pre_release_test');
+  await expect(page.getByTestId('beta-readiness')).toContainText('Blocked');
+  await expect(page.getByTestId('beta-flags')).toContainText('beta_billing_manual_orders');
+  const betaFlagResponsePromise = page.waitForResponse(
+    (response) =>
+      /\/api\/v1\/workspaces\/[^/]+\/beta\/feature-flags\/beta_billing_manual_orders$/.test(
+        new URL(response.url()).pathname,
+      ) && response.request().method() === 'POST',
+  );
+  await page.getByTestId('beta-flags').getByRole('button', { name: 'Enable' }).click();
+  const betaFlagResponse = await betaFlagResponsePromise;
+  expect(betaFlagResponse.status()).toBe(200);
+  const betaFeedbackForm = page.getByTestId('beta-feedback-form');
+  await betaFeedbackForm.getByLabel('Feedback type').selectOption('BUG');
+  await betaFeedbackForm.getByLabel('Severity').selectOption('HIGH');
+  await betaFeedbackForm.getByPlaceholder('Short title').fill('Invite copy is unclear');
+  await betaFeedbackForm
+    .getByPlaceholder('What happened and what should change')
+    .fill('The design partner could not tell whether the beta invite link was reusable.');
+  const betaFeedbackResponsePromise = page.waitForResponse(
+    (response) =>
+      /\/api\/v1\/workspaces\/[^/]+\/beta\/feedback$/.test(new URL(response.url()).pathname) &&
+      response.request().method() === 'POST',
+  );
+  await betaFeedbackForm.getByRole('button', { name: 'Submit feedback' }).click();
+  const betaFeedbackResponse = await betaFeedbackResponsePromise;
+  expect(betaFeedbackResponse.status()).toBe(201);
+  await expect(page.getByTestId('beta-feedback')).toContainText('Invite copy is unclear');
+  await expect(page.getByTestId('beta-documents')).toContainText('Release Notes Draft');
+  await expect(page.getByTestId('beta-exit')).toContainText('Release candidate verification');
+
   const teammateEmail = `teammate-${suffix}@example.com`;
   await page.goto('/team');
   const invitationForm = page.getByTestId('team-invite-form');
@@ -245,9 +278,9 @@ test('requester can submit, track, reply to and progress a ticket', async ({ pag
   await expect(page.getByText('RESOLVED')).toBeVisible();
   await page.getByRole('button', { name: 'Create draft' }).click();
   await expect(page.getByText('How to resolve: VPN access is unavailable')).toBeVisible();
-  await expect(page.getByText('DRAFT 路 INTERNAL')).toBeVisible();
+  await expect(page.getByText('DRAFT ? INTERNAL')).toBeVisible();
   await page.getByRole('button', { name: 'Publish' }).click();
-  await expect(page.getByText('PUBLISHED 路 REQUESTER')).toBeVisible();
+  await expect(page.getByText('PUBLISHED ? REQUESTER')).toBeVisible();
 
   await page.goto('/knowledge');
   await expect(page.getByRole('heading', { name: 'Knowledge' })).toBeVisible();

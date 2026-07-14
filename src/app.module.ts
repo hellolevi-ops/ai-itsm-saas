@@ -11,6 +11,7 @@ import { InvitationModule } from './modules/invitation/invitation.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { OpsModule } from './modules/ops/ops.module';
 import { ComplianceModule } from './modules/compliance/compliance.module';
+import { BetaModule } from './modules/beta/beta.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { SecurityHeadersMiddleware } from './common/middleware/security-headers.middleware';
 
@@ -28,6 +29,7 @@ import { SecurityHeadersMiddleware } from './common/middleware/security-headers.
     BillingModule,
     OpsModule,
     ComplianceModule,
+    BetaModule,
   ],
 })
 export class AppModule implements NestModule {

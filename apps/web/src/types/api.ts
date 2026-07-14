@@ -504,3 +504,86 @@ export interface CompliancePackageResponse {
   last_updated_at: string;
   documents: ComplianceDocument[];
 }
+
+export type BetaFeedbackType = 'FEEDBACK' | 'BUG' | 'INTERVIEW_NOTE';
+export type BetaFeedbackSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type BetaFeedbackStatus = 'OPEN' | 'TRIAGED' | 'CLOSED';
+
+export interface BetaDocument {
+  slug: string;
+  title: string;
+  repository_path: string;
+  summary: string;
+}
+
+export interface BetaFeatureFlag {
+  key: string;
+  description: string;
+  enabled: boolean;
+  default_enabled?: boolean;
+  changed_by_user_id: string | null;
+  changed_at: string | null;
+}
+
+export interface BetaFeedback {
+  id: string;
+  workspace_id: string;
+  reporter_id: string;
+  type: BetaFeedbackType;
+  severity: BetaFeedbackSeverity;
+  title: string;
+  description: string;
+  status: BetaFeedbackStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BetaPackageResponse {
+  package_version: string;
+  status: 'INTERNAL_BETA_READY';
+  environment: 'pre_release_test';
+  production_release: false;
+  paid_external_resources_required: false;
+  external_customer_recruiting_required: true;
+  last_updated_at: string;
+  seed_workspace: {
+    recommended_name: string;
+    recommended_slug: string;
+    default_timezone: string;
+    recommended_roles: string[];
+  };
+  invitation_controls: {
+    mode: string;
+    whitelist_required_for_real_design_partners: boolean;
+    existing_endpoint: string;
+  };
+  documents: BetaDocument[];
+  exit_criteria: string[];
+}
+
+export interface BetaWorkspaceReadinessResponse extends BetaPackageResponse {
+  workspace_id: string;
+  feature_flags: BetaFeatureFlag[];
+  feedback: BetaFeedback[];
+  feedback_summary: {
+    total: number;
+    open: number;
+    bugs: number;
+    high_or_critical: number;
+  };
+}
+
+export interface CreateBetaFeedbackRequest {
+  type: BetaFeedbackType;
+  severity?: BetaFeedbackSeverity;
+  title: string;
+  description: string;
+}
+
+export interface CreateBetaFeedbackResponse {
+  feedback: BetaFeedback;
+}
+
+export interface UpdateBetaFeatureFlagResponse {
+  feature_flag: BetaFeatureFlag;
+}

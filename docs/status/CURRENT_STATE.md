@@ -20,19 +20,19 @@
 | API Server | 3000 | Not started in this checkpoint |
 | Web UI | 3001 | Started by Playwright during E2E, then test runner stopped it |
 | PostgreSQL local service | 5432 | Present, not used for validation |
-| Temporary PostgreSQL | 55442 | Reserved for M9 migration validation, then stopped and removed after validation |
+| Temporary PostgreSQL | 55443 | Reserved for M10 migration validation, then stopped and removed after validation |
 | Redis | 6379 | Not verified |
 
 ## Migration Status
 
-Latest migration: `20260715053000_add_billing_entitlements`
+Latest migration: `20260715065000_add_beta_readiness`
 
 Validation:
 
-- Empty temporary PostgreSQL 18 database migration: PASS for eight migrations through M9
+- Empty temporary PostgreSQL 18 database migration: PASS for nine migrations through M10
 - `prisma migrate deploy`: PASS
 - `prisma migrate status`: PASS, schema up to date
-- Tables created include: `_prisma_migrations`, `roles`, `tenants`, `users`, `workspace_members`, `workspaces`, `tickets`, `ticket_messages`, `ticket_events`, `ai_runs`, `knowledge_articles`, `service_catalog_items`, `request_templates`, `workspace_working_hours`, `channel_connections`, `channel_inbound_messages`, `workspace_invitations`, `workspace_subscriptions`, `payment_orders`
+- Tables created include: `_prisma_migrations`, `roles`, `tenants`, `users`, `workspace_members`, `workspaces`, `tickets`, `ticket_messages`, `ticket_events`, `ai_runs`, `knowledge_articles`, `service_catalog_items`, `request_templates`, `workspace_working_hours`, `channel_connections`, `channel_inbound_messages`, `workspace_invitations`, `workspace_subscriptions`, `payment_orders`, `beta_feedback`, `workspace_feature_flags`
 
 ## Available Features
 
@@ -83,21 +83,26 @@ Validation:
 - Public compliance package metadata API
 - Web compliance center at `/legal`
 - China-market compliance drafts and review checklists marked as not effective and professional-review-required
+- Public beta readiness package metadata API
+- Workspace beta feature flags
+- Workspace beta feedback, bug and interview-note intake
+- Web beta readiness console at `/beta`
+- Beta guide, release notes draft, support process, interview outline, reset runbook and exit criteria
 
 ## Quality Baseline
 
 - Root typecheck: PASS
 - Root lint: PASS
-- Root Jest tests: PASS, 144/144
+- Root Jest tests: PASS, 151/151
 - Root build: PASS
 - Web typecheck: PASS
 - Web lint: PASS
 - Web Vitest tests: PASS, 69/69
 - Web Playwright E2E: PASS, 1/1
 - Web build: PASS
-- Temporary PostgreSQL migration validation: PASS, 8 migrations through M8
-- Secret scan: PASS, no committed GitHub/OpenAI token found; `service-desk-api` is a `sk-` substring false positive
-- Total automated tests: PASS, 214/214 including Playwright E2E
+- Temporary PostgreSQL migration validation: PASS, 9 migrations through M10
+- Secret scan: PASS, no committed GitHub/OpenAI token found
+- Total automated tests: PASS, 221/221 including Playwright E2E
 - M1 backend ticket module: PASS, 88/88 backend tests
 - M1/M2 web ticket components: PASS, 66/66 frontend tests
 
@@ -114,6 +119,7 @@ Validation:
 - `docs/contracts/BILLING_API.md` - M7 plan, entitlement and manual-order contract
 - `docs/contracts/OPERATIONS_API.md` - M8 health, request correlation and security header contract
 - `docs/contracts/COMPLIANCE_API.md` - M9 compliance package metadata contract
+- `docs/contracts/BETA_API.md` - M10 beta readiness, feature flag and feedback contract
 
 ## M1 Progress
 
@@ -270,17 +276,36 @@ Validation:
 - Browser E2E: main path now verifies the compliance center after knowledge self-service.
 - Validation: root typecheck/lint/Jest/build, web typecheck/lint/Vitest/build/E2E, Prisma validate, temporary PostgreSQL migration validation and secret scan all pass.
 
+## M10 Progress
+
+- Contract: `docs/contracts/BETA_API.md`.
+- Task file: `docs/tasks/M10-beta-readiness.md`.
+- Beta docs: `docs/beta/**`.
+- Prisma models: `BetaFeedback` and `WorkspaceFeatureFlag`.
+- Migration: `20260715065000_add_beta_readiness`.
+- Backend: `src/modules/beta/**` with public beta package and workspace beta controls.
+- Endpoints:
+  - `GET /api/v1/beta/public`
+  - `GET /api/v1/workspaces/:workspaceId/beta`
+  - `POST /api/v1/workspaces/:workspaceId/beta/feedback`
+  - `POST /api/v1/workspaces/:workspaceId/beta/feature-flags/:key`
+- Safety: beta package explicitly marks `production_release = false` and paid external resources as not required.
+- Web: `/beta` renders beta status, feature flags, feedback intake, documents and exit criteria.
+- Browser E2E: main path verifies beta readiness, flag toggle and feedback creation before the existing invite/channel/ticket/AI/knowledge/compliance flow.
+- Validation: root typecheck/lint/Jest/build, web typecheck/lint/Vitest/build/E2E, Prisma validate, temporary PostgreSQL migration validation and secret scan all pass.
+
 ## Known Security/Audit Notes
 
 - Web `npm audit --audit-level=moderate`: 2 moderate findings from Next's transitive PostCSS dependency.
 - `npm audit fix --force` proposes a breaking downgrade to Next 9.3.3, so it was not applied automatically.
-- Secret scan after M8 found no committed GitHub/OpenAI token; matches were dependency/document URL and `service-desk-api` false positives.
+- Secret scan after M10 found no committed GitHub/OpenAI token.
 - M5 still uses only mock channel tokens; no real WeCom or production secret is required.
 - M6 invite links are displayed in-app for local PLG validation only; no real email provider or production onboarding system is used.
 - M7 uses manual/mock commercial activation only; no real payment provider, invoice system, tax workflow or production commerce resource is connected.
 - M8 adds local executable operations primitives only; no production monitoring provider, backup storage, alerting tool or deployment change is connected.
 - M9 adds draft compliance materials only; no final legal judgment, filing, external legal resource or production release was performed.
 - M9 also removes the external Google Fonts build dependency so the web production build no longer needs network font fetches.
+- M10 is beta readiness only; real design partner recruiting, interviews and payment validation remain manual business work before RC approval.
 
 ## Tech Stack
 

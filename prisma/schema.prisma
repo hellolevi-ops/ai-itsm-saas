@@ -143,6 +143,25 @@ enum PaymentOrderStatus {
   CANCELED
 }
 
+enum BetaFeedbackType {
+  FEEDBACK
+  BUG
+  INTERVIEW_NOTE
+}
+
+enum BetaFeedbackSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum BetaFeedbackStatus {
+  OPEN
+  TRIAGED
+  CLOSED
+}
+
 model Tenant {
   id        String          @id @default(uuid())
   name      String
@@ -185,6 +204,8 @@ model User {
   createdSubscriptions WorkspaceSubscription[] @relation("SubscriptionCreator")
   requestedOrders      PaymentOrder[]          @relation("PaymentOrderRequester")
   activatedOrders      PaymentOrder[]          @relation("PaymentOrderActivator")
+  betaFeedback         BetaFeedback[]          @relation("BetaFeedbackReporter")
+  changedFeatureFlags  WorkspaceFeatureFlag[]  @relation("FeatureFlagChangedBy")
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -218,6 +239,8 @@ model Workspace {
   invitations         WorkspaceInvitation[]
   subscriptions       WorkspaceSubscription[]
   paymentOrders       PaymentOrder[]
+  betaFeedback        BetaFeedback[]
+  featureFlags        WorkspaceFeatureFlag[]
 
   @@unique([tenantId, slug])
   @@index([tenantId])
@@ -610,4 +633,48 @@ model PaymentOrder {
   @@index([requestedById])
   @@index([activatedById])
   @@map("payment_orders")
+}
+
+model BetaFeedback {
+  id          String               @id @default(uuid())
+  workspaceId String               @map("workspace_id")
+  reporterId  String               @map("reporter_id")
+  type        BetaFeedbackType
+  severity    BetaFeedbackSeverity @default(MEDIUM)
+  title       String
+  description String
+  status      BetaFeedbackStatus   @default(OPEN)
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  reporter  User      @relation("BetaFeedbackReporter", fields: [reporterId], references: [id])
+
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@index([workspaceId, type])
+  @@index([reporterId])
+  @@index([createdAt])
+  @@map("beta_feedback")
+}
+
+model WorkspaceFeatureFlag {
+  id              String   @id @default(uuid())
+  workspaceId     String   @map("workspace_id")
+  key             String
+  enabled         Boolean  @default(false)
+  description     String
+  changedByUserId String?  @map("changed_by_user_id")
+  changedAt       DateTime @default(now()) @map("changed_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  changedByUser User?     @relation("FeatureFlagChangedBy", fields: [changedByUserId], references: [id])
+
+  @@unique([workspaceId, key])
+  @@index([workspaceId])
+  @@index([workspaceId, enabled])
+  @@index([changedByUserId])
+  @@map("workspace_feature_flags")
 }

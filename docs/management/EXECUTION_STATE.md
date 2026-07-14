@@ -1,13 +1,13 @@
 # Execution State
 
-- Last updated: 2026-07-15 03:50 Asia/Shanghai
+- Last updated: 2026-07-15 04:12 Asia/Shanghai
 - Current branch: local snapshot plus GitHub branch `codex/m0-takeover-baseline`; base branch `develop`
-- Current commit: GitHub branch `codex/m0-takeover-baseline`; M8 validation recorded in this snapshot; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
+- Current commit: GitHub branch `codex/m0-takeover-baseline`; M10 validation recorded in this snapshot; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
 - Current phase: Milestone implementation after takeover
-- Current milestone: M9 - China compliance preparation
-- Current milestone status: ACCEPTED_LOCALLY - M9 compliance drafts, public metadata API and web compliance center pass local gates; PR/CI review remains before merge
+- Current milestone: M10 - Beta readiness
+- Current milestone status: ACCEPTED_LOCALLY - M10 beta package, feature flags, feedback intake, beta console and beta docs pass local gates; PR/CI review remains before merge
 - Completed tasks:
-  - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_自主接管与商业化开发总控执行书.md`.
+  - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_???????????????.md`.
   - Inspected the requested workspace path.
   - Verified the requested workspace initially contained no project files or `.git` directory.
   - Searched local candidate paths under `Documents`, `Desktop`, `Downloads`, Trae project directories and Trae snapshots.
@@ -123,8 +123,15 @@
 - Created `docs/compliance/**` draft package for professional review.
 - Implemented `src/modules/compliance/**` with public compliance metadata APIs.
 - Added web `/legal` compliance center, MSW support and E2E coverage.
+- Created `docs/contracts/BETA_API.md`.
+- Created `docs/tasks/M10-beta-readiness.md`.
+- Created `docs/beta/**` beta readiness operating package.
+- Added Prisma `BetaFeedback` and `WorkspaceFeatureFlag` models.
+- Added migration `20260715065000_add_beta_readiness`.
+- Implemented `src/modules/beta/**` with public beta package, workspace readiness, feedback intake and feature flag APIs.
+- Added web `/beta` readiness console, MSW support and E2E coverage for beta flag toggle and feedback creation.
 - Active tasks:
-  - Start M10 beta readiness preparation.
+  - Start M11 release candidate preparation without production release.
 - Blocked tasks:
   - `git fetch --all --tags --prune`
   - Local branch, remote and working tree checks
@@ -172,6 +179,8 @@
   - M8 temporary PostgreSQL migration validation for eight migrations
   - M9 temporary PostgreSQL migration validation for eight migrations
   - M9 secret scan for GitHub/OpenAI token patterns
+  - M10 temporary PostgreSQL migration validation for nine migrations
+  - M10 secret scan for GitHub/OpenAI token patterns
   - health probe E2E fetches for `/api/v1/health/live` and `/api/v1/health/ready`
   - M3 temporary PostgreSQL migration validation for four migrations
   - `psql` table inspection for `knowledge_articles`, `ai_runs`, `tickets` and `ticket_events`
@@ -317,6 +326,19 @@
 - Prisma schema validates after M9 implementation.
 - M9 migration validation passed: eight migrations through `20260715053000_add_billing_entitlements` applied to an empty PostgreSQL 18 database.
 - Secret scan after M9 implementation found no user-provided GitHub/OpenAI token in repository files; observed matches were dependency/document URL and `service-desk-api` false positives.
+- Prisma schema validates after M10 implementation.
+- Root typecheck passed after M10 implementation.
+- Root lint passed after M10 implementation.
+- Root Jest tests passed after M10 implementation: 151/151.
+- Root build passed after M10 implementation.
+- Web typecheck passed after M10 implementation.
+- Web lint passed after M10 implementation.
+- Web Vitest tests passed after M10 implementation: 69/69.
+- Web build passed after M10 implementation.
+- Web Playwright E2E passed after M10 implementation: 1/1.
+- M10 migration validation passed: nine migrations through `20260715065000_add_beta_readiness` applied to an empty PostgreSQL 18 database.
+- M10 migration created tables `beta_feedback` and `workspace_feature_flags`.
+- Secret scan after M10 implementation found no user-provided GitHub/OpenAI token in repository files.
 - Web Playwright E2E passed after M4 implementation: 1/1.
 - Secret scan after M4 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
 - Open P0 issues:
@@ -330,4 +352,4 @@
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Start M10 beta readiness: define beta environment, seed workspace, invitation/whitelist, feature flag, feedback/bug-report workflow, release notes and beta exit criteria without production release.
+  - Start M11 release candidate preparation: define RC gates, CI/CD requirements, rollback/backup evidence, release checklist and remaining blockers without production release.

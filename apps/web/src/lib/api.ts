@@ -40,6 +40,11 @@ import type {
   CreateInvitationResponse,
   ListInvitationsResponse,
   CompliancePackageResponse,
+  BetaPackageResponse,
+  BetaWorkspaceReadinessResponse,
+  CreateBetaFeedbackRequest,
+  CreateBetaFeedbackResponse,
+  UpdateBetaFeatureFlagResponse,
 } from '@/types/api';
 
 const apiClient = axios.create({
@@ -338,9 +343,46 @@ export const complianceApi = {
   },
 };
 
+export const betaApi = {
+  async publicPackage(): Promise<ApiResponse<BetaPackageResponse>> {
+    const response = await apiClient.get<ApiResponse<BetaPackageResponse>>('/beta/public');
+    return response.data;
+  },
+
+  async readiness(workspaceId: string): Promise<ApiResponse<BetaWorkspaceReadinessResponse>> {
+    const response = await apiClient.get<ApiResponse<BetaWorkspaceReadinessResponse>>(
+      `/workspaces/${workspaceId}/beta`,
+    );
+    return response.data;
+  },
+
+  async createFeedback(
+    workspaceId: string,
+    data: CreateBetaFeedbackRequest,
+  ): Promise<ApiResponse<CreateBetaFeedbackResponse>> {
+    const response = await apiClient.post<ApiResponse<CreateBetaFeedbackResponse>>(
+      `/workspaces/${workspaceId}/beta/feedback`,
+      data,
+    );
+    return response.data;
+  },
+
+  async updateFeatureFlag(
+    workspaceId: string,
+    key: string,
+    enabled: boolean,
+  ): Promise<ApiResponse<UpdateBetaFeatureFlagResponse>> {
+    const response = await apiClient.post<ApiResponse<UpdateBetaFeatureFlagResponse>>(
+      `/workspaces/${workspaceId}/beta/feature-flags/${key}`,
+      { enabled },
+    );
+    return response.data;
+  },
+};
+
 export function extractApiError(error: unknown): string {
   if (axios.isAxiosError(error) && error.response?.data?.error) {
-    return error.response.data.error.message || '请求失败，请稍后重试';
+    return error.response.data.error.message || '????,?????';
   }
-  return '网络错误，请稍后重试';
+  return '????,?????';
 }
