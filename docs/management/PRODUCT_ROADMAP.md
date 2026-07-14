@@ -44,8 +44,16 @@ Goal: WeCom mock inbound webhook, channel connection management, token verificat
 
 Out of scope: real WeCom production integration, paid channel services, outbound replies, media messages and production release.
 
-## M6-M11
+## M6 - PLG Activation and Team Spread
 
-Status: M6_NEXT
+Status: ACCEPTED_LOCALLY
 
-Continue in the order defined by the control document: PLG activation, plans/entitlements, security/ops, compliance preparation, beta readiness, and Release Candidate.
+Goal: Owner/admin invitation creation, one-time invite links, public acceptance, target-tenant user creation and workspace membership assignment.
+
+Out of scope: real email delivery, invite revocation UI, SSO/SCIM, onboarding analytics and production release.
+
+## M7-M11
+
+Status: M7_NEXT
+
+Continue in the order defined by the control document: plans/entitlements, security/ops, compliance preparation, beta readiness, and Release Candidate.

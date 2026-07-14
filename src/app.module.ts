@@ -7,6 +7,7 @@ import { AiModule } from './modules/ai/ai.module';
 import { KnowledgeModule } from './modules/knowledge/knowledge.module';
 import { ServiceCatalogModule } from './modules/service-catalog/service-catalog.module';
 import { ChannelModule } from './modules/channel/channel.module';
+import { InvitationModule } from './modules/invitation/invitation.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ChannelModule } from './modules/channel/channel.module';
     AiModule,
     KnowledgeModule,
     ChannelModule,
+    InvitationModule,
   ],
 })
 export class AppModule {}

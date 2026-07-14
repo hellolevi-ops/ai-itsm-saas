@@ -122,5 +122,35 @@ Security note:
 
 Remaining limitations:
 
-- Temporary PostgreSQL migration validation has passed through M4; staging/production migration remains future release work.
+- Temporary PostgreSQL migration validation has passed through M6; staging/production migration remains future release work.
 - Production release was not attempted.
+
+## Latest Local M6 Validation
+
+- Checked at: 2026-07-15 02:51 Asia/Shanghai
+- Draft PR: `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2`
+- Branch: `codex/m0-takeover-baseline`
+- Token stored in this repository: No
+
+Validation evidence after M6:
+
+| Gate | Result |
+|---|---|
+| `npm exec prisma -- validate` with local `DATABASE_URL` | PASS |
+| Root `npm run typecheck` | PASS |
+| Root `npm run lint:check` | PASS |
+| Root `npm test -- --runInBand` | PASS, 127/127 tests |
+| Root `npm run build` | PASS |
+| Web `npm run typecheck` | PASS |
+| Web `npm run lint` | PASS |
+| Web `npm test` | PASS, 69/69 tests |
+| Web `npm run build` | PASS |
+| Web `npm run test:e2e` | PASS, 1/1 |
+| Temporary PostgreSQL migration validation | PASS, 7 migrations through `20260715043000_add_workspace_invitations` |
+| Secret scan | PASS, no committed GitHub/OpenAI token found |
+
+Security note:
+
+- M6 adds invitation tokens as server-side hashes and never returns `token_hash`.
+- Invite creation is owner/admin-only and cannot grant owner/admin roles.
+- `npm audit --audit-level=moderate` still reports Next's transitive PostCSS advisory; forced fix would install Next 9.3.3 and was not applied.

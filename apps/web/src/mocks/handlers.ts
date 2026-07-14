@@ -142,6 +142,21 @@ type MockChannelInboundMessage = {
   received_at: string;
 };
 
+type MockWorkspaceInvitation = {
+  id: string;
+  workspace_id: string;
+  email: string | null;
+  role_type: 'AGENT' | 'REQUESTER';
+  token: string;
+  status: 'PENDING' | 'ACCEPTED' | 'REVOKED' | 'EXPIRED';
+  invited_by_id: string;
+  accepted_by_id: string | null;
+  expires_at: string;
+  accepted_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 function loadMockMap<T>(key: string): Map<string, T> {
   if (typeof localStorage === 'undefined') return new Map();
 
@@ -169,6 +184,7 @@ const serviceCatalogItems = loadMockMap<MockServiceCatalogItem>('msw:serviceCata
 const requestTemplates = loadMockMap<MockRequestTemplate>('msw:requestTemplates');
 const channelConnections = loadMockMap<MockChannelConnection>('msw:channelConnections');
 const channelInboundMessages = loadMockMap<MockChannelInboundMessage>('msw:channelInboundMessages');
+const workspaceInvitations = loadMockMap<MockWorkspaceInvitation>('msw:workspaceInvitations');
 
 function getUserFromRequest(request: Request) {
   const authHeader = request.headers.get('Authorization');
@@ -182,6 +198,22 @@ function getUserFromRequest(request: Request) {
 
 function isWorkspaceMember(workspaceId: string, userId: string) {
   return (workspaceMembers.get(workspaceId) || []).includes(userId);
+}
+
+function safeInvitation(invitation: MockWorkspaceInvitation) {
+  return {
+    id: invitation.id,
+    workspace_id: invitation.workspace_id,
+    email: invitation.email,
+    role_type: invitation.role_type,
+    status: invitation.status,
+    invited_by_id: invitation.invited_by_id,
+    accepted_by_id: invitation.accepted_by_id,
+    expires_at: invitation.expires_at,
+    accepted_at: invitation.accepted_at,
+    created_at: invitation.created_at,
+    updated_at: invitation.updated_at,
+  };
 }
 
 export const handlers = [
@@ -766,6 +798,194 @@ export const handlers = [
       );
     },
   ),
+
+  http.get('/api/v1/workspaces/:workspaceId/invitations', async ({ request, params }) => {
+    await delay(150);
+    const user = getUserFromRequest(request);
+    const workspaceId = params.workspaceId as string;
+    if (!user || !isWorkspaceMember(workspaceId, user.id)) {
+      return HttpResponse.json(
+        {
+          error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+          request_id: generateRequestId(),
+        },
+        { status: user ? 403 : 401 },
+      );
+    }
+
+    const invitations = Array.from(workspaceInvitations.values())
+      .filter((invitation) => invitation.workspace_id === workspaceId)
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .map(safeInvitation);
+
+    return HttpResponse.json({
+      data: { invitations },
+      request_id: generateRequestId(),
+    });
+  }),
+
+  http.post('/api/v1/workspaces/:workspaceId/invitations', async ({ request, params }) => {
+    await delay(200);
+    const user = getUserFromRequest(request);
+    const workspaceId = params.workspaceId as string;
+    if (!user || !isWorkspaceMember(workspaceId, user.id)) {
+      return HttpResponse.json(
+        {
+          error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+          request_id: generateRequestId(),
+        },
+        { status: user ? 403 : 401 },
+      );
+    }
+
+    const body = (await request.json()) as {
+      email?: string;
+      role_type?: 'AGENT' | 'REQUESTER';
+    };
+    const now = new Date().toISOString();
+    const token = `invite-${generateId()}-${generateId()}`;
+    const invitation = {
+      id: generateId(),
+      workspace_id: workspaceId,
+      email: body.email?.toLowerCase() || null,
+      role_type: body.role_type || 'REQUESTER',
+      token,
+      status: 'PENDING' as const,
+      invited_by_id: user.id,
+      accepted_by_id: null,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      accepted_at: null,
+      created_at: now,
+      updated_at: now,
+    };
+    workspaceInvitations.set(invitation.id, invitation);
+    persistMockMap('msw:workspaceInvitations', workspaceInvitations);
+
+    return HttpResponse.json(
+      {
+        data: { invitation: safeInvitation(invitation), token },
+        request_id: generateRequestId(),
+      },
+      { status: 201 },
+    );
+  }),
+
+  http.post('/api/v1/invitations/accept', async ({ request }) => {
+    await delay(250);
+    const body = (await request.json()) as {
+      token: string;
+      email: string;
+      password: string;
+      name?: string;
+    };
+    const invitation = Array.from(workspaceInvitations.values()).find(
+      (candidate) => candidate.token === body.token,
+    );
+    if (!invitation) {
+      return HttpResponse.json(
+        {
+          error: { code: 'INVITATION_NOT_FOUND', message: 'Invitation not found' },
+          request_id: generateRequestId(),
+        },
+        { status: 404 },
+      );
+    }
+    if (invitation.status !== 'PENDING') {
+      return HttpResponse.json(
+        {
+          error: { code: 'INVITATION_NOT_PENDING', message: 'Invitation is not pending' },
+          request_id: generateRequestId(),
+        },
+        { status: 409 },
+      );
+    }
+    if (invitation.email && invitation.email !== body.email.toLowerCase()) {
+      return HttpResponse.json(
+        {
+          error: { code: 'INVITATION_EMAIL_MISMATCH', message: 'Invitation email does not match' },
+          request_id: generateRequestId(),
+        },
+        { status: 403 },
+      );
+    }
+
+    const workspace = workspaces.get(invitation.workspace_id);
+    if (!workspace) {
+      return HttpResponse.json(
+        {
+          error: { code: 'WORKSPACE_NOT_FOUND', message: 'Workspace not found' },
+          request_id: generateRequestId(),
+        },
+        { status: 404 },
+      );
+    }
+    const existingUser = Array.from(users.values()).find(
+      (candidate) => candidate.email.toLowerCase() === body.email.toLowerCase(),
+    );
+    if (existingUser) {
+      return HttpResponse.json(
+        {
+          error: { code: 'EMAIL_ALREADY_EXISTS', message: 'Email already exists' },
+          request_id: generateRequestId(),
+        },
+        { status: 409 },
+      );
+    }
+    const now = new Date().toISOString();
+    const user = {
+      id: generateId(),
+      email: body.email.toLowerCase(),
+      password: body.password,
+      name: body.name || null,
+      created_at: now,
+    };
+    users.set(user.id, user);
+    workspaceMembers.set(invitation.workspace_id, [
+      ...(workspaceMembers.get(invitation.workspace_id) || []),
+      user.id,
+    ]);
+    const acceptedInvitation = {
+      ...invitation,
+      status: 'ACCEPTED' as const,
+      accepted_by_id: user.id,
+      accepted_at: now,
+      updated_at: now,
+    };
+    workspaceInvitations.set(invitation.id, acceptedInvitation);
+    persistMockMap('msw:users', users);
+    persistMockMap('msw:workspaceMembers', workspaceMembers);
+    persistMockMap('msw:workspaceInvitations', workspaceInvitations);
+
+    return HttpResponse.json(
+      {
+        data: {
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            created_at: user.created_at,
+          },
+          token: {
+            access_token: `mock_access_token_${user.id}`,
+            refresh_token: `mock_refresh_token_${user.id}`,
+            expires_in: 3600,
+          },
+          workspace: {
+            id: workspace.id,
+            name: workspace.name,
+            slug: workspace.slug,
+            timezone: workspace.timezone,
+            language: workspace.language,
+            role: invitation.role_type.toLowerCase(),
+            created_at: workspace.created_at,
+          },
+          invitation: safeInvitation(acceptedInvitation),
+        },
+        request_id: generateRequestId(),
+      },
+      { status: 201 },
+    );
+  }),
 
   http.get('/api/v1/workspaces/:workspaceId/channels', async ({ request, params }) => {
     await delay(150);

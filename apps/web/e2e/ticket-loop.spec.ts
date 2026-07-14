@@ -31,6 +31,50 @@ test('requester can submit, track, reply to and progress a ticket', async ({ pag
   await page.getByTestId('create-workspace-form').getByRole('button').click();
   await expect(page).toHaveURL('http://localhost:3001/');
 
+  const teammateEmail = `teammate-${suffix}@example.com`;
+  await page.goto('/team');
+  const invitationForm = page.getByTestId('team-invite-form');
+  await invitationForm.getByPlaceholder('teammate@example.com').fill(teammateEmail);
+  await invitationForm.getByLabel('Role').selectOption('AGENT');
+  const invitationResponsePromise = page.waitForResponse(
+    (response) =>
+      /\/api\/v1\/workspaces\/[^/]+\/invitations$/.test(new URL(response.url()).pathname) &&
+      response.request().method() === 'POST',
+  );
+  await invitationForm.getByRole('button', { name: 'Create invite' }).click();
+  const invitationResponse = await invitationResponsePromise;
+  expect(invitationResponse.status()).toBe(201);
+  await expect(page.getByTestId('invite-link')).toContainText('/invite/accept?token=');
+  const inviteLinkText = (await page.getByTestId('invite-link').textContent()) || '';
+  const inviteUrl = inviteLinkText.match(/http:\/\/localhost:3001\/invite\/accept\?token=\S+/)?.[0];
+  expect(inviteUrl).toBeTruthy();
+
+  await page.evaluate(() => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('current_workspace');
+  });
+  await page.goto(inviteUrl!);
+  const acceptInviteForm = page.getByTestId('accept-invite-form');
+  await acceptInviteForm.getByPlaceholder('teammate@example.com').fill(teammateEmail);
+  await acceptInviteForm.getByPlaceholder('Name').fill('M6 Agent');
+  await acceptInviteForm.getByPlaceholder('Password').fill('Password123');
+  const acceptInvitationResponsePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes('/api/v1/invitations/accept') &&
+      response.request().method() === 'POST',
+  );
+  await acceptInviteForm.getByRole('button', { name: 'Join workspace' }).click();
+  const acceptInvitationResponse = await acceptInvitationResponsePromise;
+  expect(acceptInvitationResponse.status()).toBe(201);
+  await expect(page).toHaveURL(/\/tickets/);
+  const teammateAuthState = await page.evaluate(() => ({
+    token: localStorage.getItem('access_token'),
+    workspace: localStorage.getItem('current_workspace'),
+  }));
+  expect(teammateAuthState.token).toContain('mock_access_token_');
+  expect(teammateAuthState.workspace).toContain('Acme Ops');
+
   await page.goto('/channels');
   const channelForm = page.getByTestId('wecom-channel-form');
   await channelForm.getByPlaceholder('Channel name').fill('WeCom support');

@@ -30,6 +30,11 @@ import type {
   ListChannelsResponse,
   ReceiveWeComMessageRequest,
   ReceiveWeComMessageResponse,
+  AcceptInvitationRequest,
+  AcceptInvitationResponse,
+  CreateInvitationRequest,
+  CreateInvitationResponse,
+  ListInvitationsResponse,
 } from '@/types/api';
 
 const apiClient = axios.create({
@@ -257,6 +262,34 @@ export const channelApi = {
       `/channels/wecom/${channel.id}/messages`,
       data,
       { headers: { 'X-Channel-Token': token } },
+    );
+    return response.data;
+  },
+};
+
+export const invitationApi = {
+  async list(workspaceId: string): Promise<ApiResponse<ListInvitationsResponse>> {
+    const response = await apiClient.get<ApiResponse<ListInvitationsResponse>>(
+      `/workspaces/${workspaceId}/invitations`,
+    );
+    return response.data;
+  },
+
+  async create(
+    workspaceId: string,
+    data: CreateInvitationRequest,
+  ): Promise<ApiResponse<CreateInvitationResponse>> {
+    const response = await apiClient.post<ApiResponse<CreateInvitationResponse>>(
+      `/workspaces/${workspaceId}/invitations`,
+      data,
+    );
+    return response.data;
+  },
+
+  async accept(data: AcceptInvitationRequest): Promise<ApiResponse<AcceptInvitationResponse>> {
+    const response = await apiClient.post<ApiResponse<AcceptInvitationResponse>>(
+      '/invitations/accept',
+      data,
     );
     return response.data;
   },

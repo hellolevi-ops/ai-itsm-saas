@@ -349,3 +349,47 @@ export interface ReceiveWeComMessageResponse {
   inbound_message: ChannelInboundMessage;
   ticket: Ticket | null;
 }
+
+export type WorkspaceInvitationStatus = 'PENDING' | 'ACCEPTED' | 'REVOKED' | 'EXPIRED';
+
+export interface WorkspaceInvitation {
+  id: string;
+  workspace_id: string;
+  email: string | null;
+  role_type: 'OWNER' | 'ADMIN' | 'AGENT' | 'REQUESTER';
+  status: WorkspaceInvitationStatus;
+  invited_by_id: string;
+  accepted_by_id: string | null;
+  expires_at: string;
+  accepted_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ListInvitationsResponse {
+  invitations: WorkspaceInvitation[];
+}
+
+export interface CreateInvitationRequest {
+  email?: string;
+  role_type?: 'AGENT' | 'REQUESTER';
+}
+
+export interface CreateInvitationResponse {
+  invitation: WorkspaceInvitation;
+  token: string;
+}
+
+export interface AcceptInvitationRequest {
+  token: string;
+  email: string;
+  password: string;
+  name?: string;
+}
+
+export interface AcceptInvitationResponse {
+  user: User;
+  token: Token;
+  workspace: Workspace;
+  invitation: WorkspaceInvitation;
+}

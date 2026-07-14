@@ -1,11 +1,11 @@
 # Execution State
 
-- Last updated: 2026-07-15 02:29 Asia/Shanghai
+- Last updated: 2026-07-15 02:51 Asia/Shanghai
 - Current branch: local snapshot plus GitHub branch `codex/m0-takeover-baseline`; base branch `develop`
-- Current commit: GitHub branch `codex/m0-takeover-baseline`; M5 validation recorded in this snapshot; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
+- Current commit: GitHub branch `codex/m0-takeover-baseline`; M6 validation recorded in this snapshot; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
 - Current phase: Milestone implementation after takeover
-- Current milestone: M5 - First China channel
-- Current milestone status: ACCEPTED_LOCALLY - M5 WeCom mock inbound channel passes local gates; PR/CI review remains before merge
+- Current milestone: M6 - PLG activation and team spread
+- Current milestone status: ACCEPTED_LOCALLY - M6 invitation and teammate activation loop passes local gates; PR/CI review remains before merge
 - Completed tasks:
   - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_自主接管与商业化开发总控执行书.md`.
   - Inspected the requested workspace path.
@@ -95,9 +95,18 @@
 - Added backend M5 tests for staff-only management, token rejection, inbound ticket creation, idempotent duplicates and missing channels.
 - Added web `/channels` page and MSW handlers for WeCom mock connection and inbound message simulation.
 - Extended Playwright E2E to verify WeCom mock inbound creates a WECOM ticket before the existing M4/M3 flows.
+- Created `docs/contracts/INVITATION_API.md`.
+- Created `docs/tasks/M6-plg-team-spread.md`.
+- Added Prisma `WorkspaceInvitation` model and `WorkspaceInvitationStatus` enum.
+- Added migration `20260715043000_add_workspace_invitations`.
+- Implemented `src/modules/invitation/**` with owner/admin invitation management and public invitation acceptance.
+- Restricted invited roles to `AGENT` and `REQUESTER`.
+- Added hashed invite token storage and target-tenant teammate creation on acceptance.
+- Added web `/team` page and `/invite/accept` page.
+- Added MSW invitation handlers and extended Playwright E2E to verify invite creation, teammate acceptance and continued core workflow.
 - Active tasks:
-  - Push M5 implementation and validation evidence to PR #2.
-  - Start M6 PLG activation and team spread contract after PR #2 is updated.
+  - Push M6 implementation and validation evidence to PR #2.
+  - Start M7 plans, entitlements and commercial flow contract after PR #2 is updated.
 - Blocked tasks:
   - `git fetch --all --tags --prune`
   - Local branch, remote and working tree checks
@@ -138,6 +147,8 @@
   - M4 secret scan for GitHub/OpenAI token patterns
   - M5 temporary PostgreSQL migration validation for six migrations
   - `psql` table inspection for `channel_connections`, `channel_inbound_messages`, `tickets`, `service_catalog_items`, `knowledge_articles` and `ai_runs`
+  - M6 temporary PostgreSQL migration validation for seven migrations
+  - `psql` table inspection for `workspace_invitations`, `channel_connections`, `channel_inbound_messages`, `tickets`, `service_catalog_items`, `knowledge_articles` and `ai_runs`
   - M3 temporary PostgreSQL migration validation for four migrations
   - `psql` table inspection for `knowledge_articles`, `ai_runs`, `tickets` and `ticket_events`
   - `cd apps/web; npm audit --audit-level=moderate`
@@ -239,6 +250,17 @@
 - Web lint, typecheck, Vitest, build and E2E passed after M5 implementation.
 - Web Vitest tests passed after M5 implementation: 69/69.
 - Web Playwright E2E passed after M5 implementation: 1/1.
+- Prisma schema validates after M6 invitation model.
+- Root typecheck passed after M6 implementation.
+- Root lint passed after M6 implementation.
+- Root Jest tests passed after M6 implementation: 127/127.
+- Root build passed after M6 implementation.
+- Web lint, typecheck, Vitest, build and E2E passed after M6 implementation.
+- Web Vitest tests passed after M6 implementation: 69/69.
+- Web Playwright E2E passed after M6 implementation: 1/1.
+- M6 migration validation passed: seven migrations through `20260715043000_add_workspace_invitations` applied to an empty PostgreSQL 18 database.
+- M6 migration created table `workspace_invitations`.
+- Secret scan after M6 implementation found no user-provided GitHub/OpenAI token in repository files; observed matches were dependency/document URL false positives.
 - Web Playwright E2E passed after M4 implementation: 1/1.
 - Secret scan after M4 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
 - Open P0 issues:
@@ -252,4 +274,4 @@
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Push M5 implementation to PR #2 through GitHub REST API.
+  - Push M6 implementation to PR #2 through GitHub REST API.
