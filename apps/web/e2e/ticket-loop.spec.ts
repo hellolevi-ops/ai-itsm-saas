@@ -4,6 +4,32 @@ test('requester can submit, track, reply to and progress a ticket', async ({ pag
   const suffix = Date.now();
   const email = `m1-${suffix}@example.com`;
 
+  await page.goto('/');
+  await expect
+    .poll(async () =>
+      page.evaluate(async () => {
+        const live = await fetch('/api/v1/health/live');
+        const ready = await fetch('/api/v1/health/ready');
+        const liveText = await live.text();
+        const readyText = await ready.text();
+        if (!liveText.startsWith('{') || !readyText.startsWith('{')) {
+          return { liveStatus: live.status, readyStatus: ready.status, pending: true };
+        }
+        return {
+          liveStatus: live.status,
+          readyStatus: ready.status,
+          liveBody: JSON.parse(liveText),
+          readyBody: JSON.parse(readyText),
+        };
+      }),
+    )
+    .toMatchObject({
+      liveStatus: 200,
+      readyStatus: 200,
+      liveBody: { data: { status: 'ok' } },
+      readyBody: { data: { status: 'ok', checks: { database: { status: 'ok' } } } },
+    });
+
   await page.goto('/register');
   await page.getByTestId('register-form').locator('input[type="email"]').fill(email);
   await page.getByTestId('register-form').locator('input[type="text"]').fill('M1 Requester');

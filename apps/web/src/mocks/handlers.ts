@@ -356,6 +356,36 @@ function assertCanCreateTicket(workspaceId: string) {
 }
 
 export const handlers = [
+  http.get('/api/v1/health/live', async () => {
+    return HttpResponse.json({
+      data: {
+        status: 'ok',
+        service: 'lingxi-service-desk-api',
+        timestamp: new Date().toISOString(),
+        uptime_seconds: 1,
+        started_at: new Date().toISOString(),
+      },
+      request_id: generateRequestId(),
+    });
+  }),
+
+  http.get('/api/v1/health/ready', async () => {
+    return HttpResponse.json({
+      data: {
+        status: 'ok',
+        service: 'lingxi-service-desk-api',
+        timestamp: new Date().toISOString(),
+        checks: {
+          database: {
+            status: 'ok',
+            latency_ms: 1,
+          },
+        },
+      },
+      request_id: generateRequestId(),
+    });
+  }),
+
   http.post('/api/v1/auth/register', async ({ request }) => {
     await delay(500);
 

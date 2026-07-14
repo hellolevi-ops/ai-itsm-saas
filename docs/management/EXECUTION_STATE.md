@@ -1,11 +1,11 @@
 # Execution State
 
-- Last updated: 2026-07-15 03:14 Asia/Shanghai
+- Last updated: 2026-07-15 03:25 Asia/Shanghai
 - Current branch: local snapshot plus GitHub branch `codex/m0-takeover-baseline`; base branch `develop`
-- Current commit: GitHub branch `codex/m0-takeover-baseline`; M7 validation recorded in this snapshot; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
+- Current commit: GitHub branch `codex/m0-takeover-baseline`; M8 validation recorded in this snapshot; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
 - Current phase: Milestone implementation after takeover
-- Current milestone: M7 - Plans, entitlements and commercial flow
-- Current milestone status: ACCEPTED_LOCALLY - M7 manual commercial loop and ticket quota enforcement pass local gates; PR/CI review remains before merge
+- Current milestone: M8 - Security, reliability and operations
+- Current milestone status: ACCEPTED_LOCALLY - M8 health probes, request correlation and security headers pass local gates; PR/CI review remains before merge
 - Completed tasks:
   - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_自主接管与商业化开发总控执行书.md`.
   - Inspected the requested workspace path.
@@ -112,9 +112,15 @@
 - Added owner/admin-only commercial writes and no real payment provider integration.
 - Added ticket quota enforcement to web and channel ticket creation paths through `BillingService`.
 - Added web `/billing` page, MSW billing handlers and E2E coverage for Free overview, Team manual order creation and manual activation.
+- Created `docs/contracts/OPERATIONS_API.md`.
+- Created `docs/tasks/M8-security-reliability-operations.md`.
+- Implemented `src/modules/ops/**` with public liveness and readiness endpoints.
+- Added Prisma-backed database readiness check.
+- Added global request id and baseline security header middlewares.
+- Added ops/middleware unit tests and MSW/E2E health probe verification.
 - Active tasks:
-  - Push M7 implementation and validation evidence to PR #2.
-  - Start M8 security, reliability and operations hardening contract after PR #2 is updated.
+  - Push M8 implementation and validation evidence to PR #2.
+  - Start M9 China compliance preparation after PR #2 is updated.
 - Blocked tasks:
   - `git fetch --all --tags --prune`
   - Local branch, remote and working tree checks
@@ -159,6 +165,8 @@
   - `psql` table inspection for `workspace_invitations`, `channel_connections`, `channel_inbound_messages`, `tickets`, `service_catalog_items`, `knowledge_articles` and `ai_runs`
   - M7 temporary PostgreSQL migration validation for eight migrations
   - `psql` table inspection for `workspace_subscriptions`, `payment_orders`, `workspace_invitations`, `channel_connections`, `channel_inbound_messages`, `tickets`, `service_catalog_items`, `knowledge_articles` and `ai_runs`
+  - M8 temporary PostgreSQL migration validation for eight migrations
+  - health probe E2E fetches for `/api/v1/health/live` and `/api/v1/health/ready`
   - M3 temporary PostgreSQL migration validation for four migrations
   - `psql` table inspection for `knowledge_articles`, `ai_runs`, `tickets` and `ticket_events`
   - `cd apps/web; npm audit --audit-level=moderate`
@@ -282,6 +290,15 @@
 - M7 migration validation passed: eight migrations through `20260715053000_add_billing_entitlements` applied to an empty PostgreSQL 18 database.
 - M7 migration created tables `workspace_subscriptions` and `payment_orders`.
 - Secret scan after M7 implementation found no user-provided GitHub/OpenAI token in repository files; observed matches were dependency/document URL false positives.
+- Root typecheck passed after M8 implementation.
+- Root lint passed after M8 implementation.
+- Root Jest tests passed after M8 implementation: 141/141.
+- Root build passed after M8 implementation.
+- Web lint, typecheck, Vitest, build and E2E passed after M8 implementation.
+- Web Vitest tests passed after M8 implementation: 69/69.
+- Web Playwright E2E passed after M8 implementation: 1/1.
+- M8 migration validation passed: eight migrations through `20260715053000_add_billing_entitlements` applied to an empty PostgreSQL 18 database.
+- Secret scan after M8 implementation found no user-provided GitHub/OpenAI token in repository files; observed matches were dependency/document URL and `service-desk-api` false positives.
 - Web Playwright E2E passed after M4 implementation: 1/1.
 - Secret scan after M4 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
 - Open P0 issues:
@@ -295,4 +312,4 @@
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Push M7 implementation to PR #2 through GitHub REST API.
+  - Push M8 implementation to PR #2 through GitHub REST API.

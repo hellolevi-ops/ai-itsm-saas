@@ -3,12 +3,12 @@
 ## P0
 
 - Continue Phase 0 only for items that require a true Git working tree.
-- Preserve the verified M7 executable gate baseline.
+- Preserve the verified M8 executable gate baseline.
 
 ## P1
 
 - Make Git CLI available or use a connector path that supports branch and commit operations.
-- Update draft PR #2 with M7 implementation and validation evidence.
+- Update draft PR #2 with M8 implementation and validation evidence.
 - Resolve Jest ESM config warning.
 - Add CI workflow for root and web gates if absent.
 - Broaden M1 backend tests from service/repository unit coverage to controller/integration coverage.
@@ -19,7 +19,11 @@
 - Broaden M5 backend tests from service unit coverage to controller/integration coverage.
 - Broaden M6 backend tests from service unit coverage to controller/integration coverage.
 - Broaden M7 backend tests from service unit coverage to controller/integration coverage.
-- Start M8 security, reliability and operations hardening contract.
+- Broaden M8 backend tests from service/middleware unit coverage to controller/integration coverage.
+- Start M9 China compliance preparation materials.
+- Add rate limiting for auth and public webhook endpoints.
+- Add backup/restore scripts and non-destructive restore drill.
+- Add CI workflow for root and web gates if absent.
 - Add immutable usage ledger, AI action charging and 14-day Growth trial lifecycle.
 - Add knowledge article detail/publish management screens beyond the ticket-detail shortcut.
 - Add RAG citation contract after service catalog basics, still behind AI Gateway and tenant filters.

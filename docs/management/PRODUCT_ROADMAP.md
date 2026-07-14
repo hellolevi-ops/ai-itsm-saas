@@ -60,8 +60,16 @@ Goal: Plan catalog, workspace subscriptions, manual payment orders, owner/admin 
 
 Out of scope: real payment provider integration, automatic renewal, refunds, real invoicing, tax/legal final judgment and production release.
 
-## M8-M11
+## M8 - Security, Reliability and Operations
 
-Status: M8_NEXT
+Status: ACCEPTED_LOCALLY
 
-Continue in the order defined by the control document: security/ops, compliance preparation, beta readiness, and Release Candidate.
+Goal: Health probes, request correlation and baseline browser security headers verified locally.
+
+Out of scope: paid monitoring, production alerting, production deployment, destructive restore drills and external security certification.
+
+## M9-M11
+
+Status: M9_NEXT
+
+Continue in the order defined by the control document: compliance preparation, beta readiness, and Release Candidate.

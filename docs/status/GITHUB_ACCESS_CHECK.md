@@ -122,7 +122,7 @@ Security note:
 
 Remaining limitations:
 
-- Temporary PostgreSQL migration validation has passed through M7; staging/production migration remains future release work.
+- Temporary PostgreSQL migration validation has passed through M8; staging/production migration remains future release work.
 - Production release was not attempted.
 
 ## Latest Local M6 Validation
@@ -189,3 +189,33 @@ Security note:
 - M7 uses manual/mock order activation only; no real payment provider, invoice system or production commercial resource is connected.
 - Ticket quota is enforced on the server before web and channel ticket creation.
 - Package naming differs across product docs (`Pro` vs `Team/Growth/Business`) and is tracked as a product follow-up before production pricing copy.
+
+## Latest Local M8 Validation
+
+- Checked at: 2026-07-15 03:25 Asia/Shanghai
+- Draft PR: `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2`
+- Branch: `codex/m0-takeover-baseline`
+- Token stored in this repository: No
+
+Validation evidence after M8:
+
+| Gate | Result |
+|---|---|
+| `npm exec prisma -- validate` with local `DATABASE_URL` | PASS |
+| Root `npm run typecheck` | PASS |
+| Root `npm run lint:check` | PASS |
+| Root `npm test -- --runInBand` | PASS, 141/141 tests |
+| Root `npm run build` | PASS |
+| Web `npm run typecheck` | PASS |
+| Web `npm run lint` | PASS |
+| Web `npm test` | PASS, 69/69 tests |
+| Web `npm run build` | PASS |
+| Web `npm run test:e2e` | PASS, 1/1 |
+| Temporary PostgreSQL migration validation | PASS, 8 migrations through M8 |
+| Secret scan | PASS, no committed GitHub/OpenAI token found |
+
+Security note:
+
+- M8 adds public health probes, request id propagation and baseline browser security headers.
+- Secret scan false positives include dependency/document URLs and the literal service name `lingxi-service-desk-api`, not secrets.
+- No production monitoring provider, backup storage, alerting tool or deployment change was connected.

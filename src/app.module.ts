@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { PrismaModule } from './prisma/prisma.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -9,6 +9,9 @@ import { ServiceCatalogModule } from './modules/service-catalog/service-catalog.
 import { ChannelModule } from './modules/channel/channel.module';
 import { InvitationModule } from './modules/invitation/invitation.module';
 import { BillingModule } from './modules/billing/billing.module';
+import { OpsModule } from './modules/ops/ops.module';
+import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
+import { SecurityHeadersMiddleware } from './common/middleware/security-headers.middleware';
 
 @Module({
   imports: [
@@ -22,6 +25,11 @@ import { BillingModule } from './modules/billing/billing.module';
     ChannelModule,
     InvitationModule,
     BillingModule,
+    OpsModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware, SecurityHeadersMiddleware).forRoutes('*');
+  }
+}
