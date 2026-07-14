@@ -205,7 +205,7 @@ export function TicketDetail({ workspaceId, ticket, messages, events }: TicketDe
               <div>
                 <div className="text-xs font-medium uppercase text-gray-500">Confidence</div>
                 <div className="mt-1 text-gray-900">
-                  {Math.round(aiSuggestion.confidence * 100)}% · {aiSuggestion.risk_level}
+                  {Math.round(aiSuggestion.confidence * 100)}% 璺?{aiSuggestion.risk_level}
                 </div>
               </div>
               <div>
@@ -239,8 +239,11 @@ export function TicketDetail({ workspaceId, ticket, messages, events }: TicketDe
           </Button>
           {knowledgeDraft && (
             <div className="mt-4 border border-gray-200 p-3 text-sm">
-              <div className="text-xs font-medium uppercase text-gray-500">
-                {knowledgeDraft.status} 路 {knowledgeDraft.visibility}
+              <div
+                className="text-xs font-medium uppercase text-gray-500"
+                data-testid="knowledge-draft-status"
+              >
+                {knowledgeDraft.status} / {knowledgeDraft.visibility}
               </div>
               <p className="mt-1 font-medium text-gray-900">{knowledgeDraft.title}</p>
               <p className="mt-2 text-gray-700">{knowledgeDraft.resolution}</p>
