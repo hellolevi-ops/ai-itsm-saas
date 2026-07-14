@@ -27,8 +27,23 @@ export class WorkspaceMemberService {
     return member;
   }
 
+  async findByIdWithRole(id: string): Promise<WorkspaceMember & { role?: { roleType: string } }> {
+    const member = await this.memberRepository.findByIdWithRole(id);
+    if (!member) {
+      throw new NotFoundException('Workspace member not found');
+    }
+    return member;
+  }
+
   async findByUserId(userId: string): Promise<WorkspaceMember | null> {
     return this.memberRepository.findByUserId(userId);
+  }
+
+  async findByUserIdAndWorkspaceId(
+    userId: string,
+    workspaceId: string,
+  ): Promise<WorkspaceMember | null> {
+    return this.memberRepository.findByUserIdAndWorkspaceId(userId, workspaceId);
   }
 
   async findAll(params: { skip?: number; take?: number; roleId?: string }): Promise<{

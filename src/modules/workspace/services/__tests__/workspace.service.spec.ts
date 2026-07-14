@@ -5,10 +5,12 @@ import {
   WorkspaceRepository,
   TenantWorkspaceRepository,
 } from '../../repositories/workspace.repository';
+import { TenantContextHolder } from '../../tenant/tenant-context';
 import { WorkspaceStatus } from '@prisma/client';
 
 const mockWorkspace = {
   id: 'ws-001',
+  tenantId: 'tenant-001',
   name: 'Test Workspace',
   slug: 'test-workspace',
   timezone: 'Asia/Shanghai',
@@ -24,6 +26,8 @@ describe('WorkspaceService', () => {
   let tenantWorkspaceRepository: jest.Mocked<TenantWorkspaceRepository>;
 
   beforeEach(async () => {
+    jest.spyOn(TenantContextHolder, 'getTenantId').mockReturnValue('tenant-001');
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         WorkspaceService,
@@ -56,6 +60,10 @@ describe('WorkspaceService', () => {
     ) as jest.Mocked<TenantWorkspaceRepository>;
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   describe('create', () => {
     it('should create a workspace successfully', async () => {
       const createDto = { name: 'New Workspace', slug: 'new-workspace' };
@@ -67,7 +75,11 @@ describe('WorkspaceService', () => {
       expect(result.name).toBe(createDto.name);
       expect(result.slug).toBe(createDto.slug);
       expect(workspaceRepository.findBySlug).toHaveBeenCalledWith(createDto.slug);
-      expect(workspaceRepository.create).toHaveBeenCalled();
+      expect(workspaceRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tenant: { connect: { id: 'tenant-001' } },
+        }),
+      );
     });
 
     it('should throw ConflictException when slug already exists', async () => {
@@ -91,6 +103,7 @@ describe('WorkspaceService', () => {
         expect.objectContaining({
           timezone: 'Asia/Shanghai',
           language: 'zh-CN',
+          tenant: { connect: { id: 'tenant-001' } },
         }),
       );
     });
@@ -114,6 +127,7 @@ describe('WorkspaceService', () => {
         expect.objectContaining({
           timezone: 'America/New_York',
           language: 'en-US',
+          tenant: { connect: { id: 'tenant-001' } },
         }),
       );
     });
@@ -223,6 +237,7 @@ describe('WorkspaceService', () => {
       const dto = service.toDto(mockWorkspace);
 
       expect(dto.id).toBe(mockWorkspace.id);
+      expect(dto.tenantId).toBe(mockWorkspace.tenantId);
       expect(dto.name).toBe(mockWorkspace.name);
       expect(dto.slug).toBe(mockWorkspace.slug);
       expect(dto.timezone).toBe(mockWorkspace.timezone);

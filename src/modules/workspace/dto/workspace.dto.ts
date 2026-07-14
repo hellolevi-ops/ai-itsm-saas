@@ -40,6 +40,7 @@ export class UpdateWorkspaceDto {
 
 export class WorkspaceDto {
   id: string;
+  tenantId: string;
   name: string;
   slug: string;
   timezone: string;

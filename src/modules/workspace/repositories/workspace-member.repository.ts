@@ -22,15 +22,34 @@ export class WorkspaceMemberRepository {
     });
   }
 
-  async findById(id: string): Promise<WorkspaceMember | null> {
+  async findById(id: string): Promise<(WorkspaceMember & { role?: { roleType: string } }) | null> {
     return this.prisma.workspaceMember.findFirst({
       where: { id, workspaceId: this.workspaceId },
+      include: { role: { select: { roleType: true } } },
+    });
+  }
+
+  async findByIdWithRole(
+    id: string,
+  ): Promise<(WorkspaceMember & { role?: { roleType: string } }) | null> {
+    return this.prisma.workspaceMember.findFirst({
+      where: { id, workspaceId: this.workspaceId },
+      include: { role: { select: { roleType: true } } },
     });
   }
 
   async findByUserId(userId: string): Promise<WorkspaceMember | null> {
     return this.prisma.workspaceMember.findFirst({
       where: { userId, workspaceId: this.workspaceId },
+    });
+  }
+
+  async findByUserIdAndWorkspaceId(
+    userId: string,
+    workspaceId: string,
+  ): Promise<WorkspaceMember | null> {
+    return this.prisma.workspaceMember.findFirst({
+      where: { userId, workspaceId },
     });
   }
 

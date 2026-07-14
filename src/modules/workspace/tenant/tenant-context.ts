@@ -1,58 +1,50 @@
+import { AsyncLocalStorage } from 'async_hooks';
+
 export interface TenantContext {
+  tenantId: string;
   workspaceId: string;
   userId?: string;
 }
 
-const TENANT_CONTEXT_STORAGE = new Map<string, TenantContext>();
+const asyncLocalStorage = new AsyncLocalStorage<TenantContext>();
 
 export class TenantContextHolder {
-  private static contextKey = 'current';
-
   static setContext(context: TenantContext): void {
-    TENANT_CONTEXT_STORAGE.set(this.contextKey, context);
+    const store = asyncLocalStorage.getStore();
+    if (store) {
+      Object.assign(store, context);
+    }
   }
 
   static getContext(): TenantContext | undefined {
-    return TENANT_CONTEXT_STORAGE.get(this.contextKey);
+    return asyncLocalStorage.getStore();
+  }
+
+  static getTenantId(): string {
+    const context = this.getContext();
+    if (!context?.tenantId) {
+      throw new Error('Tenant context not set');
+    }
+    return context.tenantId;
   }
 
   static getWorkspaceId(): string {
     const context = this.getContext();
     if (!context?.workspaceId) {
-      throw new Error('Tenant context not set');
+      throw new Error('Workspace context not set');
     }
     return context.workspaceId;
   }
 
-  static clear(): void {
-    TENANT_CONTEXT_STORAGE.delete(this.contextKey);
+  static getUserId(): string | undefined {
+    return this.getContext()?.userId;
   }
 
   static runWithContext<T>(context: TenantContext, fn: () => T): T {
-    const previous = this.getContext();
-    try {
-      this.setContext(context);
-      return fn();
-    } finally {
-      if (previous) {
-        this.setContext(previous);
-      } else {
-        this.clear();
-      }
-    }
+    return asyncLocalStorage.run(context, fn);
   }
 
   static async runWithContextAsync<T>(context: TenantContext, fn: () => Promise<T>): Promise<T> {
-    const previous = this.getContext();
-    try {
-      this.setContext(context);
-      return await fn();
-    } finally {
-      if (previous) {
-        this.setContext(previous);
-      } else {
-        this.clear();
-      }
-    }
+    return asyncLocalStorage.run(context, fn);
   }
 }

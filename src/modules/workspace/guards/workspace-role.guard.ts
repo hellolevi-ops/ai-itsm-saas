@@ -38,11 +38,23 @@ export class WorkspaceRoleGuard implements CanActivate {
     userId: string,
     requiredRoles: RoleType[],
   ): Promise<boolean> {
-    const member = await this.memberService.findByUserId(userId);
+    const member = await this.memberService.findByUserIdAndWorkspaceId(userId, workspaceId);
     if (!member) {
       throw new ForbiddenException('User is not a member of this workspace');
     }
 
-    return requiredRoles.some((role) => member.roleId === role);
+    // Load role relation to compare roleType, not roleId
+    const memberWithRole = await this.memberService.findByIdWithRole(member.id);
+    const userRole = memberWithRole?.role;
+    if (!userRole) {
+      throw new ForbiddenException('Member role not found');
+    }
+
+    const hasRole = requiredRoles.some((role) => userRole.roleType === role);
+    if (!hasRole) {
+      throw new ForbiddenException('Insufficient workspace role');
+    }
+
+    return true;
   }
 }

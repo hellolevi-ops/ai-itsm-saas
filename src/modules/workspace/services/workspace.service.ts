@@ -5,6 +5,7 @@ import {
   TenantWorkspaceRepository,
 } from '../repositories/workspace.repository';
 import { CreateWorkspaceDto, UpdateWorkspaceDto, WorkspaceDto } from '../dto/workspace.dto';
+import { TenantContextHolder } from '../tenant/tenant-context';
 
 @Injectable()
 export class WorkspaceService {
@@ -14,6 +15,7 @@ export class WorkspaceService {
   ) {}
 
   async create(dto: CreateWorkspaceDto): Promise<Workspace> {
+    const tenantId = TenantContextHolder.getTenantId();
     const existing = await this.workspaceRepository.findBySlug(dto.slug);
     if (existing) {
       throw new ConflictException('Workspace slug already exists');
@@ -24,6 +26,7 @@ export class WorkspaceService {
       slug: dto.slug,
       timezone: dto.timezone ?? 'Asia/Shanghai',
       language: dto.language ?? 'zh-CN',
+      tenant: { connect: { id: tenantId } },
     });
   }
 
@@ -75,6 +78,7 @@ export class WorkspaceService {
   toDto(workspace: Workspace): WorkspaceDto {
     return {
       id: workspace.id,
+      tenantId: (workspace as any).tenantId,
       name: workspace.name,
       slug: workspace.slug,
       timezone: workspace.timezone,

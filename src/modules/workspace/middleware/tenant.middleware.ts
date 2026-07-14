@@ -1,6 +1,7 @@
 import { Injectable, NestMiddleware, ForbiddenException } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { TenantContext, TenantContextHolder } from '../tenant/tenant-context';
+import { WorkspaceMemberService } from '../services/workspace-member.service';
 import { WorkspaceService } from '../services/workspace.service';
 
 declare module 'express' {
@@ -11,9 +12,19 @@ declare module 'express' {
 
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {
-  constructor(private readonly workspaceService: WorkspaceService) {}
+  constructor(
+    private readonly workspaceService: WorkspaceService,
+    private readonly memberService: WorkspaceMemberService,
+  ) {}
 
   async use(req: Request, _res: Response, next: NextFunction) {
+    // T-001: Read authenticated user from request (set by JwtAuthGuard upstream).
+    // Do NOT trust x-workspace-id / x-user-id headers directly.
+    const user = (req as any).user;
+    if (!user?.id || !user?.tenantId) {
+      return next();
+    }
+
     const workspaceId =
       (req.headers['x-workspace-id'] as string) ||
       (req.query.workspaceId as string) ||
@@ -23,22 +34,26 @@ export class TenantMiddleware implements NestMiddleware {
       return next();
     }
 
+    // Validate workspace exists and belongs to the user's tenant
     const workspace = await this.workspaceService.findById(workspaceId);
-    if (!workspace) {
-      throw new ForbiddenException('Invalid workspace');
+    if (!workspace || workspace.tenantId !== user.tenantId) {
+      throw new ForbiddenException('Invalid workspace or cross-tenant access denied');
     }
 
-    const userId = (req.headers['x-user-id'] as string) || undefined;
+    // Validate user is a member of this workspace
+    const member = await this.memberService.findByUserIdAndWorkspaceId(user.id, workspaceId);
+    if (!member) {
+      throw new ForbiddenException('User is not a member of this workspace');
+    }
 
     const tenantContext: TenantContext = {
+      tenantId: user.tenantId,
       workspaceId,
-      userId,
+      userId: user.id,
     };
 
     req.tenantContext = tenantContext;
-    TenantContextHolder.setContext(tenantContext);
-
-    next();
+    TenantContextHolder.runWithContext(tenantContext, () => next());
   }
 
   private extractFromSubdomain(req: Request): string | undefined {

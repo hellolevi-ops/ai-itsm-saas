@@ -27,7 +27,9 @@ describe('WorkspaceMemberService', () => {
           useValue: {
             create: jest.fn(),
             findById: jest.fn(),
+            findByIdWithRole: jest.fn(),
             findByUserId: jest.fn(),
+            findByUserIdAndWorkspaceId: jest.fn(),
             findAll: jest.fn(),
             update: jest.fn(),
             delete: jest.fn(),
@@ -82,6 +84,24 @@ describe('WorkspaceMemberService', () => {
     });
   });
 
+  describe('findByIdWithRole', () => {
+    it('should return member with role when found', async () => {
+      const memberWithRole = { ...mockMember, role: { roleType: RoleType.ADMIN } };
+      memberRepository.findByIdWithRole.mockResolvedValue(memberWithRole);
+
+      const result = await service.findByIdWithRole('member-001');
+
+      expect(result.id).toBe('member-001');
+      expect(result.role?.roleType).toBe(RoleType.ADMIN);
+    });
+
+    it('should throw NotFoundException when not found', async () => {
+      memberRepository.findByIdWithRole.mockResolvedValue(null);
+
+      await expect(service.findByIdWithRole('non-existent')).rejects.toThrow(NotFoundException);
+    });
+  });
+
   describe('findByUserId', () => {
     it('should return member when found', async () => {
       memberRepository.findByUserId.mockResolvedValue(mockMember);
@@ -95,6 +115,28 @@ describe('WorkspaceMemberService', () => {
       memberRepository.findByUserId.mockResolvedValue(null);
 
       const result = await service.findByUserId('non-existent');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('findByUserIdAndWorkspaceId', () => {
+    it('should return member when found', async () => {
+      memberRepository.findByUserIdAndWorkspaceId.mockResolvedValue(mockMember);
+
+      const result = await service.findByUserIdAndWorkspaceId('user-001', 'ws-001');
+
+      expect(result?.userId).toBe('user-001');
+      expect(memberRepository.findByUserIdAndWorkspaceId).toHaveBeenCalledWith(
+        'user-001',
+        'ws-001',
+      );
+    });
+
+    it('should return null when not found', async () => {
+      memberRepository.findByUserIdAndWorkspaceId.mockResolvedValue(null);
+
+      const result = await service.findByUserIdAndWorkspaceId('user-001', 'ws-002');
 
       expect(result).toBeNull();
     });
