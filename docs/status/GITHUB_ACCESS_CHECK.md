@@ -88,14 +88,14 @@ Executable gates run after recovery:
 
 ## Latest PR Branch Update
 
-- Checked at: 2026-07-15 02:03 Asia/Shanghai
+- Checked at: 2026-07-15 02:29 Asia/Shanghai
 - Draft PR: `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2`
 - Branch: `codex/m0-takeover-baseline`
-- Latest M4 commit pushed by GitHub REST API: `7a6aa1187210daccb5462a08bf5ba3f9603c9749`
+- Latest M5 commit pushed by GitHub REST API: `244cc42502710be6fc6d1a515d58dcb12bb6dc63`
 - PR head verification: PASS
 - Token stored in this repository: No
 
-Latest validation evidence after M4:
+Latest validation evidence after M5:
 
 | Gate | Result |
 |---|---|
@@ -103,14 +103,14 @@ Latest validation evidence after M4:
 | `npm exec prisma -- validate` with local `DATABASE_URL` | PASS |
 | Root `npm run typecheck` | PASS |
 | Root `npm run lint:check` | PASS |
-| Root `npm test -- --runInBand` | PASS, 114/114 tests |
+| Root `npm test -- --runInBand` | PASS, 120/120 tests |
 | Root `npm run build` | PASS |
 | Web `npm run typecheck` | PASS |
 | Web `npm run lint` | PASS |
 | Web `npm test` | PASS, 69/69 tests |
 | Web `npm run build` | PASS |
 | Web `npm run test:e2e` | PASS, 1/1 |
-| Temporary PostgreSQL migration validation | PASS, 5 migrations through `20260715021500_add_service_catalog` |
+| Temporary PostgreSQL migration validation | PASS, 6 migrations through `20260715033000_add_wecom_channel` |
 | Secret scan | PASS, no committed GitHub/OpenAI token found |
 
 Security note:
@@ -118,7 +118,7 @@ Security note:
 - The provided GitHub token was not written to repository files.
 - A runtime JWT fallback secret was found and removed. Runtime now requires `JWT_SECRET`.
 - `.env.example` was added for required local configuration.
-- M4 secret scan matched only dependency/document URLs, not secrets.
+- M5 secret scan matched only dependency/document URLs, not secrets.
 
 Remaining limitations:
 
