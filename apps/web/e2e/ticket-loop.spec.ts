@@ -278,9 +278,11 @@ test('requester can submit, track, reply to and progress a ticket', async ({ pag
   await expect(page.getByText('RESOLVED')).toBeVisible();
   await page.getByRole('button', { name: 'Create draft' }).click();
   await expect(page.getByText('How to resolve: VPN access is unavailable')).toBeVisible();
-  await expect(page.getByText('DRAFT ? INTERNAL')).toBeVisible();
+  await expect(page.getByTestId('knowledge-draft-status')).toContainText('DRAFT');
+  await expect(page.getByTestId('knowledge-draft-status')).toContainText('INTERNAL');
   await page.getByRole('button', { name: 'Publish' }).click();
-  await expect(page.getByText('PUBLISHED ? REQUESTER')).toBeVisible();
+  await expect(page.getByTestId('knowledge-draft-status')).toContainText('PUBLISHED');
+  await expect(page.getByTestId('knowledge-draft-status')).toContainText('REQUESTER');
 
   await page.goto('/knowledge');
   await expect(page.getByRole('heading', { name: 'Knowledge' })).toBeVisible();
