@@ -57,7 +57,7 @@ async def update_workspace(
     tenant_context: dict = Depends(require_workspace_admin),
     db: AsyncSession = Depends(get_db),
 ):
-    update_data = {k: v for k, v in request.dict().items() if v is not None}
+    update_data = {k: v for k, v in request.model_dump().items() if v is not None}
     if not update_data:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
