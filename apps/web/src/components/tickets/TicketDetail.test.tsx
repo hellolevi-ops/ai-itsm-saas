@@ -80,9 +80,7 @@ describe('TicketDetail', () => {
   });
 
   it('renders ticket conversation and timeline', () => {
-    render(
-      <TicketDetail workspaceId="ws-1" ticket={ticket} messages={messages} events={events} />,
-    );
+    render(<TicketDetail workspaceId="ws-1" ticket={ticket} messages={messages} events={events} />);
 
     expect(screen.getByText('Payroll access issue')).toBeInTheDocument();
     expect(screen.getByText('Please help.')).toBeInTheDocument();
@@ -97,9 +95,7 @@ describe('TicketDetail', () => {
       request_id: 'req-1',
     });
 
-    render(
-      <TicketDetail workspaceId="ws-1" ticket={ticket} messages={messages} events={events} />,
-    );
+    render(<TicketDetail workspaceId="ws-1" ticket={ticket} messages={messages} events={events} />);
 
     await user.type(screen.getByPlaceholderText(/Write a reply/), 'I am checking this now.');
     await user.click(screen.getByRole('button', { name: /Add message/ }));
@@ -121,9 +117,7 @@ describe('TicketDetail', () => {
       request_id: 'req-1',
     });
 
-    render(
-      <TicketDetail workspaceId="ws-1" ticket={ticket} messages={messages} events={events} />,
-    );
+    render(<TicketDetail workspaceId="ws-1" ticket={ticket} messages={messages} events={events} />);
 
     await user.click(screen.getByRole('button', { name: /Start work/ }));
 
@@ -166,9 +160,7 @@ describe('TicketDetail', () => {
       request_id: 'req-1',
     });
 
-    render(
-      <TicketDetail workspaceId="ws-1" ticket={ticket} messages={messages} events={events} />,
-    );
+    render(<TicketDetail workspaceId="ws-1" ticket={ticket} messages={messages} events={events} />);
 
     await user.click(screen.getByRole('button', { name: /Generate suggestion/ }));
 
@@ -223,7 +215,9 @@ describe('TicketDetail', () => {
       expect(mockCreateKnowledgeDraft).toHaveBeenCalledWith('ws-1', 'ticket-1');
     });
     expect(screen.getByText('How to resolve: Payroll access issue')).toBeInTheDocument();
-    expect(screen.getByText('Reset access and confirm the requester can sign in.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Reset access and confirm the requester can sign in.'),
+    ).toBeInTheDocument();
   });
 
   it('publishes a generated knowledge draft', async () => {
