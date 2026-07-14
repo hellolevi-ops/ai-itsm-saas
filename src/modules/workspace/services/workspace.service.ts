@@ -20,7 +20,7 @@ export class WorkspaceService {
       throw new ConflictException('Tenant context required');
     }
     const slug = dto.slug ?? `workspace-${Date.now()}`;
-    const existing = await this.workspaceRepository.findBySlug(slug);
+    const existing = await this.workspaceRepository.findBySlug(slug, ctxTenantId);
     if (existing) {
       throw new ConflictException('Workspace slug already exists');
     }

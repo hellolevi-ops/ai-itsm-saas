@@ -14,7 +14,10 @@ export class WorkspaceController {
 
   @Post()
   @RequiresRoles(RoleType.OWNER, RoleType.ADMIN)
-  async create(@Body() dto: CreateWorkspaceDto, @CurrentUser() user: { id: string; email: string; tenantId: string }) {
+  async create(
+    @Body() dto: CreateWorkspaceDto,
+    @CurrentUser() user: { id: string; email: string; tenantId: string },
+  ) {
     return this.workspaceService.create(dto, user.tenantId);
   }
 

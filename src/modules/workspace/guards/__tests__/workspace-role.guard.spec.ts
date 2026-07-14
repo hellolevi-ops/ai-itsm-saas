@@ -10,11 +10,12 @@ describe('WorkspaceRoleGuard', () => {
   let reflector: jest.Mocked<Reflector>;
   let memberService: jest.Mocked<WorkspaceMemberService>;
 
-  const createMockExecutionContext = (tenantContext?: any): ExecutionContext =>
+  const createMockExecutionContext = (tenantContext?: any, user?: any): ExecutionContext =>
     ({
       switchToHttp: () => ({
         getRequest: () => ({
           tenantContext,
+          user: user || { id: 'user-001', tenantId: 'tenant-001' },
         }),
       }),
       getHandler: () => ({}),
@@ -58,13 +59,44 @@ describe('WorkspaceRoleGuard', () => {
   });
 
   describe('when tenant context is missing', () => {
-    it('should throw ForbiddenException', () => {
+    it('should allow POST requests without workspaceId', async () => {
       reflector.getAllAndOverride.mockReturnValue([RoleType.ADMIN]);
-      const context = createMockExecutionContext();
+      const context = {
+        switchToHttp: () => ({
+          getRequest: () => ({
+            tenantContext: undefined,
+            user: { id: 'user-001', tenantId: 'tenant-001' },
+            method: 'POST',
+          }),
+        }),
+        getHandler: () => ({}),
+        getClass: () => ({}),
+      } as ExecutionContext;
 
-      expect(() => guard.canActivate(context)).toThrow(
-        new ForbiddenException('Tenant context required'),
-      );
+      const result = await guard.canActivate(context);
+
+      expect(result).toBe(true);
+    });
+
+    it('should throw ForbiddenException for non-POST requests without workspaceId', async () => {
+      reflector.getAllAndOverride.mockReturnValue([RoleType.ADMIN]);
+      const context = {
+        switchToHttp: () => ({
+          getRequest: () => ({
+            tenantContext: undefined,
+            user: { id: 'user-001', tenantId: 'tenant-001' },
+            method: 'GET',
+          }),
+        }),
+        getHandler: () => ({}),
+        getClass: () => ({}),
+      } as ExecutionContext;
+
+      expect(async () => {
+        await guard.canActivate(context);
+      }).rejects.toMatchObject({
+        message: 'Tenant context required',
+      });
     });
   });
 
@@ -72,7 +104,17 @@ describe('WorkspaceRoleGuard', () => {
     it('should throw ForbiddenException', async () => {
       reflector.getAllAndOverride.mockReturnValue([RoleType.ADMIN]);
       memberService.findByUserIdAndWorkspaceId.mockResolvedValue(null);
-      const context = createMockExecutionContext({ workspaceId: 'ws-001', userId: 'user-001' });
+      const context = {
+        switchToHttp: () => ({
+          getRequest: () => ({
+            tenantContext: { workspaceId: 'ws-001', userId: 'user-001' },
+            user: { id: 'user-001', tenantId: 'tenant-001' },
+            method: 'GET',
+          }),
+        }),
+        getHandler: () => ({}),
+        getClass: () => ({}),
+      } as ExecutionContext;
 
       await expect(guard.canActivate(context)).rejects.toThrow(
         new ForbiddenException('User is not a member of this workspace'),
@@ -88,7 +130,17 @@ describe('WorkspaceRoleGuard', () => {
         id: 'member-001',
         role: { roleType: RoleType.ADMIN },
       } as any);
-      const context = createMockExecutionContext({ workspaceId: 'ws-001', userId: 'user-001' });
+      const context = {
+        switchToHttp: () => ({
+          getRequest: () => ({
+            tenantContext: { workspaceId: 'ws-001', userId: 'user-001' },
+            user: { id: 'user-001', tenantId: 'tenant-001' },
+            method: 'GET',
+          }),
+        }),
+        getHandler: () => ({}),
+        getClass: () => ({}),
+      } as ExecutionContext;
 
       await expect(guard.canActivate(context)).rejects.toThrow(
         new ForbiddenException('Insufficient workspace role'),
@@ -102,7 +154,17 @@ describe('WorkspaceRoleGuard', () => {
         id: 'member-001',
         role: { roleType: RoleType.ADMIN },
       } as any);
-      const context = createMockExecutionContext({ workspaceId: 'ws-001', userId: 'user-001' });
+      const context = {
+        switchToHttp: () => ({
+          getRequest: () => ({
+            tenantContext: { workspaceId: 'ws-001', userId: 'user-001' },
+            user: { id: 'user-001', tenantId: 'tenant-001' },
+            method: 'GET',
+          }),
+        }),
+        getHandler: () => ({}),
+        getClass: () => ({}),
+      } as ExecutionContext;
 
       const result = await guard.canActivate(context);
 
@@ -120,7 +182,17 @@ describe('WorkspaceRoleGuard', () => {
         role: { roleType: RoleType.AGENT },
       } as any);
 
-      const context = createMockExecutionContext({ workspaceId: 'ws-001', userId: 'user-001' });
+      const context = {
+        switchToHttp: () => ({
+          getRequest: () => ({
+            tenantContext: { workspaceId: 'ws-001', userId: 'user-001' },
+            user: { id: 'user-001', tenantId: 'tenant-001' },
+            method: 'GET',
+          }),
+        }),
+        getHandler: () => ({}),
+        getClass: () => ({}),
+      } as ExecutionContext;
       await expect(guard.canActivate(context)).rejects.toThrow(
         new ForbiddenException('Insufficient workspace role'),
       );
@@ -143,7 +215,17 @@ describe('WorkspaceRoleGuard', () => {
         id: 'member-001',
         role: undefined,
       } as any);
-      const context = createMockExecutionContext({ workspaceId: 'ws-001', userId: 'user-001' });
+      const context = {
+        switchToHttp: () => ({
+          getRequest: () => ({
+            tenantContext: { workspaceId: 'ws-001', userId: 'user-001' },
+            user: { id: 'user-001', tenantId: 'tenant-001' },
+            method: 'GET',
+          }),
+        }),
+        getHandler: () => ({}),
+        getClass: () => ({}),
+      } as ExecutionContext;
 
       await expect(guard.canActivate(context)).rejects.toThrow(
         new ForbiddenException('Member role not found'),
@@ -161,7 +243,17 @@ describe('WorkspaceRoleGuard', () => {
         }
         return Promise.resolve(null);
       });
-      const context = createMockExecutionContext({ workspaceId: 'ws-001', userId: 'user-001' });
+      const context = {
+        switchToHttp: () => ({
+          getRequest: () => ({
+            tenantContext: { workspaceId: 'ws-001', userId: 'user-001' },
+            user: { id: 'user-001', tenantId: 'tenant-001' },
+            method: 'GET',
+          }),
+        }),
+        getHandler: () => ({}),
+        getClass: () => ({}),
+      } as ExecutionContext;
 
       await expect(guard.canActivate(context)).rejects.toThrow(
         new ForbiddenException('User is not a member of this workspace'),

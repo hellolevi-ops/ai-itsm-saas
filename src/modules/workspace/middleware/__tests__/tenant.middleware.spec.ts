@@ -23,8 +23,8 @@ describe('TenantMiddleware', () => {
 
   beforeEach(async () => {
     jest
-      .spyOn(TenantContextHolder, 'runWithContext')
-      .mockImplementation((_ctx: any, fn: any) => fn());
+      .spyOn(TenantContextHolder, 'runWithContextAsync')
+      .mockImplementation((_ctx: any, fn: any) => Promise.resolve(fn()));
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -127,7 +127,7 @@ describe('TenantMiddleware', () => {
         workspaceId: 'ws-001',
         userId: 'user-001',
       });
-      expect(TenantContextHolder.runWithContext).toHaveBeenCalledWith(
+      expect(TenantContextHolder.runWithContextAsync).toHaveBeenCalledWith(
         expect.objectContaining({
           tenantId: 'tenant-001',
           workspaceId: 'ws-001',
