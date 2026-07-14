@@ -9,6 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "pretest:e2e": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\"",
     "test:e2e": "playwright test",
     "test:watch": "vitest",
     "test:ui": "vitest --ui"
