@@ -1,35 +1,43 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 
-/**
- * Placeholder JWT Authentication Guard.
- * In production, this validates JWT tokens from the Authorization header.
- * For T-001 scope, this guard establishes the auth contract without
- * implementing the full login/registration flow (deferred to T-003).
- */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+  canActivate(
+    context: ExecutionContext,
+  ): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest();
-
-    // T-001: Accept mock authenticated user for testing tenant isolation.
-    // T-003 will replace this with real JWT validation.
     const authHeader = request.headers['authorization'];
+
     if (!authHeader) {
-      throw new UnauthorizedException('Authentication required');
+      throw new UnauthorizedException({
+        code: 'UNAUTHORIZED',
+        message: '未认证或令牌无效',
+      });
     }
 
-    // Placeholder: extract user from header for T-001 testing
-    // Format: "Bearer mock-<userId>-<tenantId>"
     const parts = authHeader.split(' ');
-    if (parts.length === 2 && parts[0] === 'Bearer' && parts[1].startsWith('mock-')) {
-      const [, userId, tenantId] = parts[1].split('-');
-      if (userId && tenantId) {
-        request.user = { id: userId, tenantId, email: `${userId}@test.com` };
-        return true;
-      }
+    if (parts.length !== 2 || parts[0] !== 'Bearer') {
+      throw new UnauthorizedException({
+        code: 'UNAUTHORIZED',
+        message: '未认证或令牌无效',
+      });
     }
 
-    throw new UnauthorizedException('Invalid authentication token');
+    // The JWT validation is handled by PassportStrategy
+    // Here we just check if user is attached to request
+    if (!request.user) {
+      throw new UnauthorizedException({
+        code: 'UNAUTHORIZED',
+        message: '未认证或令牌无效',
+      });
+    }
+
+    return true;
   }
 }
