@@ -73,6 +73,10 @@ test('requester can submit, track, reply to and progress a ticket', async ({ pag
   await expect(page.getByText('P2')).toBeVisible();
   await page.getByRole('link', { name: 'VPN access is unavailable' }).click();
 
+  await page.getByRole('button', { name: 'Generate suggestion' }).click();
+  await expect(page.getByText('network', { exact: true })).toBeVisible();
+  await expect(page.getByText(/Human review required/)).toBeVisible();
+
   await page
     .getByPlaceholder('Write a reply or internal note')
     .fill('I am checking the VPN concentrator.');

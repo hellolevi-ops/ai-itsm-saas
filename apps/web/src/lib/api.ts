@@ -15,6 +15,7 @@ import type {
   CreateTicketResponse,
   ListTicketsResponse,
   TicketDetailResponse,
+  TicketAiSuggestionResponse,
   TicketMessageResponse,
 } from '@/types/api';
 
@@ -138,6 +139,16 @@ export const ticketApi = {
     const response = await apiClient.post<ApiResponse<CreateTicketResponse>>(
       `/workspaces/${workspaceId}/tickets/${ticketId}/status`,
       data,
+    );
+    return response.data;
+  },
+
+  async generateSuggestions(
+    workspaceId: string,
+    ticketId: string,
+  ): Promise<ApiResponse<TicketAiSuggestionResponse>> {
+    const response = await apiClient.post<ApiResponse<TicketAiSuggestionResponse>>(
+      `/workspaces/${workspaceId}/tickets/${ticketId}/ai-suggestions`,
     );
     return response.data;
   },

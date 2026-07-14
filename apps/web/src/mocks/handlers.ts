@@ -568,6 +568,78 @@ export const handlers = [
   }),
 
   http.post(
+    '/api/v1/workspaces/:workspaceId/tickets/:ticketId/ai-suggestions',
+    async ({ request, params }) => {
+      await delay(250);
+      const user = getUserFromRequest(request);
+      const workspaceId = params.workspaceId as string;
+      const ticketId = params.ticketId as string;
+      if (!user || !isWorkspaceMember(workspaceId, user.id)) {
+        return HttpResponse.json(
+          {
+            error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+            request_id: generateRequestId(),
+          },
+          { status: user ? 403 : 401 },
+        );
+      }
+      const ticket = tickets.get(ticketId);
+      if (!ticket || ticket.workspace_id !== workspaceId) {
+        return HttpResponse.json(
+          {
+            error: { code: 'TICKET_NOT_FOUND', message: 'Ticket not found' },
+            request_id: generateRequestId(),
+          },
+          { status: 404 },
+        );
+      }
+
+      const text = `${ticket.title} ${ticket.description}`.toLowerCase();
+      const category = /\b(vpn|wifi|network|connect)\b/.test(text)
+        ? 'network'
+        : /\b(password|login|permission|access|account)\b/.test(text)
+          ? 'access'
+          : ticket.category || 'general';
+      const priority = /\b(cannot|unable|blocked|unavailable|down)\b/.test(text)
+        ? 'P2'
+        : ticket.priority;
+      const confidence = category === 'general' ? 0.62 : 0.82;
+      const suggestion = {
+        summary: `${ticket.title}. ${ticket.description}`.slice(0, 180),
+        category,
+        priority,
+        reply_draft:
+          category === 'network'
+            ? 'Thanks for the details. Please share the error message, device type, network location and whether other users are affected.'
+            : 'Thanks for the details. Please share any screenshots, affected users and the business impact so the team can triage quickly.',
+        confidence,
+        risk_level: 'LOW',
+        reasons: [`Matched ${category} request pattern`, `Suggested ${priority} priority`],
+        requires_human_review: true,
+      };
+
+      return HttpResponse.json({
+        data: {
+          ai_run: {
+            id: generateId(),
+            action: 'TICKET_TRIAGE',
+            provider: 'mock',
+            model: 'rules-v1',
+            prompt_version: 'ticket-triage-v1',
+            status: 'SUCCEEDED',
+            confidence,
+            latency_ms: 3,
+            risk_level: 'LOW',
+            created_at: new Date().toISOString(),
+          },
+          suggestion,
+        },
+        request_id: generateRequestId(),
+      });
+    },
+  ),
+
+  http.post(
     '/api/v1/workspaces/:workspaceId/tickets/:ticketId/messages',
     async ({ request, params }) => {
       await delay(200);

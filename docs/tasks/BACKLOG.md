@@ -13,7 +13,8 @@
 - Add CI workflow for root and web gates if absent.
 - Broaden M1 backend tests from service/repository unit coverage to controller/integration coverage.
 - Review Next transitive PostCSS moderate audit advisory; avoid `npm audit fix --force` because it proposes a breaking Next downgrade.
-- Start M2 AI-assisted ticket contract and implementation plan.
+- Broaden M2 backend tests from service/provider unit coverage to controller/integration coverage.
+- Start M3 knowledge and self-service contract: knowledge document model, approval workflow and AI citation boundaries.
 
 ## P2
 

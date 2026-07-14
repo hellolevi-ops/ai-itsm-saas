@@ -168,3 +168,32 @@ export interface TicketDetailResponse {
 export interface TicketMessageResponse {
   message: TicketMessage;
 }
+
+export interface AiRunSummary {
+  id: string;
+  action: 'TICKET_TRIAGE';
+  provider: string;
+  model: string;
+  prompt_version: string;
+  status: 'SUCCEEDED' | 'FAILED';
+  confidence: number;
+  latency_ms: number;
+  risk_level: 'LOW' | 'MEDIUM' | 'HIGH';
+  created_at: string;
+}
+
+export interface TicketAiSuggestion {
+  summary: string;
+  category: string;
+  priority: TicketPriority;
+  reply_draft: string;
+  confidence: number;
+  risk_level: 'LOW' | 'MEDIUM' | 'HIGH';
+  reasons: string[];
+  requires_human_review: boolean;
+}
+
+export interface TicketAiSuggestionResponse {
+  ai_run: AiRunSummary;
+  suggestion: TicketAiSuggestion;
+}

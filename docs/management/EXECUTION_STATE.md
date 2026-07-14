@@ -4,8 +4,8 @@
 - Current branch: local snapshot plus GitHub branch `codex/m0-takeover-baseline`; base branch `develop`
 - Current commit: GitHub branch commit `ca2ab7868b9605c8628bc7a28ff5f47721507958`; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
 - Current phase: Phase 0 / Phase 1 takeover
-- Current milestone: M1 - Minimal ticket loop
-- Current milestone status: ACCEPTED_LOCALLY - M1 backend, web and browser-level E2E gates passed; PR/CI review remains before merge
+- Current milestone: M2 - AI-assisted tickets
+- Current milestone status: ACCEPTED_LOCALLY - M2 AI Gateway, mock provider, structured suggestions, audit storage, web panel and E2E gates passed; PR/CI review remains before merge
 - Completed tasks:
   - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_自主接管与商业化开发总控执行书.md`.
   - Inspected the requested workspace path.
@@ -56,9 +56,17 @@
   - Added frontend ticket component tests for submit redirect, queue links, conversation rendering, message add and status change.
   - Added Playwright E2E coverage for register, create workspace, submit ticket, view queue, open detail, add message and start work.
   - Fixed M1 browser issues found by E2E: mock-worker startup race, localStorage hydration mismatch, mock state loss across full-page navigation, and client-detail status/message refresh.
+  - Created `docs/contracts/AI_TICKET_ASSIST_API.md`.
+  - Created `docs/tasks/M2-ai-assisted-tickets.md`.
+  - Added Prisma `AiRun` model and migration `20260715004500_add_ai_runs`.
+  - Implemented `src/modules/ai/**` with AI Gateway, deterministic mock provider, structured ticket suggestions, AI run repository, service and controller.
+  - Added `POST /api/v1/workspaces/:workspaceId/tickets/:ticketId/ai-suggestions`.
+  - Added backend M2 tests for structured suggestions, risk handling, audit record creation, requester ownership and fail-closed membership.
+  - Added web ticket detail AI suggestion panel and MSW support.
+  - Extended Playwright E2E to verify AI suggestion generation and human-review messaging.
 - Active tasks:
-  - Push M1 browser E2E hardening and validation evidence to draft PR #2.
-  - Start M2 AI-assisted ticket contract and implementation plan after PR #2 is updated.
+  - Push M2 AI-assisted ticket implementation and validation evidence to draft PR #2.
+  - Start M3 knowledge and self-service contract after PR #2 is updated.
 - Blocked tasks:
   - `git fetch --all --tags --prune`
   - Local branch, remote and working tree checks
@@ -95,6 +103,7 @@
   - `cd apps/web; npm run build`
   - `cd apps/web; npm run test:e2e`
   - `cd apps/web; npm audit --audit-level=moderate`
+  - M2 temporary PostgreSQL migration validation for three migrations
   - GitHub REST API git refs, blobs, tree, commit and pull request creation for `codex/m0-takeover-baseline`
   - Temporary PostgreSQL 18 cluster initialization with `initdb`
   - `prisma migrate deploy`
@@ -153,6 +162,17 @@
   - Web lint, typecheck, Vitest, build and E2E passed after M1 E2E hardening.
   - Secret scan after M1 E2E hardening found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
   - Web npm audit reports 2 moderate vulnerabilities from Next's transitive PostCSS dependency; `npm audit fix --force` proposes a breaking downgrade to Next 9.3.3, so no automatic fix was applied.
+  - Prisma schema validates after M2 AI run model.
+  - M2 migration validation passed: migrations `20260714113121_init`, `20260714230500_add_ticket_loop` and `20260715004500_add_ai_runs` applied to an empty PostgreSQL 18 database.
+  - M2 migration created table `ai_runs`.
+  - Root typecheck passed after M2 implementation.
+  - Root lint passed after M2 implementation.
+  - Root Jest tests passed after M2 implementation: 95/95.
+  - Root build passed after M2 implementation.
+  - Web lint, typecheck, Vitest, build and E2E passed after M2 implementation.
+  - Web Vitest tests passed after M2 implementation: 66/66.
+  - Web Playwright E2E passed after M2 implementation: 1/1.
+  - Secret scan after M2 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
 - Open P0 issues:
   - None for executable source validation.
 - Open P1 issues:
@@ -164,4 +184,4 @@
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Push current M1 browser E2E hardening to PR #2, then begin M2 AI-assisted ticket contract planning.
+  - Push current M2 implementation to PR #2, then begin M3 knowledge and self-service contract planning.

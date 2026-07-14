@@ -18,6 +18,7 @@ vi.mock('@/lib/api', () => ({
   ticketApi: {
     addMessage: vi.fn(),
     changeStatus: vi.fn(),
+    generateSuggestions: vi.fn(),
   },
   extractApiError: () => 'Request failed',
 }));
@@ -124,5 +125,50 @@ describe('TicketDetail', () => {
       });
     });
     expect(mockRefresh).toHaveBeenCalled();
+  });
+
+  it('generates AI suggestions without changing ticket fields', async () => {
+    const user = userEvent.setup();
+    const mockGenerateSuggestions = ticketApi.generateSuggestions as Mock;
+    mockGenerateSuggestions.mockResolvedValue({
+      data: {
+        ai_run: {
+          id: 'run-1',
+          action: 'TICKET_TRIAGE',
+          provider: 'mock',
+          model: 'rules-v1',
+          prompt_version: 'ticket-triage-v1',
+          status: 'SUCCEEDED',
+          confidence: 0.82,
+          latency_ms: 3,
+          risk_level: 'LOW',
+          created_at: '2026-07-15T00:00:00.000Z',
+        },
+        suggestion: {
+          summary: 'Unable to access payroll portal.',
+          category: 'access',
+          priority: 'P2',
+          reply_draft: 'Please confirm the affected application.',
+          confidence: 0.82,
+          risk_level: 'LOW',
+          reasons: ['Matched access request pattern'],
+          requires_human_review: true,
+        },
+      },
+      request_id: 'req-1',
+    });
+
+    render(
+      <TicketDetail workspaceId="ws-1" ticket={ticket} messages={messages} events={events} />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /Generate suggestion/ }));
+
+    await waitFor(() => {
+      expect(mockGenerateSuggestions).toHaveBeenCalledWith('ws-1', 'ticket-1');
+    });
+    expect(screen.getByText('Please confirm the affected application.')).toBeInTheDocument();
+    expect(screen.getByText('P2')).toBeInTheDocument();
+    expect(screen.getByText(/Human review required/)).toBeInTheDocument();
   });
 });

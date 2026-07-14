@@ -5,7 +5,13 @@ import { useRouter } from 'next/navigation';
 import { ticketApi, extractApiError } from '@/lib/api';
 import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
-import type { Ticket, TicketEvent, TicketMessage, TicketStatus } from '@/types/api';
+import type {
+  Ticket,
+  TicketAiSuggestion,
+  TicketEvent,
+  TicketMessage,
+  TicketStatus,
+} from '@/types/api';
 
 interface TicketDetailProps {
   workspaceId: string;
@@ -23,6 +29,8 @@ export function TicketDetail({ workspaceId, ticket, messages, events }: TicketDe
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isChangingStatus, setIsChangingStatus] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<TicketAiSuggestion | null>(null);
+  const [isGeneratingSuggestion, setIsGeneratingSuggestion] = useState(false);
 
   const addMessage = async () => {
     if (!body.trim()) return;
@@ -54,6 +62,19 @@ export function TicketDetail({ workspaceId, ticket, messages, events }: TicketDe
       setError(extractApiError(err));
     } finally {
       setIsChangingStatus(false);
+    }
+  };
+
+  const generateAiSuggestion = async () => {
+    setError(null);
+    setIsGeneratingSuggestion(true);
+    try {
+      const response = await ticketApi.generateSuggestions(workspaceId, currentTicket.id);
+      setAiSuggestion(response.data.suggestion);
+    } catch (err) {
+      setError(extractApiError(err));
+    } finally {
+      setIsGeneratingSuggestion(false);
     }
   };
 
@@ -120,6 +141,54 @@ export function TicketDetail({ workspaceId, ticket, messages, events }: TicketDe
       </section>
 
       <aside className="space-y-4">
+        <div className="border border-gray-200 bg-white p-5">
+          <h2 className="text-sm font-semibold text-gray-900">AI suggestion</h2>
+          <p className="mt-1 text-xs text-gray-500">Draft only. It will not change this ticket.</p>
+          <Button
+            type="button"
+            variant="secondary"
+            className="mt-4 w-full"
+            onClick={generateAiSuggestion}
+            loading={isGeneratingSuggestion}
+          >
+            Generate suggestion
+          </Button>
+          {aiSuggestion && (
+            <div className="mt-4 space-y-3 text-sm">
+              <div>
+                <div className="text-xs font-medium uppercase text-gray-500">Summary</div>
+                <p className="mt-1 text-gray-800">{aiSuggestion.summary}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <div className="text-xs font-medium uppercase text-gray-500">Category</div>
+                  <div className="mt-1 text-gray-900">{aiSuggestion.category}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-medium uppercase text-gray-500">Priority</div>
+                  <div className="mt-1 text-gray-900">{aiSuggestion.priority}</div>
+                </div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase text-gray-500">Confidence</div>
+                <div className="mt-1 text-gray-900">
+                  {Math.round(aiSuggestion.confidence * 100)}% · {aiSuggestion.risk_level}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase text-gray-500">Reply draft</div>
+                <p className="mt-1 whitespace-pre-wrap text-gray-800">
+                  {aiSuggestion.reply_draft}
+                </p>
+              </div>
+              {aiSuggestion.requires_human_review && (
+                <div className="border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
+                  Human review required before sending or changing ticket fields.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         <div className="border border-gray-200 bg-white p-5">
           <h2 className="text-sm font-semibold text-gray-900">Actions</h2>
           <div className="mt-4 grid gap-2">

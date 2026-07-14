@@ -55,6 +55,15 @@ enum TicketEventType {
   REOPENED
 }
 
+enum AiActionType {
+  TICKET_TRIAGE
+}
+
+enum AiRunStatus {
+  SUCCEEDED
+  FAILED
+}
+
 model Tenant {
   id        String   @id @default(uuid())
   name      String
@@ -88,6 +97,7 @@ model User {
   updatedTickets   Ticket[] @relation("TicketUpdater")
   ticketMessages   TicketMessage[]
   ticketEvents     TicketEvent[]
+  aiRuns           AiRun[]
 
   @@map("users")
   @@unique([tenantId, email])
@@ -111,6 +121,7 @@ model Workspace {
   tickets Ticket[]
   ticketMessages TicketMessage[]
   ticketEvents TicketEvent[]
+  aiRuns       AiRun[]
 
   @@map("workspaces")
   @@unique([tenantId, slug])
@@ -182,6 +193,7 @@ model Ticket {
   updatedBy User?     @relation("TicketUpdater", fields: [updatedById], references: [id])
   messages  TicketMessage[]
   events    TicketEvent[]
+  aiRuns    AiRun[]
 
   @@map("tickets")
   @@unique([workspaceId, number])
@@ -231,4 +243,35 @@ model TicketEvent {
   @@index([ticketId])
   @@index([actorId])
   @@index([type])
+}
+
+model AiRun {
+  id                 String       @id @default(uuid())
+  workspaceId        String       @map("workspace_id")
+  ticketId           String       @map("ticket_id")
+  actorId            String?      @map("actor_id")
+  action             AiActionType
+  provider           String
+  model              String
+  promptVersion      String       @map("prompt_version")
+  status             AiRunStatus
+  inputHash          String       @map("input_hash")
+  output             Json
+  confidence         Float
+  riskLevel          String       @default("LOW") @map("risk_level")
+  latencyMs          Int          @map("latency_ms")
+  inputTokens        Int          @default(0) @map("input_tokens")
+  outputTokens       Int          @default(0) @map("output_tokens")
+  estimatedCostMicros Int         @default(0) @map("estimated_cost_micros")
+  createdAt          DateTime     @default(now()) @map("created_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  ticket    Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actor     User?     @relation(fields: [actorId], references: [id])
+
+  @@map("ai_runs")
+  @@index([workspaceId])
+  @@index([workspaceId, ticketId])
+  @@index([workspaceId, action])
+  @@index([actorId])
 }
