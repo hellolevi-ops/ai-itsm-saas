@@ -366,6 +366,8 @@
 - Secret scan after M11 implementation found no user-provided GitHub/OpenAI token in repository files.
 - GitHub Actions CI initially failed on the service-catalog SLA unit test because M4 due-date calculation used the process-local timezone; fixed by deriving wall-clock working time from `WorkspaceWorkingHours.timezone`.
 - Post-fix UTC validation passed: root Jest 152/152 tests, root lint, root typecheck, `npm run rc:check` and root build.
+- GitHub Actions CI then failed on the web Playwright knowledge-draft status assertion because a corrupted status separator glyph made the exact-text assertion brittle; fixed with an ASCII UI separator and `knowledge-draft-status` semantic assertions.
+- Post-fix web validation passed: typecheck, lint, Vitest 69/69, build and Playwright 1/1.
 - Web Playwright E2E passed after M4 implementation: 1/1.
 - Secret scan after M4 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
 - Open P0 issues:
@@ -380,4 +382,4 @@
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Push M11 remote CI timezone fix to PR #2, verify GitHub Actions, then pause with human/external production-release hold items.
+  - Push M11 remote CI web E2E stability fix to PR #2, verify GitHub Actions, then pause with human/external production-release hold items.
