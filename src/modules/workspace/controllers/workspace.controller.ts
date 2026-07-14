@@ -7,7 +7,7 @@ import { RequiresRoles } from '../decorators/requires-roles.decorator';
 import { RoleType } from '@prisma/client';
 
 @UseGuards(JwtAuthGuard, WorkspaceRoleGuard)
-@Controller('api/workspaces')
+@Controller('api/v1/workspaces')
 export class WorkspaceController {
   constructor(private readonly workspaceService: WorkspaceService) {}
 
