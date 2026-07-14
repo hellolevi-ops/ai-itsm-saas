@@ -58,8 +58,8 @@ The recursive tree for `develop` contains:
 - `src`
 - `docs`
 - `README.md`
-- `AI_ITSM_SaaS_PLG_???????_PRD_???_V1.0.md`
-- `AI_ITSM_SaaS_PLG_?????_???_V1.0.md`
+- `AI_ITSM_SaaS_PLG_浜у搧闇€姹傝鏄庝功_PRD_涓浗鍖篲V1.0.md`
+- `AI_ITSM_SaaS_PLG_鍟嗕笟璁″垝涔涓浗鍖篲V1.0.md`
 
 ## Local Recovery and Validation
 
@@ -287,3 +287,39 @@ Security note:
 - M10 adds pre-release beta readiness only; no production deployment, real payment provider, paid external resource, irreversible migration or final legal judgment was performed.
 - Beta feedback and feature flags are workspace-scoped; flag writes are owner/admin-only.
 - Real design partner recruiting, interviews and payment validation remain manual business work before release-candidate approval.
+
+## Latest Local M11 Validation
+
+- Checked at: 2026-07-15 04:47 Asia/Shanghai
+- Draft PR: `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2`
+- Branch: `codex/m0-takeover-baseline`
+- Latest M11 implementation commit pushed by GitHub REST API: `8bd2cc737298156be53b5554efd54fd190ad8a16`
+- PR head verification: pending final evidence push
+- Token stored in this repository: No
+
+Validation evidence after M11:
+
+| Gate | Result |
+|---|---|
+| `npm run prisma:generate` | PASS |
+| `npm exec prisma -- validate` with local `DATABASE_URL` | PASS |
+| `npm run rc:check` | PASS |
+| Root `npm run typecheck` | PASS |
+| Root `npm run lint:check` | PASS |
+| Root `npm test -- --runInBand` | PASS, 152/152 tests |
+| Root `npm run build` | PASS |
+| Root `npm audit --audit-level=moderate` | PASS, 0 vulnerabilities |
+| Web `npm run typecheck` | PASS |
+| Web `npm run lint` | PASS |
+| Web `npm test` | PASS, 69/69 tests |
+| Web `npm run build` | PASS |
+| Web `npm run test:e2e` | PASS, 1/1 |
+| Temporary PostgreSQL migration validation | PASS, 9 migrations through `20260715065000_add_beta_readiness` |
+| Secret scan | PASS, no committed GitHub/OpenAI token found |
+
+Security and release note:
+
+- M11 adds the Release Candidate package, CI workflow, RC artifact check, RC center and production-release hold documentation.
+- The RC package explicitly keeps `production_release: false`, `merge_to_main_approved: false` and `legal_final_judgment: false`.
+- Web `npm audit --audit-level=moderate` still reports 2 moderate Next/PostCSS findings; `npm audit fix --force` would downgrade Next to 9.3.3 and was not applied.
+- Production release, main merge, paid external resources, irreversible migrations and final legal judgment were not performed.
