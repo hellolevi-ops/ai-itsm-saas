@@ -58,8 +58,8 @@ The recursive tree for `develop` contains:
 - `src`
 - `docs`
 - `README.md`
-- `AI_ITSM_SaaS_PLG_???????_PRD_???_V1.0.md`
-- `AI_ITSM_SaaS_PLG_?????_???_V1.0.md`
+- `AI_ITSM_SaaS_PLG_产品需求说明书_PRD_中国区_V1.0.md`
+- `AI_ITSM_SaaS_PLG_商业计划书_中国区_V1.0.md`
 
 ## Local Recovery and Validation
 
@@ -86,13 +86,41 @@ Executable gates run after recovery:
 | Web `npm test` | PASS, 58/58 tests |
 | Web `npm run build` | PASS |
 
+## Latest PR Branch Update
+
+- Checked at: 2026-07-15 02:03 Asia/Shanghai
+- Draft PR: `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2`
+- Branch: `codex/m0-takeover-baseline`
+- Latest M4 commit pushed by GitHub REST API: `7a6aa1187210daccb5462a08bf5ba3f9603c9749`
+- PR head verification: PASS
+- Token stored in this repository: No
+
+Latest validation evidence after M4:
+
+| Gate | Result |
+|---|---|
+| `npm run prisma:generate` | PASS |
+| `npm exec prisma -- validate` with local `DATABASE_URL` | PASS |
+| Root `npm run typecheck` | PASS |
+| Root `npm run lint:check` | PASS |
+| Root `npm test -- --runInBand` | PASS, 114/114 tests |
+| Root `npm run build` | PASS |
+| Web `npm run typecheck` | PASS |
+| Web `npm run lint` | PASS |
+| Web `npm test` | PASS, 69/69 tests |
+| Web `npm run build` | PASS |
+| Web `npm run test:e2e` | PASS, 1/1 |
+| Temporary PostgreSQL migration validation | PASS, 5 migrations through `20260715021500_add_service_catalog` |
+| Secret scan | PASS, no committed GitHub/OpenAI token found |
+
 Security note:
 
 - The provided GitHub token was not written to repository files.
 - A runtime JWT fallback secret was found and removed. Runtime now requires `JWT_SECRET`.
 - `.env.example` was added for required local configuration.
+- M4 secret scan matched only dependency/document URLs, not secrets.
 
 Remaining limitations:
 
-- No live PostgreSQL instance was used, so migrations were schema-validated but not applied to a database.
+- Temporary PostgreSQL migration validation has passed through M4; staging/production migration remains future release work.
 - Production release was not attempted.
