@@ -276,7 +276,9 @@ test('requester can submit, track, reply to and progress a ticket', async ({ pag
 
   await page.getByRole('button', { name: 'Resolve' }).click();
   await expect(page.getByText('RESOLVED')).toBeVisible();
-  await page.getByRole('button', { name: 'Create draft' }).click();
+  const createDraftButton = page.getByRole('button', { name: 'Create draft' });
+  await expect(createDraftButton).toBeEnabled();
+  await createDraftButton.click();
   await expect(page.getByText('How to resolve: VPN access is unavailable')).toBeVisible();
   await expect(page.getByTestId('knowledge-draft-status')).toContainText('DRAFT');
   await expect(page.getByTestId('knowledge-draft-status')).toContainText('INTERNAL');
