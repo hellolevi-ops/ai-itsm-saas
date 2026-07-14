@@ -58,8 +58,8 @@ The recursive tree for `develop` contains:
 - `src`
 - `docs`
 - `README.md`
-- `AI_ITSM_SaaS_PLG_产品需求说明书_PRD_中国区_V1.0.md`
-- `AI_ITSM_SaaS_PLG_商业计划书_中国区_V1.0.md`
+- `AI_ITSM_SaaS_PLG_???????_PRD_???_V1.0.md`
+- `AI_ITSM_SaaS_PLG_?????_???_V1.0.md`
 
 ## Local Recovery and Validation
 
@@ -253,3 +253,36 @@ Security note:
 - M9 adds compliance drafts and metadata only; no final legal judgment, filing, paid external review, customer data transfer or production release was performed.
 - The web build no longer depends on fetching Google Fonts during production build.
 - Secret scan false positives include dependency/document URLs and the literal service name `lingxi-service-desk-api`, not secrets.
+
+## Latest Local M10 Validation
+
+- Checked at: 2026-07-15 04:12 Asia/Shanghai
+- Draft PR: `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2`
+- Branch: `codex/m0-takeover-baseline`
+- Latest M10 implementation commit pushed by GitHub REST API: `d5c2212c18c9a7dd35f0384ccc0d071e1215f5c8`
+- PR head verification: pending follow-up API check after evidence commit
+- Token stored in this repository: No
+
+Validation evidence after M10:
+
+| Gate | Result |
+|---|---|
+| `npm run prisma:generate` | PASS |
+| `npm exec prisma -- validate` with local `DATABASE_URL` | PASS |
+| Root `npm run typecheck` | PASS |
+| Root `npm run lint:check` | PASS |
+| Root `npm test -- --runInBand` | PASS, 151/151 tests |
+| Root `npm run build` | PASS |
+| Web `npm run typecheck` | PASS |
+| Web `npm run lint` | PASS |
+| Web `npm test` | PASS, 69/69 tests |
+| Web `npm run build` | PASS |
+| Web `npm run test:e2e` | PASS, 1/1 |
+| Temporary PostgreSQL migration validation | PASS, 9 migrations through `20260715065000_add_beta_readiness` |
+| Secret scan | PASS, no committed GitHub/OpenAI token found |
+
+Security note:
+
+- M10 adds pre-release beta readiness only; no production deployment, real payment provider, paid external resource, irreversible migration or final legal judgment was performed.
+- Beta feedback and feature flags are workspace-scoped; flag writes are owner/admin-only.
+- Real design partner recruiting, interviews and payment validation remain manual business work before release-candidate approval.
