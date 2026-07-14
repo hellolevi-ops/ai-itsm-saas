@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+  push:
+    branches:
+      - develop
+      - codex/**
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ai_itsm_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ai_itsm_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ai_itsm_ci
+      JWT_SECRET: ci-only-jwt-secret-change-before-production
+      NEXT_PUBLIC_ENABLE_MOCK: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate
+
+      - name: Validate Prisma schema
+        run: npm exec prisma -- validate
+
+      - name: Apply database migrations
+        run: npm exec prisma -- migrate deploy
+
+      - name: Backend typecheck
+        run: npm run typecheck
+
+      - name: Backend lint
+        run: npm run lint:check
+
+      - name: Backend tests
+        run: npm test -- --runInBand
+
+      - name: Backend build
+        run: npm run build
+
+      - name: RC artifact check
+        run: npm run rc:check
+
+      - name: Install web dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Web typecheck
+        working-directory: apps/web
+        run: npm run typecheck
+
+      - name: Web lint
+        working-directory: apps/web
+        run: npm run lint
+
+      - name: Web unit tests
+        working-directory: apps/web
+        run: npm test
+
+      - name: Install Playwright browser
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+
+      - name: Web build
+        working-directory: apps/web
+        run: npm run build
+
+      - name: Web E2E
+        working-directory: apps/web
+        run: npm run test:e2e

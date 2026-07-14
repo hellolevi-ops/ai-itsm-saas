@@ -587,3 +587,34 @@ export interface CreateBetaFeedbackResponse {
 export interface UpdateBetaFeatureFlagResponse {
   feature_flag: BetaFeatureFlag;
 }
+
+export interface ReleaseCandidateGate {
+  key: string;
+  title: string;
+  status:
+    | 'PASS_LOCAL'
+    | 'PASS_LOCAL_WITH_REVIEW_GAP'
+    | 'PASS_LOCAL_WITH_MOCK_PROVIDER'
+    | 'PASS_WITH_KNOWN_RISK'
+    | 'DOCUMENTED_NOT_LOAD_TESTED'
+    | 'RUNBOOK_READY_NOT_PRODUCTION_DRILLED'
+    | 'PASS_LOCAL_WITH_RUNBOOK'
+    | 'PARTIAL_LOCAL'
+    | 'PASS_LOCAL_MANUAL_ONLY'
+    | 'DRAFT_READY_FOR_PROFESSIONAL_REVIEW'
+    | 'TECHNICAL_LOOP_READY_EXTERNAL_EVIDENCE_REQUIRED';
+  evidence: string[];
+}
+
+export interface ReleaseCandidatePackageResponse {
+  package_version: string;
+  status: 'RELEASE_CANDIDATE_PREPARED';
+  production_release: false;
+  merge_to_main_approved: false;
+  legal_final_judgment: false;
+  paid_external_resources_required: false;
+  last_updated_at: string;
+  gates: ReleaseCandidateGate[];
+  human_actions_required: string[];
+  reports: string[];
+}

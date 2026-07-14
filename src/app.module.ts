@@ -12,6 +12,7 @@ import { BillingModule } from './modules/billing/billing.module';
 import { OpsModule } from './modules/ops/ops.module';
 import { ComplianceModule } from './modules/compliance/compliance.module';
 import { BetaModule } from './modules/beta/beta.module';
+import { ReleaseCandidateModule } from './modules/release-candidate/rc.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { SecurityHeadersMiddleware } from './common/middleware/security-headers.middleware';
 
@@ -30,6 +31,7 @@ import { SecurityHeadersMiddleware } from './common/middleware/security-headers.
     OpsModule,
     ComplianceModule,
     BetaModule,
+    ReleaseCandidateModule,
   ],
 })
 export class AppModule implements NestModule {

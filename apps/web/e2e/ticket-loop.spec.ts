@@ -294,4 +294,17 @@ test('requester can submit, track, reply to and progress a ticket', async ({ pag
   await expect(page.getByTestId('compliance-documents')).toContainText(
     'Generative AI and Content Labeling Checklist',
   );
+
+  await page.goto('/release-candidate');
+  await expect(page.getByRole('heading', { name: 'Release Candidate' })).toBeVisible();
+  await expect(page.getByTestId('rc-center')).toContainText('RELEASE_CANDIDATE_PREPARED');
+  await expect(page.getByTestId('rc-center')).toContainText('Blocked');
+  await expect(page.getByTestId('rc-gates')).toContainText('Full regression');
+  await expect(page.getByTestId('rc-gates')).toContainText('Beta evidence');
+  await expect(page.getByTestId('rc-reports')).toContainText(
+    'docs/release-candidate/RELEASE_CANDIDATE_REPORT.md',
+  );
+  await expect(page.getByTestId('rc-human-actions')).toContainText(
+    'Formal production release approval',
+  );
 });

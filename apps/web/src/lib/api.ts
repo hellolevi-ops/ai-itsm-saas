@@ -45,6 +45,7 @@ import type {
   CreateBetaFeedbackRequest,
   CreateBetaFeedbackResponse,
   UpdateBetaFeatureFlagResponse,
+  ReleaseCandidatePackageResponse,
 } from '@/types/api';
 
 const apiClient = axios.create({
@@ -375,6 +376,15 @@ export const betaApi = {
     const response = await apiClient.post<ApiResponse<UpdateBetaFeatureFlagResponse>>(
       `/workspaces/${workspaceId}/beta/feature-flags/${key}`,
       { enabled },
+    );
+    return response.data;
+  },
+};
+
+export const releaseCandidateApi = {
+  async publicPackage(): Promise<ApiResponse<ReleaseCandidatePackageResponse>> {
+    const response = await apiClient.get<ApiResponse<ReleaseCandidatePackageResponse>>(
+      '/release-candidate/public',
     );
     return response.data;
   },

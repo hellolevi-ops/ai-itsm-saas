@@ -17,9 +17,10 @@ Only `VERIFIED` counts as technically complete.
 | Data security | PARTIAL | Secret, export, deletion and storage checks pass. | Secret scan found no committed GitHub token; JWT fallback removed. | Export/deletion/storage flows not built. | Yes |
 | Observability | PARTIAL | Logs, metrics, traces and health checks verified. | M8 liveness/readiness endpoints, database readiness check and request id headers pass unit tests and E2E. | Structured logs, metrics, traces, dashboards and alerting pending. | Yes |
 | Backup and restore | NOT_STARTED | Restore drill verified. | None. | No backup/restore drill. | Yes |
-| Performance capacity | NOT_STARTED | Baseline load test recorded. | None. | Capacity unknown. | No |
-| CI/CD | NOT_STARTED | Reproducible CI passes. | No workflow found in recovered tree. | CI must be added before release readiness. | Yes |
-| Rollback | NOT_STARTED | Rollback path rehearsed. | None. | No rollback evidence; M8 records health checks but no rollback rehearsal. | Yes |
+| Performance capacity | PARTIAL | Baseline load test recorded. | M11 performance baseline documents first capacity assumptions and required load-test scope. | Dedicated load test and capacity measurements still pending. | No |
+| CI/CD | IMPLEMENTED | Reproducible CI passes. | M11 adds `.github/workflows/ci.yml` covering backend, web, migrations, E2E and RC artifact checks. | Remote CI result pending after GitHub run. | Yes |
+| Rollback | PARTIAL | Rollback path rehearsed. | M11 migration/rollback runbook plus empty PostgreSQL migration validation through M10. | Production rollback rehearsal requires approved infrastructure. | Yes |
 | Compliance materials | PARTIAL | Draft materials marked for professional review. | M9 compliance draft package, `COMPLIANCE_API.md`, public compliance API and `/legal` compliance center. | Final legal review, filings and production legal approval remain external/manual. | No |
 | Customer support operations | PARTIAL | Support workflow and feedback loop ready. | M10 support process doc plus `/beta` feedback and bug intake. | Real support rotations and partner response tracking pending. | No |
 | Beta evidence | PARTIAL | Beta usage and feedback recorded. | M10 beta package, workspace feature flags, persistent feedback records and `/beta` console pass E2E. | Real design partner usage, interviews and payment validation are still manual business work. | Yes |
+| Release Candidate | IMPLEMENTED | RC package and hold list prepared. | M11 RC report, RC API, `/release-candidate`, CI workflow and `npm run rc:check`. | Human/external actions remain before production release. | Yes |

@@ -25,8 +25,40 @@ Evidence:
 Residual risks:
 
 - Local workspace still lacks `.git`, so future local Git operations require Git installation or API workflow.
-- No CI workflow is present yet.
-- Browser-level E2E flow was not automated in this checkpoint.
+- CI workflow is now defined, but remote CI result still depends on GitHub Actions execution.
+- Browser-level E2E is automated locally and in the CI workflow definition.
+
+## Release Candidate Gate
+
+Criteria:
+
+- M0-M10 accepted locally.
+- Root and web regression gates pass.
+- Main browser E2E path passes.
+- Empty PostgreSQL migration validation passes.
+- RC artifact check passes.
+- Production release hold items are listed.
+
+Current result: PASS_WITH_HUMAN_ACTIONS_REQUIRED.
+
+Evidence:
+
+- `docs/release-candidate/RELEASE_CANDIDATE_REPORT.md`
+- `docs/release-candidate/REGRESSION_MATRIX.md`
+- `docs/release-candidate/PERMISSION_TENANT_MATRIX.md`
+- `docs/release-candidate/AI_SAFETY_REVIEW.md`
+- `docs/release-candidate/PRODUCTION_RELEASE_HOLD.md`
+- `GET /api/v1/release-candidate/public`
+- `/release-candidate`
+- `.github/workflows/ci.yml`
+- `npm run rc:check`
+
+Residual risks:
+
+- Real design partner beta evidence is not yet available.
+- Legal/compliance materials need professional final review.
+- Real model, email, payment and production infrastructure are not configured.
+- Backup/restore, rollback and monitoring are documented but not production-drilled.
 
 ## Production Gate
 

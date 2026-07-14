@@ -86,6 +86,8 @@ Out of scope: production release, paid external resources, real customer recruit
 
 ## M11 - Release Candidate
 
-Status: NEXT
+Status: ACCEPTED_LOCALLY
 
-Continue in the order defined by the control document: prepare Release Candidate gates without production release.
+Goal: Package full regression evidence, permission and tenant matrix, AI safety, dependency security, performance baseline, backup/restore, migration/rollback, monitoring/alerting, commercial readiness, compliance drafts and production release hold list.
+
+Out of scope: production deployment, merge to `main`, paid external resources, production secrets, final legal judgment, real payment provider, irreversible production migration and formal production release approval.

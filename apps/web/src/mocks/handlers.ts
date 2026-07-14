@@ -311,6 +311,85 @@ const betaDocuments = [
   },
 ];
 
+const releaseCandidateGates = [
+  {
+    key: 'full_regression',
+    title: 'Full regression',
+    status: 'PASS_LOCAL',
+    evidence: [
+      'Root typecheck, lint, Jest and build pass locally.',
+      'Web typecheck, lint, Vitest, build and Playwright E2E pass locally.',
+    ],
+  },
+  {
+    key: 'permission_tenant_matrix',
+    title: 'Permission and tenant matrix',
+    status: 'PASS_LOCAL_WITH_REVIEW_GAP',
+    evidence: [
+      'Service and guard tests cover workspace membership and role boundaries.',
+      'Broader controller-level permission matrix remains pre-production hardening.',
+    ],
+  },
+  {
+    key: 'ai_safety',
+    title: 'AI safety',
+    status: 'PASS_LOCAL_WITH_MOCK_PROVIDER',
+    evidence: ['AI Gateway uses deterministic mock provider.', 'Suggestions require human review.'],
+  },
+  {
+    key: 'dependency_security',
+    title: 'Dependency security',
+    status: 'PASS_WITH_KNOWN_RISK',
+    evidence: ['Known Next/PostCSS advisory remains tracked as P1-SEC-002.'],
+  },
+  {
+    key: 'backup_restore',
+    title: 'Backup and restore',
+    status: 'RUNBOOK_READY_NOT_PRODUCTION_DRILLED',
+    evidence: ['Non-production backup/restore runbook is ready.'],
+  },
+  {
+    key: 'compliance',
+    title: 'Compliance materials',
+    status: 'DRAFT_READY_FOR_PROFESSIONAL_REVIEW',
+    evidence: ['Compliance drafts are marked not legally effective.'],
+  },
+  {
+    key: 'beta_evidence',
+    title: 'Beta evidence',
+    status: 'TECHNICAL_LOOP_READY_EXTERNAL_EVIDENCE_REQUIRED',
+    evidence: ['Beta feedback loop exists; real design partner evidence remains manual.'],
+  },
+];
+
+function releaseCandidatePackage() {
+  return {
+    package_version: 'm11-rc-preparation-2026-07-15',
+    status: 'RELEASE_CANDIDATE_PREPARED',
+    production_release: false,
+    merge_to_main_approved: false,
+    legal_final_judgment: false,
+    paid_external_resources_required: false,
+    last_updated_at: '2026-07-15T04:40:00.000+08:00',
+    gates: releaseCandidateGates,
+    human_actions_required: [
+      'Legal/privacy/security professional review and final judgment.',
+      'ICP, public security filing and MLPS applicability handling where required.',
+      'Real model, email, payment and production secret provisioning.',
+      'Real design partner results and willingness-to-pay evidence.',
+      'Production cloud resources, domain, certificate, backup storage and monitoring provider approval.',
+      'Formal production release approval.',
+    ],
+    reports: [
+      'docs/release-candidate/RELEASE_CANDIDATE_REPORT.md',
+      'docs/release-candidate/REGRESSION_MATRIX.md',
+      'docs/release-candidate/PERMISSION_TENANT_MATRIX.md',
+      'docs/release-candidate/AI_SAFETY_REVIEW.md',
+      'docs/release-candidate/PRODUCTION_RELEASE_HOLD.md',
+    ],
+  };
+}
+
 const complianceDocuments = [
   {
     slug: 'user-agreement',
@@ -633,6 +712,13 @@ function betaPackage(workspaceId?: string) {
 }
 
 export const handlers = [
+  http.get('/api/v1/release-candidate/public', async () => {
+    return HttpResponse.json({
+      data: releaseCandidatePackage(),
+      request_id: generateRequestId(),
+    });
+  }),
+
   http.get('/api/v1/beta/public', async () => {
     return HttpResponse.json({
       data: betaPackage(),

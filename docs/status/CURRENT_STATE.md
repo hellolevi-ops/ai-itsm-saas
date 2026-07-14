@@ -8,7 +8,7 @@
 | Base Branch | `develop` |
 | Base Commit | `3b20d49bd68c836ba059e50426ec07b371b04c40` |
 | Codex Branch | `codex/m0-takeover-baseline` |
-| Codex Commit | PR branch `codex/m0-takeover-baseline`; M9 validation recorded in this snapshot |
+| Codex Commit | PR branch `codex/m0-takeover-baseline`; M11 validation recorded in this snapshot |
 | Draft PR | `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2` |
 | Database | PostgreSQL |
 | Build Status | PASS |
@@ -20,7 +20,7 @@
 | API Server | 3000 | Not started in this checkpoint |
 | Web UI | 3001 | Started by Playwright during E2E, then test runner stopped it |
 | PostgreSQL local service | 5432 | Present, not used for validation |
-| Temporary PostgreSQL | 55443 | Reserved for M10 migration validation, then stopped and removed after validation |
+| Temporary PostgreSQL | 55444 | Reserved for M11 migration validation, then stopped and removed after validation |
 | Redis | 6379 | Not verified |
 
 ## Migration Status
@@ -88,12 +88,17 @@ Validation:
 - Workspace beta feedback, bug and interview-note intake
 - Web beta readiness console at `/beta`
 - Beta guide, release notes draft, support process, interview outline, reset runbook and exit criteria
+- Public release-candidate readiness package metadata API
+- Web release-candidate center at `/release-candidate`
+- CI workflow definition for PR/push verification
+- Local RC artifact check with `npm run rc:check`
+- RC report, regression matrix, permission/tenant matrix, AI safety review, dependency review, performance baseline, backup/restore runbook, migration/rollback runbook, monitoring plan and production release hold list
 
 ## Quality Baseline
 
 - Root typecheck: PASS
 - Root lint: PASS
-- Root Jest tests: PASS, 151/151
+- Root Jest tests: PASS, 152/152
 - Root build: PASS
 - Web typecheck: PASS
 - Web lint: PASS
@@ -102,7 +107,7 @@ Validation:
 - Web build: PASS
 - Temporary PostgreSQL migration validation: PASS, 9 migrations through M10
 - Secret scan: PASS, no committed GitHub/OpenAI token found
-- Total automated tests: PASS, 221/221 including Playwright E2E
+- Total automated tests: PASS, 222/222 including Playwright E2E
 - M1 backend ticket module: PASS, 88/88 backend tests
 - M1/M2 web ticket components: PASS, 66/66 frontend tests
 
@@ -120,6 +125,7 @@ Validation:
 - `docs/contracts/OPERATIONS_API.md` - M8 health, request correlation and security header contract
 - `docs/contracts/COMPLIANCE_API.md` - M9 compliance package metadata contract
 - `docs/contracts/BETA_API.md` - M10 beta readiness, feature flag and feedback contract
+- `docs/contracts/RELEASE_CANDIDATE_API.md` - M11 release candidate readiness contract
 
 ## M1 Progress
 
@@ -294,6 +300,19 @@ Validation:
 - Browser E2E: main path verifies beta readiness, flag toggle and feedback creation before the existing invite/channel/ticket/AI/knowledge/compliance flow.
 - Validation: root typecheck/lint/Jest/build, web typecheck/lint/Vitest/build/E2E, Prisma validate, temporary PostgreSQL migration validation and secret scan all pass.
 
+## M11 Progress
+
+- Contract: `docs/contracts/RELEASE_CANDIDATE_API.md`.
+- Task file: `docs/tasks/M11-release-candidate-preparation.md`.
+- RC docs: `docs/release-candidate/**`.
+- Backend: `src/modules/release-candidate/**` with public RC readiness metadata.
+- Endpoint:
+  - `GET /api/v1/release-candidate/public`
+- Web: `/release-candidate` renders RC gate status, report paths and human production-release hold items.
+- Release engineering: `.github/workflows/ci.yml`, `scripts/rc-check.mjs` and `npm run rc:check`.
+- Safety: package explicitly marks `production_release = false`, `merge_to_main_approved = false` and `legal_final_judgment = false`.
+- Validation: root prisma generate/validate, RC artifact check, typecheck/lint/Jest/build, web typecheck/lint/Vitest/build/E2E, temporary PostgreSQL migration validation, dependency audit and secret scan all ran; the only audit finding is the known web Next/PostCSS moderate advisory tracked as P1-SEC-002.
+
 ## Known Security/Audit Notes
 
 - Web `npm audit --audit-level=moderate`: 2 moderate findings from Next's transitive PostCSS dependency.
@@ -306,6 +325,7 @@ Validation:
 - M9 adds draft compliance materials only; no final legal judgment, filing, external legal resource or production release was performed.
 - M9 also removes the external Google Fonts build dependency so the web production build no longer needs network font fetches.
 - M10 is beta readiness only; real design partner recruiting, interviews and payment validation remain manual business work before RC approval.
+- M11 prepares a local Release Candidate package only; production release is held pending human/external actions.
 
 ## Tech Stack
 

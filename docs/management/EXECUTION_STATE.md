@@ -1,11 +1,11 @@
 # Execution State
 
-- Last updated: 2026-07-15 04:12 Asia/Shanghai
+- Last updated: 2026-07-15 04:40 Asia/Shanghai
 - Current branch: local snapshot plus GitHub branch `codex/m0-takeover-baseline`; base branch `develop`
-- Current commit: GitHub branch `codex/m0-takeover-baseline`; M10 validation recorded in this snapshot; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
+- Current commit: GitHub branch `codex/m0-takeover-baseline`; M11 validation recorded in this snapshot; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
 - Current phase: Milestone implementation after takeover
-- Current milestone: M10 - Beta readiness
-- Current milestone status: ACCEPTED_LOCALLY - M10 beta package, feature flags, feedback intake, beta console and beta docs pass local gates; PR/CI review remains before merge
+- Current milestone: M11 - Release Candidate preparation
+- Current milestone status: ACCEPTED_LOCALLY - RC package, CI workflow, RC artifact check, RC center, regression matrix and production-release hold are in place; production release remains blocked pending human/external actions
 - Completed tasks:
   - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_???????????????.md`.
   - Inspected the requested workspace path.
@@ -130,8 +130,14 @@
 - Added migration `20260715065000_add_beta_readiness`.
 - Implemented `src/modules/beta/**` with public beta package, workspace readiness, feedback intake and feature flag APIs.
 - Added web `/beta` readiness console, MSW support and E2E coverage for beta flag toggle and feedback creation.
+- Created `docs/contracts/RELEASE_CANDIDATE_API.md`.
+- Created `docs/tasks/M11-release-candidate-preparation.md`.
+- Created `docs/release-candidate/**` RC evidence package.
+- Implemented `src/modules/release-candidate/**` with public RC readiness metadata API.
+- Added web `/release-candidate` center, MSW support and E2E coverage.
+- Added `.github/workflows/ci.yml`, `scripts/rc-check.mjs` and `npm run rc:check`.
 - Active tasks:
-  - Start M11 release candidate preparation without production release.
+  - Validate and push M11 RC package to PR #2.
 - Blocked tasks:
   - `git fetch --all --tags --prune`
   - Local branch, remote and working tree checks
@@ -181,6 +187,10 @@
   - M9 secret scan for GitHub/OpenAI token patterns
   - M10 temporary PostgreSQL migration validation for nine migrations
   - M10 secret scan for GitHub/OpenAI token patterns
+  - M11 temporary PostgreSQL migration validation for nine migrations
+  - `npm run rc:check`
+  - M11 dependency audit: root and web
+  - M11 secret scan for GitHub/OpenAI token patterns
   - health probe E2E fetches for `/api/v1/health/live` and `/api/v1/health/ready`
   - M3 temporary PostgreSQL migration validation for four migrations
   - `psql` table inspection for `knowledge_articles`, `ai_runs`, `tickets` and `ticket_events`
@@ -339,6 +349,21 @@
 - M10 migration validation passed: nine migrations through `20260715065000_add_beta_readiness` applied to an empty PostgreSQL 18 database.
 - M10 migration created tables `beta_feedback` and `workspace_feature_flags`.
 - Secret scan after M10 implementation found no user-provided GitHub/OpenAI token in repository files.
+- Prisma schema validates after M11 implementation.
+- RC artifact check passed after M11 implementation.
+- Root dependency audit passed after M11 implementation: 0 vulnerabilities.
+- Web dependency audit still reports 2 moderate Next/PostCSS findings; forced fix would downgrade Next to 9.3.3 and was not applied.
+- Root typecheck passed after M11 implementation.
+- Root lint passed after M11 implementation.
+- Root Jest tests passed after M11 implementation: 152/152.
+- Root build passed after M11 implementation.
+- Web typecheck passed after M11 implementation.
+- Web lint passed after M11 implementation.
+- Web Vitest tests passed after M11 implementation: 69/69.
+- Web build passed after M11 implementation.
+- Web Playwright E2E passed after M11 implementation: 1/1.
+- M11 migration validation passed: nine migrations through `20260715065000_add_beta_readiness` applied to an empty PostgreSQL 18 database.
+- Secret scan after M11 implementation found no user-provided GitHub/OpenAI token in repository files.
 - Web Playwright E2E passed after M4 implementation: 1/1.
 - Secret scan after M4 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
 - Open P0 issues:
@@ -347,9 +372,10 @@
   - P1-ENV-001: Git CLI is unavailable in PATH; Git phase checks and commits cannot run locally.
   - P1-ENV-003: Local source snapshot has no `.git` metadata.
   - P1-SEC-002: Web npm audit reports Next transitive PostCSS moderate advisory; forced npm fix is destructive and requires framework/security review.
+  - P1-RC-001: Production release remains blocked by human/external actions.
 - External dependencies:
   - Local Git installation or a working Git-capable environment.
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Start M11 release candidate preparation: define RC gates, CI/CD requirements, rollback/backup evidence, release checklist and remaining blockers without production release.
+  - Push M11 RC package and validation evidence to PR #2, then pause with human/external production-release hold items.
