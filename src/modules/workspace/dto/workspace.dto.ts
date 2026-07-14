@@ -6,9 +6,10 @@ export class CreateWorkspaceDto {
   @Length(2, 100)
   name: string;
 
+  @IsOptional()
   @IsString()
   @Length(3, 50)
-  slug: string;
+  slug?: string;
 
   @IsOptional()
   @IsString()

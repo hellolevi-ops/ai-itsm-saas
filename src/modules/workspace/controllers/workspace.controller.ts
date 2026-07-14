@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
 import { WorkspaceRoleGuard } from '../guards/workspace-role.guard';
 import { RequiresRoles } from '../decorators/requires-roles.decorator';
 import { RoleType } from '@prisma/client';
+import { CurrentUser } from '@/modules/auth/decorators/current-user.decorator';
 
 @UseGuards(JwtAuthGuard, WorkspaceRoleGuard)
 @Controller('api/v1/workspaces')
@@ -13,8 +14,8 @@ export class WorkspaceController {
 
   @Post()
   @RequiresRoles(RoleType.OWNER, RoleType.ADMIN)
-  async create(@Body() dto: CreateWorkspaceDto) {
-    return this.workspaceService.create(dto);
+  async create(@Body() dto: CreateWorkspaceDto, @CurrentUser() user: { id: string; email: string; tenantId: string }) {
+    return this.workspaceService.create(dto, user.tenantId);
   }
 
   @Get()
