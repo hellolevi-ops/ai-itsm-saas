@@ -321,6 +321,7 @@ Validation evidence after M11:
 | GitHub Actions CI on `32ff9d07cdeb281bc68da2fab7487bc0f0ab4919` | FAIL, root Jest passed; web Playwright exposed a brittle knowledge-draft status text assertion tied to a corrupted separator character |
 | GitHub Actions CI on `4002192d1559c6547431ea2dee23c5592f08060c` | FAIL, E2E fix was functionally correct but two edited lines carried CRLF characters that Linux Prettier rejected |
 | GitHub Actions CI on `80301a5d938921057baa415720eaec3103434a02` | PASS, push and pull_request runs completed successfully |
+| GitHub Actions push CI on `dd06c2f0e687f06770e0eed6c3a972f32c8417ce` | FAIL, while pull_request CI passed; push run exposed Next dev server reading stale `.next` build output before E2E |
 | Local UTC reproduction after CI fix | PASS, root Jest 152/152 tests |
 | Local post-fix root build | PASS |
 | Local web post-fix typecheck/lint/Vitest/build/E2E | PASS, Vitest 69/69 and Playwright 1/1 |
@@ -336,3 +337,5 @@ Security and release note:
 - E2E fix note: knowledge draft status display now uses an ASCII separator and `data-testid="knowledge-draft-status"` so Playwright verifies status and visibility semantics instead of a corrupted separator glyph.
 - Formatting fix note: Prettier normalized the edited web ticket files before the final CI rerun.
 - Final remote CI evidence: push run `29367266015` and pull request run `29367270791` both passed on head `80301a5d938921057baa415720eaec3103434a02`.
+- E2E isolation fix note: `apps/web` now deletes `.next` in `pretest:e2e` so Playwright dev-server runs cannot reuse stale production build output.
+- E2E timeout fix note: Playwright timeout is set to 90 seconds because cold Next dev compilation makes the full end-to-end happy path exceed the 30-second default; local cold-start E2E passed in 35.5 seconds.
