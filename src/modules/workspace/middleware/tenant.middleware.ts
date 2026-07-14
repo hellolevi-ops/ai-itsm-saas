@@ -53,7 +53,7 @@ export class TenantMiddleware implements NestMiddleware {
     };
 
     req.tenantContext = tenantContext;
-    TenantContextHolder.runWithContext(tenantContext, () => next());
+    return TenantContextHolder.runWithContextAsync(tenantContext, async () => next());
   }
 
   private extractFromSubdomain(req: Request): string | undefined {

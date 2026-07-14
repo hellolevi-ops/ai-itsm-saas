@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  registerSchema,
-  loginSchema,
-  createWorkspaceSchema,
-} from './validation';
+import { registerSchema, loginSchema, createWorkspaceSchema } from './validation';
 
 describe('registerSchema', () => {
   it('validates correct registration data', () => {

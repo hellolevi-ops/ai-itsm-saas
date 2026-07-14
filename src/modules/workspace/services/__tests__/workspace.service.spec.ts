@@ -74,7 +74,7 @@ describe('WorkspaceService', () => {
 
       expect(result.name).toBe(createDto.name);
       expect(result.slug).toBe(createDto.slug);
-      expect(workspaceRepository.findBySlug).toHaveBeenCalledWith(createDto.slug);
+      expect(workspaceRepository.findBySlug).toHaveBeenCalledWith(createDto.slug, 'tenant-001');
       expect(workspaceRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           tenant: { connect: { id: 'tenant-001' } },

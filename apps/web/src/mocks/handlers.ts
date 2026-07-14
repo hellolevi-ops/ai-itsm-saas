@@ -9,8 +9,22 @@ const generateId = () =>
 
 const generateRequestId = () => 'req_' + Math.random().toString(36).substring(2, 15);
 
-const users = new Map<string, { id: string; email: string; password: string; name: string | null; created_at: string }>();
-const workspaces = new Map<string, { id: string; name: string; slug: string; timezone: string; language: string; owner_id: string; created_at: string }>();
+const users = new Map<
+  string,
+  { id: string; email: string; password: string; name: string | null; created_at: string }
+>();
+const workspaces = new Map<
+  string,
+  {
+    id: string;
+    name: string;
+    slug: string;
+    timezone: string;
+    language: string;
+    owner_id: string;
+    created_at: string;
+  }
+>();
 const workspaceMembers = new Map<string, string[]>();
 
 export const handlers = [
@@ -24,7 +38,7 @@ export const handlers = [
     };
 
     const existingUser = Array.from(users.values()).find(
-      (u) => u.email.toLowerCase() === body.email.toLowerCase()
+      (u) => u.email.toLowerCase() === body.email.toLowerCase(),
     );
 
     if (existingUser) {
@@ -37,7 +51,7 @@ export const handlers = [
           },
           request_id: generateRequestId(),
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -69,7 +83,7 @@ export const handlers = [
         },
         request_id: generateRequestId(),
       },
-      { status: 201 }
+      { status: 201 },
     );
   }),
 
@@ -82,7 +96,7 @@ export const handlers = [
     };
 
     const user = Array.from(users.values()).find(
-      (u) => u.email.toLowerCase() === body.email.toLowerCase()
+      (u) => u.email.toLowerCase() === body.email.toLowerCase(),
     );
 
     if (!user) {
@@ -95,7 +109,7 @@ export const handlers = [
           },
           request_id: generateRequestId(),
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -108,7 +122,7 @@ export const handlers = [
           },
           request_id: generateRequestId(),
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -156,7 +170,7 @@ export const handlers = [
           },
           request_id: generateRequestId(),
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -173,7 +187,7 @@ export const handlers = [
           },
           request_id: generateRequestId(),
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -216,7 +230,7 @@ export const handlers = [
           },
           request_id: generateRequestId(),
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -233,7 +247,7 @@ export const handlers = [
           },
           request_id: generateRequestId(),
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -245,7 +259,7 @@ export const handlers = [
     };
 
     const existingWorkspace = Array.from(workspaces.values()).find(
-      (w) => w.slug.toLowerCase() === body.slug.toLowerCase()
+      (w) => w.slug.toLowerCase() === body.slug.toLowerCase(),
     );
 
     if (existingWorkspace) {
@@ -258,7 +272,7 @@ export const handlers = [
           },
           request_id: generateRequestId(),
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -291,7 +305,7 @@ export const handlers = [
         },
         request_id: generateRequestId(),
       },
-      { status: 201 }
+      { status: 201 },
     );
   }),
 
@@ -308,7 +322,7 @@ export const handlers = [
           },
           request_id: generateRequestId(),
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -325,7 +339,7 @@ export const handlers = [
           },
           request_id: generateRequestId(),
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 

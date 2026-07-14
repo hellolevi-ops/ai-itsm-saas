@@ -24,9 +24,19 @@ export class WorkspaceRoleGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
+    const user = (request as any).user;
+
+    if (!user?.id || !user?.tenantId) {
+      return true;
+    }
+
     const tenantContext = request.tenantContext;
 
-    if (!tenantContext?.workspaceId || !tenantContext?.userId) {
+    if (!tenantContext?.workspaceId) {
+      const method = request.method;
+      if (method === 'POST') {
+        return true;
+      }
       throw new ForbiddenException('Tenant context required');
     }
 

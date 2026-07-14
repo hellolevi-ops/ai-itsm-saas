@@ -14,19 +14,23 @@ export class WorkspaceService {
     private readonly tenantWorkspaceRepository: TenantWorkspaceRepository,
   ) {}
 
-  async create(dto: CreateWorkspaceDto): Promise<Workspace> {
-    const tenantId = TenantContextHolder.getTenantId();
-    const existing = await this.workspaceRepository.findBySlug(dto.slug);
+  async create(dto: CreateWorkspaceDto, tenantId?: string): Promise<Workspace> {
+    const ctxTenantId = tenantId ?? TenantContextHolder.getTenantId();
+    if (!ctxTenantId) {
+      throw new ConflictException('Tenant context required');
+    }
+    const slug = dto.slug ?? `workspace-${Date.now()}`;
+    const existing = await this.workspaceRepository.findBySlug(slug, ctxTenantId);
     if (existing) {
       throw new ConflictException('Workspace slug already exists');
     }
 
     return this.workspaceRepository.create({
       name: dto.name,
-      slug: dto.slug,
+      slug,
       timezone: dto.timezone ?? 'Asia/Shanghai',
       language: dto.language ?? 'zh-CN',
-      tenant: { connect: { id: tenantId } },
+      tenant: { connect: { id: ctxTenantId } },
     });
   }
 

@@ -26,18 +26,12 @@ export const loginSchema = z.object({
 export type LoginFormData = z.infer<typeof loginSchema>;
 
 export const createWorkspaceSchema = z.object({
-  name: z
-    .string()
-    .min(1, '请输入工作区名称')
-    .max(100, '工作区名称不能超过100个字符'),
+  name: z.string().min(1, '请输入工作区名称').max(100, '工作区名称不能超过100个字符'),
   slug: z
     .string()
     .min(3, '简称至少需要3个字符')
     .max(50, '简称不能超过50个字符')
-    .regex(
-      /^[a-z0-9-]+$/,
-      '简称只能包含小写英文字母、数字和短横线'
-    )
+    .regex(/^[a-z0-9-]+$/, '简称只能包含小写英文字母、数字和短横线')
     .regex(/^[a-z]/, '简称必须以字母开头')
     .regex(/[a-z0-9]$/, '简称必须以字母或数字结尾'),
   timezone: z.string(),
