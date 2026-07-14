@@ -24,6 +24,12 @@ import type {
   CreateServiceCatalogItemRequest,
   CreateServiceCatalogItemResponse,
   ServiceCatalogResponse,
+  ChannelConnection,
+  CreateWeComChannelRequest,
+  CreateWeComChannelResponse,
+  ListChannelsResponse,
+  ReceiveWeComMessageRequest,
+  ReceiveWeComMessageResponse,
 } from '@/types/api';
 
 const apiClient = axios.create({
@@ -218,6 +224,39 @@ export const serviceCatalogApi = {
     const response = await apiClient.post<ApiResponse<CreateRequestTemplateResponse>>(
       `/workspaces/${workspaceId}/service-catalog/templates`,
       data,
+    );
+    return response.data;
+  },
+};
+
+export const channelApi = {
+  async list(workspaceId: string): Promise<ApiResponse<ListChannelsResponse>> {
+    const response = await apiClient.get<ApiResponse<ListChannelsResponse>>(
+      `/workspaces/${workspaceId}/channels`,
+    );
+    return response.data;
+  },
+
+  async createWeCom(
+    workspaceId: string,
+    data: CreateWeComChannelRequest,
+  ): Promise<ApiResponse<CreateWeComChannelResponse>> {
+    const response = await apiClient.post<ApiResponse<CreateWeComChannelResponse>>(
+      `/workspaces/${workspaceId}/channels/wecom`,
+      data,
+    );
+    return response.data;
+  },
+
+  async receiveWeComMessage(
+    channel: ChannelConnection,
+    token: string,
+    data: ReceiveWeComMessageRequest,
+  ): Promise<ApiResponse<ReceiveWeComMessageResponse>> {
+    const response = await apiClient.post<ApiResponse<ReceiveWeComMessageResponse>>(
+      `/channels/wecom/${channel.id}/messages`,
+      data,
+      { headers: { 'X-Channel-Token': token } },
     );
     return response.data;
   },

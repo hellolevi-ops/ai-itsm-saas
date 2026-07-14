@@ -33,7 +33,7 @@ type MockTicket = {
   number: string;
   title: string;
   description: string;
-  source: 'WEB';
+  source: 'WEB' | 'WECOM';
   status: 'NEW' | 'TRIAGE' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED' | 'REOPENED';
   priority: 'P1' | 'P2' | 'P3' | 'P4';
   category: string | null;
@@ -116,6 +116,32 @@ type MockRequestTemplate = {
   updated_at: string;
 };
 
+type MockChannelConnection = {
+  id: string;
+  workspace_id: string;
+  type: 'WECOM';
+  name: string;
+  token: string;
+  status: 'ACTIVE' | 'INACTIVE';
+  created_by_id: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type MockChannelInboundMessage = {
+  id: string;
+  workspace_id: string;
+  connection_id: string;
+  ticket_id: string | null;
+  external_message_id: string;
+  external_user_id: string;
+  external_user_name: string | null;
+  subject: string;
+  body: string;
+  status: 'RECEIVED' | 'TICKET_CREATED' | 'DUPLICATE' | 'REJECTED';
+  received_at: string;
+};
+
 function loadMockMap<T>(key: string): Map<string, T> {
   if (typeof localStorage === 'undefined') return new Map();
 
@@ -141,6 +167,8 @@ const ticketEvents = loadMockMap<MockTicketEvent[]>('msw:ticketEvents');
 const knowledgeArticles = loadMockMap<MockKnowledgeArticle>('msw:knowledgeArticles');
 const serviceCatalogItems = loadMockMap<MockServiceCatalogItem>('msw:serviceCatalogItems');
 const requestTemplates = loadMockMap<MockRequestTemplate>('msw:requestTemplates');
+const channelConnections = loadMockMap<MockChannelConnection>('msw:channelConnections');
+const channelInboundMessages = loadMockMap<MockChannelInboundMessage>('msw:channelInboundMessages');
 
 function getUserFromRequest(request: Request) {
   const authHeader = request.headers.get('Authorization');
@@ -738,6 +766,221 @@ export const handlers = [
       );
     },
   ),
+
+  http.get('/api/v1/workspaces/:workspaceId/channels', async ({ request, params }) => {
+    await delay(150);
+    const user = getUserFromRequest(request);
+    const workspaceId = params.workspaceId as string;
+    if (!user || !isWorkspaceMember(workspaceId, user.id)) {
+      return HttpResponse.json(
+        {
+          error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+          request_id: generateRequestId(),
+        },
+        { status: user ? 403 : 401 },
+      );
+    }
+
+    const channels = Array.from(channelConnections.values())
+      .filter((channel) => channel.workspace_id === workspaceId)
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .map((channel) => ({
+        id: channel.id,
+        workspace_id: channel.workspace_id,
+        type: channel.type,
+        name: channel.name,
+        status: channel.status,
+        created_by_id: channel.created_by_id,
+        created_at: channel.created_at,
+        updated_at: channel.updated_at,
+      }));
+
+    return HttpResponse.json({
+      data: { channels },
+      request_id: generateRequestId(),
+    });
+  }),
+
+  http.post('/api/v1/workspaces/:workspaceId/channels/wecom', async ({ request, params }) => {
+    await delay(200);
+    const user = getUserFromRequest(request);
+    const workspaceId = params.workspaceId as string;
+    if (!user || !isWorkspaceMember(workspaceId, user.id)) {
+      return HttpResponse.json(
+        {
+          error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+          request_id: generateRequestId(),
+        },
+        { status: user ? 403 : 401 },
+      );
+    }
+
+    const body = (await request.json()) as { name: string; token: string };
+    const now = new Date().toISOString();
+    const channel = {
+      id: generateId(),
+      workspace_id: workspaceId,
+      type: 'WECOM' as const,
+      name: body.name,
+      token: body.token,
+      status: 'ACTIVE' as const,
+      created_by_id: user.id,
+      created_at: now,
+      updated_at: now,
+    };
+    channelConnections.set(channel.id, channel);
+    persistMockMap('msw:channelConnections', channelConnections);
+    const safeChannel = {
+      id: channel.id,
+      workspace_id: channel.workspace_id,
+      type: channel.type,
+      name: channel.name,
+      status: channel.status,
+      created_by_id: channel.created_by_id,
+      created_at: channel.created_at,
+      updated_at: channel.updated_at,
+    };
+
+    return HttpResponse.json(
+      {
+        data: { channel: safeChannel },
+        request_id: generateRequestId(),
+      },
+      { status: 201 },
+    );
+  }),
+
+  http.post('/api/v1/channels/wecom/:connectionId/messages', async ({ request, params }) => {
+    await delay(200);
+    const connectionId = params.connectionId as string;
+    const channel = channelConnections.get(connectionId);
+    const token = request.headers.get('x-channel-token');
+    if (!channel || channel.status !== 'ACTIVE') {
+      return HttpResponse.json(
+        {
+          error: { code: 'CHANNEL_NOT_FOUND', message: 'Channel connection not found' },
+          request_id: generateRequestId(),
+        },
+        { status: 404 },
+      );
+    }
+    if (!token || token !== channel.token) {
+      return HttpResponse.json(
+        {
+          error: { code: 'INVALID_CHANNEL_TOKEN', message: 'Invalid channel token' },
+          request_id: generateRequestId(),
+        },
+        { status: 401 },
+      );
+    }
+
+    const body = (await request.json()) as {
+      external_message_id: string;
+      external_user_id: string;
+      external_user_name?: string;
+      subject?: string;
+      text: string;
+    };
+    const existing = Array.from(channelInboundMessages.values()).find(
+      (message) =>
+        message.connection_id === connectionId &&
+        message.external_message_id === body.external_message_id,
+    );
+    if (existing) {
+      return HttpResponse.json({
+        data: {
+          duplicate: true,
+          inbound_message: existing,
+          ticket: existing.ticket_id ? tickets.get(existing.ticket_id) || null : null,
+        },
+        request_id: generateRequestId(),
+      });
+    }
+
+    const now = new Date().toISOString();
+    const title =
+      body.subject?.trim() ||
+      `WeCom message from ${body.external_user_name || body.external_user_id}`;
+    const workspaceTickets = Array.from(tickets.values()).filter(
+      (ticket) => ticket.workspace_id === channel.workspace_id,
+    );
+    const email = `wecom-${connectionId}-${body.external_user_id}@channel.local`.toLowerCase();
+    let requester = Array.from(users.values()).find((candidate) => candidate.email === email);
+    if (!requester) {
+      requester = {
+        id: generateId(),
+        email,
+        password: `channel-user-${generateId()}`,
+        name: body.external_user_name || body.external_user_id,
+        created_at: now,
+      };
+      users.set(requester.id, requester);
+      const members = workspaceMembers.get(channel.workspace_id) || [];
+      workspaceMembers.set(channel.workspace_id, [...members, requester.id]);
+      persistMockMap('msw:users', users);
+      persistMockMap('msw:workspaceMembers', workspaceMembers);
+    }
+    const ticket = {
+      id: generateId(),
+      workspace_id: channel.workspace_id,
+      number: `TCK-${String(workspaceTickets.length + 1).padStart(6, '0')}`,
+      title,
+      description: body.text,
+      source: 'WECOM' as const,
+      status: 'NEW' as const,
+      priority: 'P3' as const,
+      category: 'channel:wecom',
+      requester_id: requester.id,
+      assignee_id: null,
+      created_at: now,
+      updated_at: now,
+      resolved_at: null,
+      closed_at: null,
+      reopen_count: 0,
+      service_catalog_item_id: null,
+      request_template_id: null,
+      response_due_at: null,
+      resolution_due_at: null,
+    };
+    const inbound = {
+      id: generateId(),
+      workspace_id: channel.workspace_id,
+      connection_id: connectionId,
+      ticket_id: ticket.id,
+      external_message_id: body.external_message_id,
+      external_user_id: body.external_user_id,
+      external_user_name: body.external_user_name || null,
+      subject: title,
+      body: body.text,
+      status: 'TICKET_CREATED' as const,
+      received_at: now,
+    };
+    tickets.set(ticket.id, ticket);
+    ticketMessages.set(ticket.id, []);
+    ticketEvents.set(ticket.id, [
+      {
+        id: generateId(),
+        type: 'CREATED',
+        actor_id: requester.id,
+        from_value: null,
+        to_value: ticket.number,
+        created_at: now,
+      },
+    ]);
+    channelInboundMessages.set(inbound.id, inbound);
+    persistMockMap('msw:tickets', tickets);
+    persistMockMap('msw:ticketMessages', ticketMessages);
+    persistMockMap('msw:ticketEvents', ticketEvents);
+    persistMockMap('msw:channelInboundMessages', channelInboundMessages);
+
+    return HttpResponse.json(
+      {
+        data: { duplicate: false, inbound_message: inbound, ticket },
+        request_id: generateRequestId(),
+      },
+      { status: 201 },
+    );
+  }),
 
   http.get('/api/v1/workspaces/:workspaceId/tickets', async ({ request, params }) => {
     await delay(200);

@@ -89,7 +89,7 @@ export interface Ticket {
   number: string;
   title: string;
   description: string;
-  source: 'WEB';
+  source: 'WEB' | 'WECOM';
   status: TicketStatus;
   priority: TicketPriority;
   category: string | null;
@@ -296,4 +296,56 @@ export interface CreateServiceCatalogItemResponse {
 
 export interface CreateRequestTemplateResponse {
   request_template: RequestTemplate;
+}
+
+export interface ChannelConnection {
+  id: string;
+  workspace_id: string;
+  type: 'WECOM';
+  name: string;
+  status: 'ACTIVE' | 'INACTIVE';
+  created_by_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChannelInboundMessage {
+  id: string;
+  workspace_id: string;
+  connection_id: string;
+  ticket_id: string | null;
+  external_message_id: string;
+  external_user_id: string;
+  external_user_name: string | null;
+  subject: string;
+  body: string;
+  status: 'RECEIVED' | 'TICKET_CREATED' | 'DUPLICATE' | 'REJECTED';
+  received_at: string;
+}
+
+export interface ListChannelsResponse {
+  channels: ChannelConnection[];
+}
+
+export interface CreateWeComChannelRequest {
+  name: string;
+  token: string;
+}
+
+export interface CreateWeComChannelResponse {
+  channel: ChannelConnection;
+}
+
+export interface ReceiveWeComMessageRequest {
+  external_message_id: string;
+  external_user_id: string;
+  external_user_name?: string;
+  subject?: string;
+  text: string;
+}
+
+export interface ReceiveWeComMessageResponse {
+  duplicate: boolean;
+  inbound_message: ChannelInboundMessage;
+  ticket: Ticket | null;
 }

@@ -36,8 +36,16 @@ Goal: Service catalog Lite, request templates, controlled ticket template defaul
 
 Out of scope: BPMN, CMDB, full ITIL modeling, low-code form builder, SLA pause/escalation automation and production release.
 
-## M5-M11
+## M5 - First China Channel
 
-Status: M5_NEXT
+Status: ACCEPTED_LOCALLY
 
-Continue in the order defined by the control document: first China channel, PLG activation, plans/entitlements, security/ops, compliance preparation, beta readiness, and Release Candidate.
+Goal: WeCom mock inbound webhook, channel connection management, token verification, idempotent inbound audit and ticket creation.
+
+Out of scope: real WeCom production integration, paid channel services, outbound replies, media messages and production release.
+
+## M6-M11
+
+Status: M6_NEXT
+
+Continue in the order defined by the control document: PLG activation, plans/entitlements, security/ops, compliance preparation, beta readiness, and Release Candidate.

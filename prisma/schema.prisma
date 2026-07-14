@@ -22,6 +22,7 @@ enum RoleType {
 
 enum TicketSource {
   WEB
+  WECOM
 }
 
 enum TicketStatus {
@@ -95,6 +96,22 @@ enum WorkingHoursStatus {
   INACTIVE
 }
 
+enum ChannelType {
+  WECOM
+}
+
+enum ChannelConnectionStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ChannelInboundMessageStatus {
+  RECEIVED
+  TICKET_CREATED
+  DUPLICATE
+  REJECTED
+}
+
 model Tenant {
   id        String          @id @default(uuid())
   name      String
@@ -120,17 +137,18 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  tenant             Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   workspaceMembers   WorkspaceMember[]
-  requestedTickets   Ticket[]           @relation("TicketRequester")
-  assignedTickets    Ticket[]           @relation("TicketAssignee")
-  createdTickets     Ticket[]           @relation("TicketCreator")
-  updatedTickets     Ticket[]           @relation("TicketUpdater")
+  requestedTickets   Ticket[]            @relation("TicketRequester")
+  assignedTickets    Ticket[]            @relation("TicketAssignee")
+  createdTickets     Ticket[]            @relation("TicketCreator")
+  updatedTickets     Ticket[]            @relation("TicketUpdater")
   ticketMessages     TicketMessage[]
   ticketEvents       TicketEvent[]
   aiRuns             AiRun[]
-  knowledgeArticles  KnowledgeArticle[] @relation("KnowledgeCreator")
-  publishedKnowledge KnowledgeArticle[] @relation("KnowledgePublisher")
+  knowledgeArticles  KnowledgeArticle[]  @relation("KnowledgeCreator")
+  publishedKnowledge KnowledgeArticle[]  @relation("KnowledgePublisher")
+  channelConnections ChannelConnection[] @relation("ChannelConnectionCreator")
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -148,7 +166,7 @@ model Workspace {
   createdAt DateTime        @default(now()) @map("created_at")
   updatedAt DateTime        @updatedAt @map("updated_at")
 
-  tenant              Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant              Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   members             WorkspaceMember[]
   roles               Role[]
   tickets             Ticket[]
@@ -159,6 +177,8 @@ model Workspace {
   serviceCatalogItems ServiceCatalogItem[]
   requestTemplates    RequestTemplate[]
   workingHours        WorkspaceWorkingHours?
+  channelConnections  ChannelConnection[]
+  channelMessages     ChannelInboundMessage[]
 
   @@unique([tenantId, slug])
   @@index([tenantId])
@@ -223,21 +243,22 @@ model Ticket {
   createdAt   DateTime       @default(now()) @map("created_at")
   updatedAt   DateTime       @updatedAt @map("updated_at")
 
-  workspace            Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  requester            User                @relation("TicketRequester", fields: [requesterId], references: [id])
-  assignee             User?               @relation("TicketAssignee", fields: [assigneeId], references: [id])
-  createdBy            User                @relation("TicketCreator", fields: [createdById], references: [id])
-  updatedBy            User?               @relation("TicketUpdater", fields: [updatedById], references: [id])
+  workspace            Workspace               @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  requester            User                    @relation("TicketRequester", fields: [requesterId], references: [id])
+  assignee             User?                   @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  createdBy            User                    @relation("TicketCreator", fields: [createdById], references: [id])
+  updatedBy            User?                   @relation("TicketUpdater", fields: [updatedById], references: [id])
   messages             TicketMessage[]
   events               TicketEvent[]
   aiRuns               AiRun[]
   knowledgeArticles    KnowledgeArticle[]
-  serviceCatalogItem   ServiceCatalogItem? @relation(fields: [serviceCatalogItemId], references: [id], onDelete: SetNull)
-  requestTemplate      RequestTemplate?    @relation(fields: [requestTemplateId], references: [id], onDelete: SetNull)
-  serviceCatalogItemId String?             @map("service_catalog_item_id")
-  requestTemplateId    String?             @map("request_template_id")
-  responseDueAt        DateTime?           @map("response_due_at")
-  resolutionDueAt      DateTime?           @map("resolution_due_at")
+  channelMessages      ChannelInboundMessage[]
+  serviceCatalogItem   ServiceCatalogItem?     @relation(fields: [serviceCatalogItemId], references: [id], onDelete: SetNull)
+  requestTemplate      RequestTemplate?        @relation(fields: [requestTemplateId], references: [id], onDelete: SetNull)
+  serviceCatalogItemId String?                 @map("service_catalog_item_id")
+  requestTemplateId    String?                 @map("request_template_id")
+  responseDueAt        DateTime?               @map("response_due_at")
+  resolutionDueAt      DateTime?               @map("resolution_due_at")
 
   @@unique([workspaceId, number])
   @@index([workspaceId])
@@ -420,4 +441,54 @@ model WorkspaceWorkingHours {
 
   @@index([workspaceId, status])
   @@map("workspace_working_hours")
+}
+
+model ChannelConnection {
+  id          String                  @id @default(uuid())
+  workspaceId String                  @map("workspace_id")
+  type        ChannelType
+  name        String
+  tokenHash   String                  @map("token_hash")
+  status      ChannelConnectionStatus @default(ACTIVE)
+  createdById String                  @map("created_by_id")
+  createdAt   DateTime                @default(now()) @map("created_at")
+  updatedAt   DateTime                @updatedAt @map("updated_at")
+
+  workspace       Workspace               @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy       User                    @relation("ChannelConnectionCreator", fields: [createdById], references: [id])
+  inboundMessages ChannelInboundMessage[]
+
+  @@unique([workspaceId, type, name])
+  @@index([workspaceId])
+  @@index([workspaceId, type])
+  @@index([workspaceId, status])
+  @@index([createdById])
+  @@map("channel_connections")
+}
+
+model ChannelInboundMessage {
+  id                String                      @id @default(uuid())
+  workspaceId       String                      @map("workspace_id")
+  connectionId      String                      @map("connection_id")
+  ticketId          String?                     @map("ticket_id")
+  externalMessageId String                      @map("external_message_id")
+  externalUserId    String                      @map("external_user_id")
+  externalUserName  String?                     @map("external_user_name")
+  subject           String
+  body              String
+  payload           Json
+  status            ChannelInboundMessageStatus @default(RECEIVED)
+  receivedAt        DateTime                    @default(now()) @map("received_at")
+
+  workspace  Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  connection ChannelConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  ticket     Ticket?           @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+
+  @@unique([connectionId, externalMessageId])
+  @@index([workspaceId])
+  @@index([connectionId])
+  @@index([ticketId])
+  @@index([workspaceId, status])
+  @@index([receivedAt])
+  @@map("channel_inbound_messages")
 }

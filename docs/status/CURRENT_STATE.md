@@ -8,7 +8,7 @@
 | Base Branch | `develop` |
 | Base Commit | `3b20d49bd68c836ba059e50426ec07b371b04c40` |
 | Codex Branch | `codex/m0-takeover-baseline` |
-| Codex Commit | PR branch `codex/m0-takeover-baseline`; M4 validation recorded in this snapshot |
+| Codex Commit | PR branch `codex/m0-takeover-baseline`; M5 validation recorded in this snapshot |
 | Draft PR | `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2` |
 | Database | PostgreSQL |
 | Build Status | PASS |
@@ -20,19 +20,19 @@
 | API Server | 3000 | Not started in this checkpoint |
 | Web UI | 3001 | Started by Playwright during E2E, then test runner stopped it |
 | PostgreSQL local service | 5432 | Present, not used for validation |
-| Temporary PostgreSQL | 55437 | Started for M4 migration validation, then stopped and removed |
+| Temporary PostgreSQL | 55438 | Reserved for M5 migration validation, then stopped and removed after validation |
 | Redis | 6379 | Not verified |
 
 ## Migration Status
 
-Latest migration: `20260715021500_add_service_catalog`
+Latest migration: `20260715033000_add_wecom_channel`
 
 Validation:
 
-- Empty temporary PostgreSQL 18 database migration: PASS for five migrations through M4
+- Empty temporary PostgreSQL 18 database migration: PASS for six migrations through M5
 - `prisma migrate deploy`: PASS
 - `prisma migrate status`: PASS, schema up to date
-- Tables created include: `_prisma_migrations`, `roles`, `tenants`, `users`, `workspace_members`, `workspaces`, `tickets`, `ticket_messages`, `ticket_events`, `ai_runs`, `knowledge_articles`, `service_catalog_items`, `request_templates`, `workspace_working_hours`
+- Tables created include: `_prisma_migrations`, `roles`, `tenants`, `users`, `workspace_members`, `workspaces`, `tickets`, `ticket_messages`, `ticket_events`, `ai_runs`, `knowledge_articles`, `service_catalog_items`, `request_templates`, `workspace_working_hours`, `channel_connections`, `channel_inbound_messages`
 
 ## Available Features
 
@@ -62,19 +62,23 @@ Validation:
 - Web service catalog page for item/template creation
 - Web ticket submit template selector with title, description, priority and category prefill
 - Web ticket detail service target panel
+- WeCom mock channel connection management
+- Public WeCom mock inbound webhook with token verification and idempotent external message handling
+- Channel inbound audit records linked to WECOM tickets
+- Web channels page for creating a mock connection and simulating inbound messages
 
 ## Quality Baseline
 
 - Root typecheck: PASS
 - Root lint: PASS
-- Root Jest tests: PASS, 114/114
+- Root Jest tests: PASS, 120/120
 - Root build: PASS
 - Web typecheck: PASS
 - Web lint: PASS
 - Web Vitest tests: PASS, 69/69
 - Web Playwright E2E: PASS, 1/1
 - Web build: PASS
-- Total automated tests: PASS, 184/184 including Playwright E2E
+- Total automated tests: PASS, 190/190 including Playwright E2E
 - M1 backend ticket module: PASS, 88/88 backend tests
 - M1/M2 web ticket components: PASS, 66/66 frontend tests
 
@@ -86,6 +90,7 @@ Validation:
 - `prisma/` - Database schema and migrations
 - `docs/contracts/TICKET_API.md` - M1 ticket API and permission contract
 - `docs/contracts/SERVICE_CATALOG_API.md` - M4 service catalog, request template and SLA target contract
+- `docs/contracts/CHANNEL_API.md` - M5 WeCom mock channel and inbound webhook contract
 
 ## M1 Progress
 
@@ -150,11 +155,29 @@ Validation:
 - Web: `/service-catalog` creates items/templates; `/tickets/new` applies templates; ticket detail shows service targets.
 - Browser E2E: registration, workspace creation, service item, request template, templated ticket, AI suggestion, message, resolve, knowledge draft, publish and self-service search all pass.
 
+## M5 Progress
+
+- Contract: `docs/contracts/CHANNEL_API.md`.
+- Task file: `docs/tasks/M5-first-china-channel.md`.
+- Prisma models: `ChannelConnection`, `ChannelInboundMessage`.
+- Migration: `20260715033000_add_wecom_channel`.
+- Ticket source enum now includes `WECOM`.
+- Backend: `src/modules/channel/**` with JWT-protected management API and public mock webhook.
+- Endpoints:
+  - `GET /api/v1/workspaces/:workspaceId/channels`
+  - `POST /api/v1/workspaces/:workspaceId/channels/wecom`
+  - `POST /api/v1/channels/wecom/:connectionId/messages`
+- Safety: staff-only channel creation; webhook token verification; workspace derived from connection id; duplicate external messages return the existing ticket.
+- Tests: channel service covers staff-only management, invalid tokens, inbound ticket creation, duplicate handling and missing connections.
+- Web: `/channels` creates a WeCom mock channel and simulates inbound messages.
+- Browser E2E: registration, workspace creation, WeCom mock channel, inbound WECOM ticket, service item, request template, templated ticket, AI suggestion, message, resolve, knowledge draft, publish and self-service search all pass.
+
 ## Known Security/Audit Notes
 
 - Web `npm audit --audit-level=moderate`: 2 moderate findings from Next's transitive PostCSS dependency.
 - `npm audit fix --force` proposes a breaking downgrade to Next 9.3.3, so it was not applied automatically.
 - Secret scan after M4 found no committed GitHub token; matches were dependency/document URL false positives.
+- M5 still uses only mock channel tokens; no real WeCom or production secret is required.
 
 ## Tech Stack
 

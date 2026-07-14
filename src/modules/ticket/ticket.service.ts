@@ -12,6 +12,7 @@ import {
   TicketMessage,
   TicketMessageVisibility,
   TicketPriority,
+  TicketSource,
   TicketStatus,
 } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
@@ -31,6 +32,17 @@ export interface TicketActor {
   id: string;
   tenantId: string;
   roleType?: RoleType;
+}
+
+export interface CreateTicketFromChannelInput {
+  title: string;
+  description: string;
+  source: TicketSource;
+  requesterId: string;
+  createdById: string;
+  category?: string;
+  priority?: TicketPriority;
+  metadata?: Prisma.InputJsonValue;
 }
 
 @Injectable()
@@ -87,6 +99,26 @@ export class TicketService {
         createdBy: { connect: { id: actor.id } },
       },
       this.eventInput(actor.id, TicketEventType.CREATED, null, number),
+    );
+
+    return this.wrap({ ticket: this.toTicketDto(ticket) });
+  }
+
+  async createFromChannel(workspaceId: string, input: CreateTicketFromChannelInput) {
+    const number = await this.nextTicketNumber(workspaceId);
+    const ticket = await this.ticketRepository.createWithEvent(
+      {
+        workspace: { connect: { id: workspaceId } },
+        number,
+        title: input.title,
+        description: input.description,
+        source: input.source,
+        priority: input.priority ?? TicketPriority.P3,
+        category: input.category,
+        requester: { connect: { id: input.requesterId } },
+        createdBy: { connect: { id: input.createdById } },
+      },
+      this.eventInput(input.createdById, TicketEventType.CREATED, null, number, input.metadata),
     );
 
     return this.wrap({ ticket: this.toTicketDto(ticket) });

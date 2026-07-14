@@ -6,6 +6,7 @@ import { TicketModule } from './modules/ticket/ticket.module';
 import { AiModule } from './modules/ai/ai.module';
 import { KnowledgeModule } from './modules/knowledge/knowledge.module';
 import { ServiceCatalogModule } from './modules/service-catalog/service-catalog.module';
+import { ChannelModule } from './modules/channel/channel.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ServiceCatalogModule } from './modules/service-catalog/service-catalog.
     TicketModule,
     AiModule,
     KnowledgeModule,
+    ChannelModule,
   ],
 })
 export class AppModule {}

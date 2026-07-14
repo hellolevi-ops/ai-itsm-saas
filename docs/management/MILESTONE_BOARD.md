@@ -7,8 +7,8 @@
 | M2 AI-assisted tickets | ACCEPTED_LOCALLY | AI Gateway, mock provider, structured suggestion endpoint, `ai_runs` audit, web panel, unit tests and E2E are in place; local gates passed. | Keep PR #2 draft until CI/review policy is decided. |
 | M3 Knowledge and self-service | ACCEPTED_LOCALLY | Knowledge article model, draft-from-ticket API, publish API, requester-safe list/detail rules, web draft/publish/search flow, unit tests, E2E and migration validation passed. | Keep PR #2 draft until CI/review policy is decided. |
 | M4 Service management basics | ACCEPTED_LOCALLY | Service catalog Lite, request templates, working-hours Lite, SLA target timestamps, web catalog/template flow, unit tests and E2E are in place; local gates passed. | Keep PR #2 draft until CI/review policy is decided. |
-| M5 First China channel | NOT_STARTED | No channel adapter implementation yet. | M4 accepted. |
-| M6 PLG activation and team spread | NOT_STARTED | Signup foundation exists, activation loop incomplete. | M5 accepted. |
+| M5 First China channel | ACCEPTED_LOCALLY | WeCom mock inbound channel, token verification, idempotent inbound audit, ticket creation, web simulation page, unit tests and E2E are in place; local gates passed. | Keep PR #2 draft until CI/review policy is decided. |
+| M6 PLG activation and team spread | NEXT | Signup, workspace creation, service templates, WeCom mock inbound, ticket, AI and knowledge loops are verified. | Draft invite/team activation contract. |
 | M7 Plans, entitlements and commercial flow | NOT_STARTED | No entitlement or order domain implementation yet. | M6 accepted. |
 | M8 Security, reliability and operations | NOT_STARTED | Baseline tests exist; operations hardening pending. | M7 accepted. |
 | M9 China compliance preparation | NOT_STARTED | Compliance drafts not created. | M8 accepted. |

@@ -1,11 +1,11 @@
 # Execution State
 
-- Last updated: 2026-07-15 02:03 Asia/Shanghai
+- Last updated: 2026-07-15 02:29 Asia/Shanghai
 - Current branch: local snapshot plus GitHub branch `codex/m0-takeover-baseline`; base branch `develop`
-- Current commit: GitHub branch `codex/m0-takeover-baseline`; M4 validation recorded in this snapshot; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
+- Current commit: GitHub branch `codex/m0-takeover-baseline`; M5 validation recorded in this snapshot; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
 - Current phase: Milestone implementation after takeover
-- Current milestone: M4 - Service management basics
-- Current milestone status: ACCEPTED_LOCALLY - M4 service management basics passes local gates; PR/CI review remains before merge
+- Current milestone: M5 - First China channel
+- Current milestone status: ACCEPTED_LOCALLY - M5 WeCom mock inbound channel passes local gates; PR/CI review remains before merge
 - Completed tasks:
   - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_自主接管与商业化开发总控执行书.md`.
   - Inspected the requested workspace path.
@@ -85,8 +85,19 @@
 - Added backend M4 tests for staff-only management, same-workspace validation, active catalog listing, working-hours SLA calculation and template-driven ticket creation.
 - Added web `/service-catalog` page, ticket template selector and service target detail panel.
 - Extended Playwright E2E to verify service item creation, request template creation and templated ticket submission.
+- Created `docs/contracts/CHANNEL_API.md`.
+- Created `docs/tasks/M5-first-china-channel.md`.
+- Added Prisma `ChannelConnection` and `ChannelInboundMessage` models.
+- Added migration `20260715033000_add_wecom_channel`.
+- Extended `TicketSource` with `WECOM`.
+- Implemented `src/modules/channel/**` with staff-managed WeCom mock connections and public token-verified webhook.
+- Added `TicketService.createFromChannel` so channel adapters do not directly own ticket creation.
+- Added backend M5 tests for staff-only management, token rejection, inbound ticket creation, idempotent duplicates and missing channels.
+- Added web `/channels` page and MSW handlers for WeCom mock connection and inbound message simulation.
+- Extended Playwright E2E to verify WeCom mock inbound creates a WECOM ticket before the existing M4/M3 flows.
 - Active tasks:
-  - Start M5 first China channel contract after PR #2 is updated.
+  - Push M5 implementation and validation evidence to PR #2.
+  - Start M6 PLG activation and team spread contract after PR #2 is updated.
 - Blocked tasks:
   - `git fetch --all --tags --prune`
   - Local branch, remote and working tree checks
@@ -125,6 +136,8 @@
   - M4 temporary PostgreSQL migration validation for five migrations
   - `psql` table inspection for `service_catalog_items`, `request_templates`, `workspace_working_hours`, `knowledge_articles`, `ai_runs` and `tickets`
   - M4 secret scan for GitHub/OpenAI token patterns
+  - M5 temporary PostgreSQL migration validation for six migrations
+  - `psql` table inspection for `channel_connections`, `channel_inbound_messages`, `tickets`, `service_catalog_items`, `knowledge_articles` and `ai_runs`
   - M3 temporary PostgreSQL migration validation for four migrations
   - `psql` table inspection for `knowledge_articles`, `ai_runs`, `tickets` and `ticket_events`
   - `cd apps/web; npm audit --audit-level=moderate`
@@ -218,6 +231,14 @@
 - Root build passed after M4 implementation.
 - Web lint, typecheck, Vitest, build and E2E passed after M4 implementation.
 - Web Vitest tests passed after M4 implementation: 69/69.
+- Prisma schema validates after M5 channel model.
+- Root typecheck passed after M5 implementation.
+- Root lint passed after M5 implementation.
+- Root Jest tests passed after M5 implementation: 120/120.
+- Root build passed after M5 implementation.
+- Web lint, typecheck, Vitest, build and E2E passed after M5 implementation.
+- Web Vitest tests passed after M5 implementation: 69/69.
+- Web Playwright E2E passed after M5 implementation: 1/1.
 - Web Playwright E2E passed after M4 implementation: 1/1.
 - Secret scan after M4 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
 - Open P0 issues:
@@ -231,4 +252,4 @@
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Start M5 first China channel contract after PR #2 is updated.
+  - Push M5 implementation to PR #2 through GitHub REST API.

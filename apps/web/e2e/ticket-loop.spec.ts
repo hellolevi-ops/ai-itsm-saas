@@ -31,6 +31,32 @@ test('requester can submit, track, reply to and progress a ticket', async ({ pag
   await page.getByTestId('create-workspace-form').getByRole('button').click();
   await expect(page).toHaveURL('http://localhost:3001/');
 
+  await page.goto('/channels');
+  const channelForm = page.getByTestId('wecom-channel-form');
+  await channelForm.getByPlaceholder('Channel name').fill('WeCom support');
+  await channelForm.getByPlaceholder('Mock token').fill('mock-wecom-token');
+  await channelForm.getByRole('button', { name: 'Add WeCom channel' }).click();
+  await expect(page.getByText('WECOM / ACTIVE')).toBeVisible();
+
+  const inboundForm = page.getByTestId('wecom-inbound-form');
+  await inboundForm.getByPlaceholder('Subject').fill('Payroll VPN access failed');
+  await inboundForm
+    .getByPlaceholder('Message text')
+    .fill('I cannot access the payroll system from the corporate VPN.');
+  const inboundResponsePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes('/api/v1/channels/wecom/') &&
+      response.url().includes('/messages') &&
+      response.request().method() === 'POST',
+  );
+  await inboundForm.getByRole('button', { name: 'Send mock message' }).click();
+  const inboundResponse = await inboundResponsePromise;
+  expect(inboundResponse.status()).toBe(201);
+  await expect(page.getByTestId('channel-ticket-result')).toContainText(
+    'Payroll VPN access failed',
+  );
+  await expect(page.getByTestId('channel-ticket-result')).toContainText('WECOM');
+
   await page.goto('/service-catalog');
   const serviceItemForm = page.getByTestId('service-item-form');
   await serviceItemForm.getByPlaceholder('Service name').fill('Access requests');
