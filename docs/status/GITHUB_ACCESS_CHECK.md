@@ -294,7 +294,8 @@ Security note:
 - Draft PR: `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2`
 - Branch: `codex/m0-takeover-baseline`
 - Latest M11 implementation commit pushed by GitHub REST API: `8bd2cc737298156be53b5554efd54fd190ad8a16`
-- PR head verification: pending final evidence push
+- Latest M11 evidence commit pushed by GitHub REST API: `69f6555f74ab128040c6ca9f1e7be6f039aa2893`
+- PR head verification: PASS after M11 evidence push; remote CI initially failed on a timezone-dependent M4 SLA unit test and is being fixed in the next PR branch commit
 - Token stored in this repository: No
 
 Validation evidence after M11:
@@ -316,6 +317,9 @@ Validation evidence after M11:
 | Web `npm run test:e2e` | PASS, 1/1 |
 | Temporary PostgreSQL migration validation | PASS, 9 migrations through `20260715065000_add_beta_readiness` |
 | Secret scan | PASS, no committed GitHub/OpenAI token found |
+| GitHub Actions CI on `8bd2cc737298156be53b5554efd54fd190ad8a16` | FAIL, root Jest service-catalog SLA test used runner-local UTC instead of configured working-hours timezone |
+| Local UTC reproduction after CI fix | PASS, root Jest 152/152 tests |
+| Local post-fix root build | PASS |
 
 Security and release note:
 
@@ -323,3 +327,4 @@ Security and release note:
 - The RC package explicitly keeps `production_release: false`, `merge_to_main_approved: false` and `legal_final_judgment: false`.
 - Web `npm audit --audit-level=moderate` still reports 2 moderate Next/PostCSS findings; `npm audit fix --force` would downgrade Next to 9.3.3 and was not applied.
 - Production release, main merge, paid external resources, irreversible migrations and final legal judgment were not performed.
+- CI fix note: SLA due-date calculation now derives wall-clock working time from `WorkspaceWorkingHours.timezone`, avoiding process-local timezone drift between Asia/Shanghai development machines and UTC CI runners.
