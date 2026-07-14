@@ -1,0 +1,104 @@
+# Execution State
+
+- Last updated: 2026-07-14 22:45 Asia/Shanghai
+- Current branch: API verified upstream `develop`; local workspace is a recovered source snapshot with no `.git`
+- Current commit: API verified upstream `develop` HEAD `3b20d49bd68c836ba059e50426ec07b371b04c40`; local commit UNKNOWN
+- Current phase: Phase 0 / Phase 1 takeover
+- Current milestone: M0 - Takeover and baseline security
+- Current milestone status: IN_PROGRESS - source recovered and executable Phase 0 quality gates passed; Git working tree and live DB validation pending
+- Completed tasks:
+  - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_???????????????.md`.
+  - Inspected the requested workspace path.
+  - Verified the requested workspace initially contained no project files or `.git` directory.
+  - Searched local candidate paths under `Documents`, `Desktop`, `Downloads`, Trae project directories and Trae snapshots.
+  - Found product source documents at `C:\Users\Administrator\Documents\trae_projects\AiITSM\BUSINESS_PLAN.md` and `C:\Users\Administrator\Documents\trae_projects\AiITSM\PRD.md`.
+  - Created repository governance files: `AGENTS.md`, `.codex/config.toml`, and `.codex/agents/*.toml`.
+  - Queried Codex state databases for Git origin metadata; current thread has no `git_origin_url`, `git_sha`, or `git_branch`.
+  - Queried GitHub connector repository listings; no installations, organizations, or accessible repositories were returned.
+  - Searched public GitHub for `AiITSM`, `AIITSM`, `AI ITSM`, `Lingxi Service Desk`, and commit prefix `98f6e2c`.
+  - Evaluated public candidates `technologyoftomorrow/AIITSM` and `imranmendzys/aiitsm`; neither matches the control document baseline.
+  - Copied locally discovered product documents into `docs/product/BUSINESS_PLAN.md` and `docs/product/PRD.md` as recovery evidence.
+  - Performed a third consecutive blocked audit: the workspace still has no `.git` directory, no `package.json`, and Codex state still has no `git_origin_url`, `git_sha`, or `git_branch`.
+  - Verified GitHub token access to `hellolevi-ops/ai-itsm-saas` through the REST API.
+  - Verified repository permissions: admin, maintain, push, triage and pull are all true.
+  - Verified `develop` branch exists at `3b20d49bd68c836ba059e50426ec07b371b04c40`.
+  - Verified `main` branch exists at `83da3cbcdda8e332ebc64fc7d6ba6a7cab7a397e`.
+  - Verified Trae handoff commit prefix `98f6e2c` resolves to `98f6e2c2fe7eb67a755d7d03c2f981f5daff8a15` and is present in `develop` history.
+  - Created `docs/status/GITHUB_ACCESS_CHECK.md`.
+  - Downloaded and expanded the authoritative `develop` source archive from GitHub.
+  - Merged recovered source into `C:\Users\Administrator\Documents\AI ITSM SaaS` while preserving takeover records.
+  - Installed root and web dependencies.
+  - Ran backend Prisma generation, typecheck, lint, tests and build.
+  - Ran frontend typecheck, lint, tests and build.
+  - Validated Prisma schema with a local placeholder `DATABASE_URL`.
+  - Removed hardcoded JWT runtime fallback secret and added `.env.example`.
+  - Fixed generated-file lint issues and Next Turbopack root warning.
+- Active tasks:
+  - Establish a real Git working tree or GitHub API commit workflow for the local changes.
+  - Verify migrations against a non-production PostgreSQL database.
+  - Continue Phase 1/M0 documentation and security hardening.
+- Blocked tasks:
+  - `git fetch --all --tags --prune`
+  - Local branch, remote and working tree checks
+  - Git commit, branch push, and PR creation
+  - Live migration application against PostgreSQL
+- Latest validation commands:
+  - `git status --short --branch`
+  - `git branch --show-current`
+  - `git remote -v`
+  - `git log -1 --oneline`
+  - `git branch -a`
+  - `git tag -l`
+  - `Get-ChildItem -Force`
+  - local recursive searches for `.git`, `package.json`, PRD and business documents
+  - GitHub connector `_list_repositories`, `_search_installed_repositories_v2`, `_list_user_orgs`, `_list_installations`
+  - GitHub public repository and commit searches via `Invoke-RestMethod`
+  - GitHub connector `_get_repo`, `_fetch_file`, and `_search_commits` for public candidates
+  - `Get-ChildItem -Recurse -Directory -Filter .git`
+  - `Get-ChildItem -Recurse -Filter package.json`
+  - read-only query of Codex `state_5.sqlite` thread row for `git_origin_url`, `git_sha`, and `git_branch`
+  - GitHub REST API repository, branches, tags, commits and recursive tree checks for `hellolevi-ops/ai-itsm-saas`
+  - `npm ci`
+  - `npm run prisma:generate`
+  - `npm exec prisma -- validate`
+  - `npm run typecheck`
+  - `npm run lint:check`
+  - `npm test -- --runInBand`
+  - `npm run build`
+  - `cd apps/web; npm ci`
+  - `cd apps/web; npm run typecheck`
+  - `cd apps/web; npm run lint`
+  - `cd apps/web; npm test`
+  - `cd apps/web; npm run build`
+- Latest validation results:
+  - `git` is not recognized in the current PowerShell PATH.
+  - `gh` is not available in the current PowerShell PATH.
+  - `C:\Users\Administrator\Documents\AI ITSM SaaS` existed but was empty before governance files were added.
+  - `C:\Users\Administrator\Documents\trae_projects\AiITSM` contains PRD and business plan documents but no application code and no Git metadata.
+  - Trae snapshot Git directories inspected under `AppData\Roaming\Trae\ModularData\ai-agent\snapshot` contain only version graph JSON files, not the application repository.
+  - GitHub connector has no visible installed repositories for this account/session.
+  - Public candidate `technologyoftomorrow/AIITSM` is readable but mismatched: default branch is `main`, there is no `develop` branch, only one initial commit `80a6e714...`, and the stack is React/Express/Exchange rather than the expected tenant/workspace baseline.
+  - Public candidate `imranmendzys/aiitsm` is empty.
+  - Public commit search for `98f6e2c` returns unrelated repositories, not an AI ITSM SaaS repository.
+  - Third blocked audit result was superseded by the user-provided repository and token.
+  - GitHub REST API access to the authoritative repository succeeds.
+  - `develop` is later than Trae handoff commit `98f6e2c2fe7eb67a755d7d03c2f981f5daff8a15`.
+  - `develop` contains expected project files including `package.json`, `package-lock.json`, `prisma/schema.prisma`, `apps`, `src`, and `docs`.
+  - Root npm audit after install found 0 vulnerabilities.
+  - Backend executable gates passed: Prisma generate, typecheck, lint, Jest 78/78, build.
+  - Frontend executable gates passed: typecheck, lint, Vitest 58/58, Next build.
+  - Total automated tests passed: 136/136.
+  - Prisma schema validates when `DATABASE_URL` is provided.
+  - Secret scan found no user-provided GitHub token in repository files.
+- Open P0 issues:
+  - None for executable source validation.
+- Open P1 issues:
+  - P1-ENV-001: Git CLI is unavailable in PATH; Git phase checks and commits cannot run locally.
+  - P1-ENV-003: Local source snapshot has no `.git` metadata.
+  - P1-DB-001: Live PostgreSQL migration verification has not run.
+- External dependencies:
+  - Local Git installation or a working Git-capable environment.
+- Decisions required from user:
+  - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
+- Exact next action:
+  - Commit the validated local changes through a real Git workflow or GitHub API commit path, then run live DB migration verification in a non-production PostgreSQL environment.
