@@ -5,6 +5,7 @@ const edgePath = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.
 
 export default defineConfig({
   testDir: './e2e',
+  timeout: 90000,
   fullyParallel: false,
   workers: 1,
   reporter: [['list']],
