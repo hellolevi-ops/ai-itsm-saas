@@ -371,6 +371,8 @@
 - GitHub Actions CI then failed on Linux Prettier because the E2E assertion edit introduced CRLF characters on two lines; fixed by running Prettier over the edited web ticket files.
 - Post-format validation passed: root lint and web Playwright 1/1.
 - GitHub Actions CI passed on PR head `80301a5d938921057baa415720eaec3103434a02`: push run `29367266015` and pull_request run `29367270791`.
+- A later evidence-only push had pull_request CI pass but push CI fail because Next dev-server read stale `.next` production build output before E2E; fixed by adding an `apps/web` `pretest:e2e` cleanup script.
+- Cold-start web Playwright E2E then required more than the 30-second default; Playwright timeout was raised to 90 seconds and local cold-start E2E passed in 35.5 seconds.
 - Web Playwright E2E passed after M4 implementation: 1/1.
 - Secret scan after M4 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
 - Open P0 issues:
@@ -385,4 +387,4 @@
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Pause with human/external production-release hold items; do not merge, deploy to production, approve legal conclusions, buy external resources or run irreversible production migrations without explicit approval.
+  - Push E2E isolation and timeout fix, verify final GitHub Actions on the newest PR head, then pause with human/external production-release hold items.
