@@ -1,0 +1,390 @@
+# Execution State
+
+- Last updated: 2026-07-15 04:40 Asia/Shanghai
+- Current branch: local snapshot plus GitHub branch `codex/m0-takeover-baseline`; base branch `develop`
+- Current commit: GitHub branch `codex/m0-takeover-baseline`; M11 validation recorded in this snapshot; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
+- Current phase: Milestone implementation after takeover
+- Current milestone: M11 - Release Candidate preparation
+- Current milestone status: ACCEPTED_LOCALLY - RC package, CI workflow, RC artifact check, RC center, regression matrix and production-release hold are in place; production release remains blocked pending human/external actions
+- Completed tasks:
+  - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_鑷富鎺ョ涓庡晢涓氬寲寮€鍙戞€绘帶鎵ц涔?md`.
+  - Inspected the requested workspace path.
+  - Verified the requested workspace initially contained no project files or `.git` directory.
+  - Searched local candidate paths under `Documents`, `Desktop`, `Downloads`, Trae project directories and Trae snapshots.
+  - Found product source documents at `C:\Users\Administrator\Documents\trae_projects\AiITSM\BUSINESS_PLAN.md` and `C:\Users\Administrator\Documents\trae_projects\AiITSM\PRD.md`.
+  - Created repository governance files: `AGENTS.md`, `.codex/config.toml`, and `.codex/agents/*.toml`.
+  - Queried Codex state databases for Git origin metadata; current thread has no `git_origin_url`, `git_sha`, or `git_branch`.
+  - Queried GitHub connector repository listings; no installations, organizations, or accessible repositories were returned.
+  - Searched public GitHub for `AiITSM`, `AIITSM`, `AI ITSM`, `Lingxi Service Desk`, and commit prefix `98f6e2c`.
+  - Evaluated public candidates `technologyoftomorrow/AIITSM` and `imranmendzys/aiitsm`; neither matches the control document baseline.
+  - Copied locally discovered product documents into `docs/product/BUSINESS_PLAN.md` and `docs/product/PRD.md` as recovery evidence.
+  - Performed a third consecutive blocked audit: the workspace still has no `.git` directory, no `package.json`, and Codex state still has no `git_origin_url`, `git_sha`, or `git_branch`.
+  - Verified GitHub token access to `hellolevi-ops/ai-itsm-saas` through the REST API.
+  - Verified repository permissions: admin, maintain, push, triage and pull are all true.
+  - Verified `develop` branch exists at `3b20d49bd68c836ba059e50426ec07b371b04c40`.
+  - Verified `main` branch exists at `83da3cbcdda8e332ebc64fc7d6ba6a7cab7a397e`.
+  - Verified Trae handoff commit prefix `98f6e2c` resolves to `98f6e2c2fe7eb67a755d7d03c2f981f5daff8a15` and is present in `develop` history.
+  - Created `docs/status/GITHUB_ACCESS_CHECK.md`.
+  - Downloaded and expanded the authoritative `develop` source archive from GitHub.
+  - Merged recovered source into `C:\Users\Administrator\Documents\AI ITSM SaaS` while preserving takeover records.
+  - Installed root and web dependencies.
+  - Ran backend Prisma generation, typecheck, lint, tests and build.
+  - Ran frontend typecheck, lint, tests and build.
+  - Validated Prisma schema with a local placeholder `DATABASE_URL`.
+  - Removed hardcoded JWT runtime fallback secret and added `.env.example`.
+  - Fixed generated-file lint issues and Next Turbopack root warning.
+  - Created GitHub branch `codex/m0-takeover-baseline` from verified `develop` HEAD.
+  - Created draft PR `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2`.
+  - Initialized a temporary PostgreSQL 18 cluster under `%TEMP%`.
+  - Applied migration `20260714113121_init` to an empty temporary database.
+  - Verified `prisma migrate status` reports schema up to date.
+  - Stopped and removed the temporary PostgreSQL cluster.
+  - Created `docs/contracts/TICKET_API.md`.
+  - Created `docs/tasks/M1-minimal-ticket-loop.md`.
+  - Added Prisma ticket, ticket message and ticket event models.
+  - Added migration `20260714230500_add_ticket_loop`.
+  - Validated both migrations against an empty temporary PostgreSQL database.
+  - Moved trusted workspace context validation from middleware registration into `WorkspaceRoleGuard`.
+  - Added guard tests for route workspace context, cross-tenant rejection and role checks.
+  - Implemented `src/modules/ticket/**` backend module.
+  - Added ticket DTOs, controller, service, repository and module wiring.
+  - Added global `ValidationPipe` in `main.ts`.
+  - Added service tests for requester restrictions, internal-note visibility, assignee eligibility and status transitions.
+  - Added repository tests proving `workspaceId` is mandatory for ticket reads/lists.
+  - Implemented M1 web ticket submit, queue and detail pages.
+  - Added frontend ticket API client methods and MSW handlers for create/list/detail/message/status flows.
+  - Added frontend ticket component tests for submit redirect, queue links, conversation rendering, message add and status change.
+  - Added Playwright E2E coverage for register, create workspace, submit ticket, view queue, open detail, add message and start work.
+  - Fixed M1 browser issues found by E2E: mock-worker startup race, localStorage hydration mismatch, mock state loss across full-page navigation, and client-detail status/message refresh.
+  - Created `docs/contracts/AI_TICKET_ASSIST_API.md`.
+  - Created `docs/tasks/M2-ai-assisted-tickets.md`.
+  - Added Prisma `AiRun` model and migration `20260715004500_add_ai_runs`.
+  - Implemented `src/modules/ai/**` with AI Gateway, deterministic mock provider, structured ticket suggestions, AI run repository, service and controller.
+  - Added `POST /api/v1/workspaces/:workspaceId/tickets/:ticketId/ai-suggestions`.
+  - Added backend M2 tests for structured suggestions, risk handling, audit record creation, requester ownership and fail-closed membership.
+  - Added web ticket detail AI suggestion panel and MSW support.
+  - Extended Playwright E2E to verify AI suggestion generation and human-review messaging.
+  - Created `docs/contracts/KNOWLEDGE_API.md`.
+  - Created `docs/tasks/M3-knowledge-self-service.md`.
+  - Added Prisma `KnowledgeArticle` model and migration `20260715013000_add_knowledge_articles`.
+  - Implemented `src/modules/knowledge/**` with ticket draft generation, staff publish, requester-safe list/detail and workspace-scoped repository methods.
+  - Added `POST /api/v1/workspaces/:workspaceId/tickets/:ticketId/knowledge-drafts`.
+  - Added `GET /api/v1/workspaces/:workspaceId/knowledge`.
+  - Added `GET /api/v1/workspaces/:workspaceId/knowledge/:articleId`.
+  - Added `POST /api/v1/workspaces/:workspaceId/knowledge/:articleId/publish`.
+  - Added backend M3 tests for staff-only drafting, resolved/closed gate, internal-note exclusion, requester visibility and workspace-scoped repository access.
+  - Added web ticket detail draft/publish controls and `/knowledge` self-service list/search page.
+  - Extended Playwright E2E to verify draft creation, publish and self-service knowledge search.
+- Created `docs/contracts/SERVICE_CATALOG_API.md`.
+- Created `docs/tasks/M4-service-management-basics.md`.
+- Added Prisma `ServiceCatalogItem`, `RequestTemplate` and `WorkspaceWorkingHours` models.
+- Added migration `20260715021500_add_service_catalog`.
+- Added ticket fields for service catalog item, request template, response due and resolution due timestamps.
+- Implemented `src/modules/service-catalog/**` with service catalog item and request template APIs.
+- Extended ticket creation to accept same-workspace active `request_template_id` and calculate SLA target timestamps.
+- Added backend M4 tests for staff-only management, same-workspace validation, active catalog listing, working-hours SLA calculation and template-driven ticket creation.
+- Added web `/service-catalog` page, ticket template selector and service target detail panel.
+- Extended Playwright E2E to verify service item creation, request template creation and templated ticket submission.
+- Created `docs/contracts/CHANNEL_API.md`.
+- Created `docs/tasks/M5-first-china-channel.md`.
+- Added Prisma `ChannelConnection` and `ChannelInboundMessage` models.
+- Added migration `20260715033000_add_wecom_channel`.
+- Extended `TicketSource` with `WECOM`.
+- Implemented `src/modules/channel/**` with staff-managed WeCom mock connections and public token-verified webhook.
+- Added `TicketService.createFromChannel` so channel adapters do not directly own ticket creation.
+- Added backend M5 tests for staff-only management, token rejection, inbound ticket creation, idempotent duplicates and missing channels.
+- Added web `/channels` page and MSW handlers for WeCom mock connection and inbound message simulation.
+- Extended Playwright E2E to verify WeCom mock inbound creates a WECOM ticket before the existing M4/M3 flows.
+- Created `docs/contracts/INVITATION_API.md`.
+- Created `docs/tasks/M6-plg-team-spread.md`.
+- Added Prisma `WorkspaceInvitation` model and `WorkspaceInvitationStatus` enum.
+- Added migration `20260715043000_add_workspace_invitations`.
+- Implemented `src/modules/invitation/**` with owner/admin invitation management and public invitation acceptance.
+- Restricted invited roles to `AGENT` and `REQUESTER`.
+- Added hashed invite token storage and target-tenant teammate creation on acceptance.
+- Added web `/team` page and `/invite/accept` page.
+- Added MSW invitation handlers and extended Playwright E2E to verify invite creation, teammate acceptance and continued core workflow.
+- Created `docs/contracts/BILLING_API.md`.
+- Created `docs/tasks/M7-plans-entitlements-commercial-flow.md`.
+- Added Prisma `WorkspaceSubscription` and `PaymentOrder` models.
+- Added migration `20260715053000_add_billing_entitlements`.
+- Implemented `src/modules/billing/**` with plan catalog, billing overview, manual order creation and manual activation.
+- Added owner/admin-only commercial writes and no real payment provider integration.
+- Added ticket quota enforcement to web and channel ticket creation paths through `BillingService`.
+- Added web `/billing` page, MSW billing handlers and E2E coverage for Free overview, Team manual order creation and manual activation.
+- Created `docs/contracts/OPERATIONS_API.md`.
+- Created `docs/tasks/M8-security-reliability-operations.md`.
+- Implemented `src/modules/ops/**` with public liveness and readiness endpoints.
+- Added Prisma-backed database readiness check.
+- Added global request id and baseline security header middlewares.
+- Added ops/middleware unit tests and MSW/E2E health probe verification.
+- Created `docs/contracts/COMPLIANCE_API.md`.
+- Created `docs/tasks/M9-china-compliance-preparation.md`.
+- Created `docs/compliance/**` draft package for professional review.
+- Implemented `src/modules/compliance/**` with public compliance metadata APIs.
+- Added web `/legal` compliance center, MSW support and E2E coverage.
+- Created `docs/contracts/BETA_API.md`.
+- Created `docs/tasks/M10-beta-readiness.md`.
+- Created `docs/beta/**` beta readiness operating package.
+- Added Prisma `BetaFeedback` and `WorkspaceFeatureFlag` models.
+- Added migration `20260715065000_add_beta_readiness`.
+- Implemented `src/modules/beta/**` with public beta package, workspace readiness, feedback intake and feature flag APIs.
+- Added web `/beta` readiness console, MSW support and E2E coverage for beta flag toggle and feedback creation.
+- Created `docs/contracts/RELEASE_CANDIDATE_API.md`.
+- Created `docs/tasks/M11-release-candidate-preparation.md`.
+- Created `docs/release-candidate/**` RC evidence package.
+- Implemented `src/modules/release-candidate/**` with public RC readiness metadata API.
+- Added web `/release-candidate` center, MSW support and E2E coverage.
+- Added `.github/workflows/ci.yml`, `scripts/rc-check.mjs` and `npm run rc:check`.
+- Active tasks:
+  - Pause for human/external production-release hold items after M11 RC evidence push.
+- Blocked tasks:
+  - `git fetch --all --tags --prune`
+  - Local branch, remote and working tree checks
+  - None for M1 local acceptance.
+- Latest validation commands:
+  - `git status --short --branch`
+  - `git branch --show-current`
+  - `git remote -v`
+  - `git log -1 --oneline`
+  - `git branch -a`
+  - `git tag -l`
+  - `Get-ChildItem -Force`
+  - local recursive searches for `.git`, `package.json`, PRD and business documents
+  - GitHub connector `_list_repositories`, `_search_installed_repositories_v2`, `_list_user_orgs`, `_list_installations`
+  - GitHub public repository and commit searches via `Invoke-RestMethod`
+  - GitHub connector `_get_repo`, `_fetch_file`, and `_search_commits` for public candidates
+  - `Get-ChildItem -Recurse -Directory -Filter .git`
+  - `Get-ChildItem -Recurse -Filter package.json`
+  - read-only query of Codex `state_5.sqlite` thread row for `git_origin_url`, `git_sha`, and `git_branch`
+  - GitHub REST API repository, branches, tags, commits and recursive tree checks for `hellolevi-ops/ai-itsm-saas`
+  - `npm ci`
+  - `npm run prisma:generate`
+  - `npm exec prisma -- validate`
+  - `npm run typecheck`
+  - `npm run lint:check`
+  - `npm test -- --runInBand`
+  - `npm test -- --runInBand src/modules/ticket`
+  - `npm run build`
+  - `npm run build`
+  - `cd apps/web; npm ci`
+  - `cd apps/web; npm run typecheck`
+  - `cd apps/web; npm run lint`
+  - `cd apps/web; npm test`
+  - `cd apps/web; npm run build`
+  - `cd apps/web; npm run test:e2e`
+  - M4 temporary PostgreSQL migration validation for five migrations
+  - `psql` table inspection for `service_catalog_items`, `request_templates`, `workspace_working_hours`, `knowledge_articles`, `ai_runs` and `tickets`
+  - M4 secret scan for GitHub/OpenAI token patterns
+  - M5 temporary PostgreSQL migration validation for six migrations
+  - `psql` table inspection for `channel_connections`, `channel_inbound_messages`, `tickets`, `service_catalog_items`, `knowledge_articles` and `ai_runs`
+  - M6 temporary PostgreSQL migration validation for seven migrations
+  - `psql` table inspection for `workspace_invitations`, `channel_connections`, `channel_inbound_messages`, `tickets`, `service_catalog_items`, `knowledge_articles` and `ai_runs`
+  - M7 temporary PostgreSQL migration validation for eight migrations
+  - `psql` table inspection for `workspace_subscriptions`, `payment_orders`, `workspace_invitations`, `channel_connections`, `channel_inbound_messages`, `tickets`, `service_catalog_items`, `knowledge_articles` and `ai_runs`
+  - M8 temporary PostgreSQL migration validation for eight migrations
+  - M9 temporary PostgreSQL migration validation for eight migrations
+  - M9 secret scan for GitHub/OpenAI token patterns
+  - M10 temporary PostgreSQL migration validation for nine migrations
+  - M10 secret scan for GitHub/OpenAI token patterns
+  - M11 temporary PostgreSQL migration validation for nine migrations
+  - `npm run rc:check`
+  - M11 dependency audit: root and web
+  - M11 secret scan for GitHub/OpenAI token patterns
+  - health probe E2E fetches for `/api/v1/health/live` and `/api/v1/health/ready`
+  - M3 temporary PostgreSQL migration validation for four migrations
+  - `psql` table inspection for `knowledge_articles`, `ai_runs`, `tickets` and `ticket_events`
+  - `cd apps/web; npm audit --audit-level=moderate`
+  - M2 temporary PostgreSQL migration validation for three migrations
+  - GitHub REST API git refs, blobs, tree, commit and pull request creation for `codex/m0-takeover-baseline`
+  - Temporary PostgreSQL 18 cluster initialization with `initdb`
+  - `prisma migrate deploy`
+  - `prisma migrate status`
+  - `psql` table inspection
+  - `npm run prisma:generate`
+  - M1 temporary PostgreSQL migration validation for two migrations
+  - `npm run typecheck`
+  - `npm run lint:check`
+  - `npm test -- --runInBand`
+- Latest validation results:
+  - `git` is not recognized in the current PowerShell PATH.
+  - `gh` is not available in the current PowerShell PATH.
+  - `C:\Users\Administrator\Documents\AI ITSM SaaS` existed but was empty before governance files were added.
+  - `C:\Users\Administrator\Documents\trae_projects\AiITSM` contains PRD and business plan documents but no application code and no Git metadata.
+  - Trae snapshot Git directories inspected under `AppData\Roaming\Trae\ModularData\ai-agent\snapshot` contain only version graph JSON files, not the application repository.
+  - GitHub connector has no visible installed repositories for this account/session.
+  - Public candidate `technologyoftomorrow/AIITSM` is readable but mismatched: default branch is `main`, there is no `develop` branch, only one initial commit `80a6e714...`, and the stack is React/Express/Exchange rather than the expected tenant/workspace baseline.
+  - Public candidate `imranmendzys/aiitsm` is empty.
+  - Public commit search for `98f6e2c` returns unrelated repositories, not an AI ITSM SaaS repository.
+  - Third blocked audit result was superseded by the user-provided repository and token.
+  - GitHub REST API access to the authoritative repository succeeds.
+  - `develop` is later than Trae handoff commit `98f6e2c2fe7eb67a755d7d03c2f981f5daff8a15`.
+  - `develop` contains expected project files including `package.json`, `package-lock.json`, `prisma/schema.prisma`, `apps`, `src`, and `docs`.
+  - Root npm audit after install found 0 vulnerabilities.
+  - Backend executable gates passed: Prisma generate, typecheck, lint, Jest 78/78, build.
+  - Frontend executable gates passed: typecheck, lint, Vitest 58/58, Next build.
+  - Total automated tests passed: 136/136.
+  - Prisma schema validates when `DATABASE_URL` is provided.
+  - Secret scan found no user-provided GitHub token in repository files.
+  - GitHub branch `codex/m0-takeover-baseline` created at `ca2ab7868b9605c8628bc7a28ff5f47721507958`.
+  - Draft PR #2 opened against `develop`.
+  - Temporary PostgreSQL migration validation passed: migration `20260714113121_init` applied to empty database and schema reported up to date.
+  - Temporary PostgreSQL cluster was stopped and removed.
+  - M1 migration validation passed: migrations `20260714113121_init` and `20260714230500_add_ticket_loop` applied to empty database and schema reported up to date.
+  - M1 migration created tables `tickets`, `ticket_messages` and `ticket_events`.
+  - Root typecheck passed after M1 schema and guard changes.
+  - Root lint passed after M1 schema and guard changes.
+  - Root Jest tests passed after M1 schema and guard changes: 79/79.
+  - Ticket-specific Jest tests passed: 9/9.
+  - Root Jest tests passed after ticket backend implementation: 88/88.
+  - Root build passed after ticket backend implementation.
+  - Root typecheck passed after M1 web implementation.
+  - Root lint passed after M1 web implementation.
+  - Root Jest tests passed after M1 web implementation: 88/88.
+  - Root build passed after M1 web implementation.
+  - Web typecheck passed after M1 web implementation.
+  - Web lint passed after M1 web implementation.
+  - Web Vitest tests passed after M1 web implementation: 65/65.
+  - Web Next build passed after M1 web implementation.
+  - Secret scan after M1 web implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
+  - Web Playwright E2E passed after M1 hardening: 1/1.
+  - Root lint passed after M1 E2E hardening.
+  - Root Jest tests passed after M1 E2E hardening: 88/88.
+  - Root build passed after M1 E2E hardening.
+  - Web lint, typecheck, Vitest, build and E2E passed after M1 E2E hardening.
+  - Secret scan after M1 E2E hardening found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
+  - Web npm audit reports 2 moderate vulnerabilities from Next's transitive PostCSS dependency; `npm audit fix --force` proposes a breaking downgrade to Next 9.3.3, so no automatic fix was applied.
+  - Prisma schema validates after M2 AI run model.
+  - M2 migration validation passed: migrations `20260714113121_init`, `20260714230500_add_ticket_loop` and `20260715004500_add_ai_runs` applied to an empty PostgreSQL 18 database.
+  - M2 migration created table `ai_runs`.
+  - Root typecheck passed after M2 implementation.
+  - Root lint passed after M2 implementation.
+  - Root Jest tests passed after M2 implementation: 95/95.
+  - Root build passed after M2 implementation.
+  - Web lint, typecheck, Vitest, build and E2E passed after M2 implementation.
+  - Web Vitest tests passed after M2 implementation: 66/66.
+  - Web Playwright E2E passed after M2 implementation: 1/1.
+  - Secret scan after M2 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
+  - Prisma schema validates after M3 knowledge article model.
+  - M3 migration validation passed: migrations `20260714113121_init`, `20260714230500_add_ticket_loop`, `20260715004500_add_ai_runs` and `20260715013000_add_knowledge_articles` applied to an empty PostgreSQL 18 database.
+  - M3 migration created table `knowledge_articles`.
+  - Root typecheck passed after M3 implementation.
+  - Root lint passed after M3 implementation.
+  - Root Jest tests passed after M3 implementation: 104/104.
+  - Root build passed after M3 implementation.
+  - Web lint, typecheck, Vitest, build and E2E passed after M3 implementation.
+  - Web Vitest tests passed after M3 implementation: 68/68.
+  - Web Playwright E2E passed after M3 implementation: 1/1.
+  - Secret scan after M3 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
+- Prisma schema validates after M4 service catalog model.
+- M4 migration validation passed: migrations `20260714113121_init`, `20260714230500_add_ticket_loop`, `20260715004500_add_ai_runs`, `20260715013000_add_knowledge_articles` and `20260715021500_add_service_catalog` applied to an empty PostgreSQL 18 database.
+- M4 migration created tables `service_catalog_items`, `request_templates` and `workspace_working_hours`.
+- Root typecheck passed after M4 implementation.
+- Root lint passed after M4 implementation.
+- Root Jest tests passed after M4 implementation: 114/114.
+- Root build passed after M4 implementation.
+- Web lint, typecheck, Vitest, build and E2E passed after M4 implementation.
+- Web Vitest tests passed after M4 implementation: 69/69.
+- Prisma schema validates after M5 channel model.
+- Root typecheck passed after M5 implementation.
+- Root lint passed after M5 implementation.
+- Root Jest tests passed after M5 implementation: 120/120.
+- Root build passed after M5 implementation.
+- Web lint, typecheck, Vitest, build and E2E passed after M5 implementation.
+- Web Vitest tests passed after M5 implementation: 69/69.
+- Web Playwright E2E passed after M5 implementation: 1/1.
+- Prisma schema validates after M6 invitation model.
+- Root typecheck passed after M6 implementation.
+- Root lint passed after M6 implementation.
+- Root Jest tests passed after M6 implementation: 127/127.
+- Root build passed after M6 implementation.
+- Web lint, typecheck, Vitest, build and E2E passed after M6 implementation.
+- Web Vitest tests passed after M6 implementation: 69/69.
+- Web Playwright E2E passed after M6 implementation: 1/1.
+- M6 migration validation passed: seven migrations through `20260715043000_add_workspace_invitations` applied to an empty PostgreSQL 18 database.
+- M6 migration created table `workspace_invitations`.
+- Secret scan after M6 implementation found no user-provided GitHub/OpenAI token in repository files; observed matches were dependency/document URL false positives.
+- Prisma schema validates after M7 billing model.
+- Root typecheck passed after M7 implementation.
+- Root lint passed after M7 implementation.
+- Root Jest tests passed after M7 implementation: 135/135.
+- Root build passed after M7 implementation.
+- Web lint, typecheck, Vitest, build and E2E passed after M7 implementation.
+- Web Vitest tests passed after M7 implementation: 69/69.
+- Web Playwright E2E passed after M7 implementation: 1/1.
+- M7 migration validation passed: eight migrations through `20260715053000_add_billing_entitlements` applied to an empty PostgreSQL 18 database.
+- M7 migration created tables `workspace_subscriptions` and `payment_orders`.
+- Secret scan after M7 implementation found no user-provided GitHub/OpenAI token in repository files; observed matches were dependency/document URL false positives.
+- Root typecheck passed after M8 implementation.
+- Root lint passed after M8 implementation.
+- Root Jest tests passed after M8 implementation: 141/141.
+- Root build passed after M8 implementation.
+- Web lint, typecheck, Vitest, build and E2E passed after M8 implementation.
+- Web Vitest tests passed after M8 implementation: 69/69.
+- Web Playwright E2E passed after M8 implementation: 1/1.
+- M8 migration validation passed: eight migrations through `20260715053000_add_billing_entitlements` applied to an empty PostgreSQL 18 database.
+- Secret scan after M8 implementation found no user-provided GitHub/OpenAI token in repository files; observed matches were dependency/document URL and `service-desk-api` false positives.
+- Root typecheck passed after M9 implementation.
+- Root lint passed after M9 implementation.
+- Root Jest tests passed after M9 implementation: 144/144.
+- Root build passed after M9 implementation.
+- Web typecheck passed after M9 implementation.
+- Web lint passed after M9 implementation.
+- Web Vitest tests passed after M9 implementation: 69/69.
+- Web build passed after M9 implementation.
+- Web Playwright E2E passed after M9 implementation: 1/1.
+- Prisma schema validates after M9 implementation.
+- M9 migration validation passed: eight migrations through `20260715053000_add_billing_entitlements` applied to an empty PostgreSQL 18 database.
+- Secret scan after M9 implementation found no user-provided GitHub/OpenAI token in repository files; observed matches were dependency/document URL and `service-desk-api` false positives.
+- Prisma schema validates after M10 implementation.
+- Root typecheck passed after M10 implementation.
+- Root lint passed after M10 implementation.
+- Root Jest tests passed after M10 implementation: 151/151.
+- Root build passed after M10 implementation.
+- Web typecheck passed after M10 implementation.
+- Web lint passed after M10 implementation.
+- Web Vitest tests passed after M10 implementation: 69/69.
+- Web build passed after M10 implementation.
+- Web Playwright E2E passed after M10 implementation: 1/1.
+- M10 migration validation passed: nine migrations through `20260715065000_add_beta_readiness` applied to an empty PostgreSQL 18 database.
+- M10 migration created tables `beta_feedback` and `workspace_feature_flags`.
+- Secret scan after M10 implementation found no user-provided GitHub/OpenAI token in repository files.
+- Prisma schema validates after M11 implementation.
+- RC artifact check passed after M11 implementation.
+- Root dependency audit passed after M11 implementation: 0 vulnerabilities.
+- Web dependency audit still reports 2 moderate Next/PostCSS findings; forced fix would downgrade Next to 9.3.3 and was not applied.
+- Root typecheck passed after M11 implementation.
+- Root lint passed after M11 implementation.
+- Root Jest tests passed after M11 implementation: 152/152.
+- Root build passed after M11 implementation.
+- Web typecheck passed after M11 implementation.
+- Web lint passed after M11 implementation.
+- Web Vitest tests passed after M11 implementation: 69/69.
+- Web build passed after M11 implementation.
+- Web Playwright E2E passed after M11 implementation: 1/1.
+- M11 migration validation passed: nine migrations through `20260715065000_add_beta_readiness` applied to an empty PostgreSQL 18 database.
+- Secret scan after M11 implementation found no user-provided GitHub/OpenAI token in repository files.
+- GitHub Actions CI initially failed on the service-catalog SLA unit test because M4 due-date calculation used the process-local timezone; fixed by deriving wall-clock working time from `WorkspaceWorkingHours.timezone`.
+- Post-fix UTC validation passed: root Jest 152/152 tests, root lint, root typecheck, `npm run rc:check` and root build.
+- GitHub Actions CI then failed on the web Playwright knowledge-draft status assertion because a corrupted status separator glyph made the exact-text assertion brittle; fixed with an ASCII UI separator and `knowledge-draft-status` semantic assertions.
+- Post-fix web validation passed: typecheck, lint, Vitest 69/69, build and Playwright 1/1.
+- GitHub Actions CI then failed on Linux Prettier because the E2E assertion edit introduced CRLF characters on two lines; fixed by running Prettier over the edited web ticket files.
+- Post-format validation passed: root lint and web Playwright 1/1.
+- GitHub Actions CI passed on PR head `80301a5d938921057baa415720eaec3103434a02`: push run `29367266015` and pull_request run `29367270791`.
+- A later evidence-only push had pull_request CI pass but push CI fail because Next dev-server read stale `.next` production build output before E2E; fixed by adding an `apps/web` `pretest:e2e` cleanup script.
+- Cold-start web Playwright E2E then required more than the 30-second default; Playwright timeout was raised to 90 seconds and local cold-start E2E passed in 35.5 seconds.
+- Web Playwright E2E passed after M4 implementation: 1/1.
+- Secret scan after M4 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
+- Open P0 issues:
+  - None for executable source validation.
+- Open P1 issues:
+  - P1-ENV-001: Git CLI is unavailable in PATH; Git phase checks and commits cannot run locally.
+  - P1-ENV-003: Local source snapshot has no `.git` metadata.
+  - P1-SEC-002: Web npm audit reports Next transitive PostCSS moderate advisory; forced npm fix is destructive and requires framework/security review.
+  - P1-RC-001: Production release remains blocked by human/external actions.
+- External dependencies:
+  - Local Git installation or a working Git-capable environment.
+- Decisions required from user:
+  - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
+- Exact next action:
+  - Push E2E isolation and timeout fix, verify final GitHub Actions on the newest PR head, then pause with human/external production-release hold items.

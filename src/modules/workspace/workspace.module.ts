@@ -1,4 +1,4 @@
-import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { APP_GUARD, Reflector } from '@nestjs/core';
 import { PrismaModule } from '@/prisma/prisma.module';
 import { WorkspaceService } from './services/workspace.service';
@@ -12,7 +12,6 @@ import {
 } from './repositories/workspace.repository';
 import { WorkspaceMemberRepository } from './repositories/workspace-member.repository';
 import { RoleRepository } from './repositories/role.repository';
-import { TenantMiddleware } from './middleware/tenant.middleware';
 import { TenantContextHolder } from './tenant/tenant-context';
 import { WorkspaceRoleGuard } from './guards/workspace-role.guard';
 
@@ -45,8 +44,4 @@ import { WorkspaceRoleGuard } from './guards/workspace-role.guard';
     TenantContextHolder,
   ],
 })
-export class WorkspaceModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(TenantMiddleware).forRoutes({ path: '*', method: RequestMethod.ALL });
-  }
-}
+export class WorkspaceModule {}

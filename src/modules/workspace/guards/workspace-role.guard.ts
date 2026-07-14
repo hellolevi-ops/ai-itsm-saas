@@ -1,8 +1,9 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
-import { Observable } from 'rxjs';
 import { Reflector } from '@nestjs/core';
 import { WorkspaceMemberService } from '../services/workspace-member.service';
 import { RoleType } from '@prisma/client';
+import { WorkspaceService } from '../services/workspace.service';
+import { TenantContext, TenantContextHolder } from '../tenant/tenant-context';
 
 export const ROLES_KEY = 'requiredRoles';
 
@@ -11,36 +12,78 @@ export class WorkspaceRoleGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly memberService: WorkspaceMemberService,
+    private readonly workspaceService: WorkspaceService,
   ) {}
 
-  canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredRoles = this.reflector.getAllAndOverride<RoleType[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    if (!requiredRoles) {
-      return true;
-    }
-
     const request = context.switchToHttp().getRequest();
     const user = (request as any).user;
 
     if (!user?.id || !user?.tenantId) {
-      return true;
+      return !requiredRoles;
     }
 
-    const tenantContext = request.tenantContext;
-
-    if (!tenantContext?.workspaceId) {
-      const method = request.method;
-      if (method === 'POST') {
+    const workspaceId = this.resolveWorkspaceId(request);
+    if (!workspaceId) {
+      if (!requiredRoles || request.method === 'POST') {
         return true;
       }
       throw new ForbiddenException('Tenant context required');
     }
 
-    return this.validateRole(tenantContext.workspaceId, tenantContext.userId, requiredRoles);
+    const tenantContext = await this.resolveTenantContext(workspaceId, user.id, user.tenantId);
+    request.tenantContext = tenantContext;
+    TenantContextHolder.setContext(tenantContext);
+
+    if (!requiredRoles) {
+      return true;
+    }
+
+    return this.validateRole(tenantContext.workspaceId, tenantContext.userId!, requiredRoles);
+  }
+
+  private resolveWorkspaceId(request: any): string | undefined {
+    return (
+      request.params?.workspaceId ||
+      request.params?.id ||
+      request.headers?.['x-workspace-id'] ||
+      request.query?.workspaceId ||
+      this.extractFromSubdomain(request)
+    );
+  }
+
+  private extractFromSubdomain(request: any): string | undefined {
+    const host = request.headers?.host;
+    if (!host) return undefined;
+
+    const parts = host.split('.');
+    if (parts.length >= 3 && parts[0] !== 'www') {
+      return parts[0];
+    }
+    return undefined;
+  }
+
+  private async resolveTenantContext(
+    workspaceId: string,
+    userId: string,
+    tenantId: string,
+  ): Promise<TenantContext> {
+    const workspace = await this.workspaceService.findById(workspaceId);
+    if (!workspace || workspace.tenantId !== tenantId) {
+      throw new ForbiddenException('Invalid workspace or cross-tenant access denied');
+    }
+
+    const member = await this.memberService.findByUserIdAndWorkspaceId(userId, workspaceId);
+    if (!member) {
+      throw new ForbiddenException('User is not a member of this workspace');
+    }
+
+    return { tenantId, workspaceId, userId };
   }
 
   private async validateRole(

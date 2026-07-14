@@ -20,19 +20,161 @@ enum RoleType {
   REQUESTER
 }
 
+enum TicketSource {
+  WEB
+  WECOM
+}
+
+enum TicketStatus {
+  NEW
+  TRIAGE
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  REOPENED
+}
+
+enum TicketPriority {
+  P1
+  P2
+  P3
+  P4
+}
+
+enum TicketMessageVisibility {
+  PUBLIC
+  INTERNAL
+}
+
+enum TicketEventType {
+  CREATED
+  UPDATED
+  ASSIGNED
+  MESSAGE_ADDED
+  STATUS_CHANGED
+  CLOSED
+  REOPENED
+}
+
+enum AiActionType {
+  TICKET_TRIAGE
+}
+
+enum AiRunStatus {
+  SUCCEEDED
+  FAILED
+}
+
+enum KnowledgeStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum KnowledgeVisibility {
+  INTERNAL
+  REQUESTER
+}
+
+enum KnowledgeSourceType {
+  TICKET
+  MANUAL
+}
+
+enum ServiceCatalogStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum RequestTemplateStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum WorkingHoursStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ChannelType {
+  WECOM
+}
+
+enum ChannelConnectionStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ChannelInboundMessageStatus {
+  RECEIVED
+  TICKET_CREATED
+  DUPLICATE
+  REJECTED
+}
+
+enum WorkspaceInvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+enum BillingPlanCode {
+  FREE
+  TEAM
+  GROWTH
+  BUSINESS
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+enum WorkspaceSubscriptionStatus {
+  ACTIVE
+  CANCELED
+  EXPIRED
+}
+
+enum PaymentOrderStatus {
+  PENDING
+  ACTIVATED
+  CANCELED
+}
+
+enum BetaFeedbackType {
+  FEEDBACK
+  BUG
+  INTERVIEW_NOTE
+}
+
+enum BetaFeedbackSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum BetaFeedbackStatus {
+  OPEN
+  TRIAGED
+  CLOSED
+}
+
 model Tenant {
-  id        String   @id @default(uuid())
+  id        String          @id @default(uuid())
   name      String
-  slug      String   @unique
+  slug      String          @unique
   status    WorkspaceStatus @default(ACTIVE)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
 
   workspaces Workspace[]
   users      User[]
 
-  @@map("tenants")
   @@index([status])
+  @@map("tenants")
 }
 
 model User {
@@ -45,33 +187,65 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  tenant           Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  workspaceMembers WorkspaceMember[]
+  tenant               Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  workspaceMembers     WorkspaceMember[]
+  requestedTickets     Ticket[]                @relation("TicketRequester")
+  assignedTickets      Ticket[]                @relation("TicketAssignee")
+  createdTickets       Ticket[]                @relation("TicketCreator")
+  updatedTickets       Ticket[]                @relation("TicketUpdater")
+  ticketMessages       TicketMessage[]
+  ticketEvents         TicketEvent[]
+  aiRuns               AiRun[]
+  knowledgeArticles    KnowledgeArticle[]      @relation("KnowledgeCreator")
+  publishedKnowledge   KnowledgeArticle[]      @relation("KnowledgePublisher")
+  channelConnections   ChannelConnection[]     @relation("ChannelConnectionCreator")
+  sentInvitations      WorkspaceInvitation[]   @relation("InvitationInviter")
+  acceptedInvitations  WorkspaceInvitation[]   @relation("InvitationAcceptedBy")
+  createdSubscriptions WorkspaceSubscription[] @relation("SubscriptionCreator")
+  requestedOrders      PaymentOrder[]          @relation("PaymentOrderRequester")
+  activatedOrders      PaymentOrder[]          @relation("PaymentOrderActivator")
+  betaFeedback         BetaFeedback[]          @relation("BetaFeedbackReporter")
+  changedFeatureFlags  WorkspaceFeatureFlag[]  @relation("FeatureFlagChangedBy")
 
-  @@map("users")
   @@unique([tenantId, email])
   @@index([tenantId])
+  @@map("users")
 }
 
 model Workspace {
-  id          String           @id @default(uuid())
-  tenantId    String           @map("tenant_id")
-  name        String
-  slug        String
-  timezone    String           @default("Asia/Shanghai")
-  language    String           @default("zh-CN")
-  status      WorkspaceStatus  @default(ACTIVE)
-  createdAt   DateTime         @default(now()) @map("created_at")
-  updatedAt   DateTime         @updatedAt @map("updated_at")
+  id        String          @id @default(uuid())
+  tenantId  String          @map("tenant_id")
+  name      String
+  slug      String
+  timezone  String          @default("Asia/Shanghai")
+  language  String          @default("zh-CN")
+  status    WorkspaceStatus @default(ACTIVE)
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
 
-  tenant  Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  members WorkspaceMember[]
-  roles   Role[]
+  tenant              Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  members             WorkspaceMember[]
+  roles               Role[]
+  tickets             Ticket[]
+  ticketMessages      TicketMessage[]
+  ticketEvents        TicketEvent[]
+  aiRuns              AiRun[]
+  knowledgeArticles   KnowledgeArticle[]
+  serviceCatalogItems ServiceCatalogItem[]
+  requestTemplates    RequestTemplate[]
+  workingHours        WorkspaceWorkingHours?
+  channelConnections  ChannelConnection[]
+  channelMessages     ChannelInboundMessage[]
+  invitations         WorkspaceInvitation[]
+  subscriptions       WorkspaceSubscription[]
+  paymentOrders       PaymentOrder[]
+  betaFeedback        BetaFeedback[]
+  featureFlags        WorkspaceFeatureFlag[]
 
-  @@map("workspaces")
   @@unique([tenantId, slug])
   @@index([tenantId])
   @@index([status])
+  @@map("workspaces")
 }
 
 model WorkspaceMember {
@@ -87,10 +261,10 @@ model WorkspaceMember {
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   role      Role      @relation(fields: [roleId], references: [id])
 
-  @@map("workspace_members")
   @@unique([workspaceId, userId])
   @@index([workspaceId])
   @@index([userId])
+  @@map("workspace_members")
 }
 
 model Role {
@@ -106,7 +280,401 @@ model Role {
   workspace Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   members   WorkspaceMember[]
 
-  @@map("roles")
   @@unique([workspaceId, name])
   @@index([workspaceId])
+  @@map("roles")
+}
+
+model Ticket {
+  id          String         @id @default(uuid())
+  workspaceId String         @map("workspace_id")
+  number      String
+  title       String
+  description String
+  source      TicketSource   @default(WEB)
+  status      TicketStatus   @default(NEW)
+  priority    TicketPriority @default(P3)
+  category    String?
+  requesterId String         @map("requester_id")
+  assigneeId  String?        @map("assignee_id")
+  createdById String         @map("created_by_id")
+  updatedById String?        @map("updated_by_id")
+  resolvedAt  DateTime?      @map("resolved_at")
+  closedAt    DateTime?      @map("closed_at")
+  reopenCount Int            @default(0) @map("reopen_count")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  workspace            Workspace               @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  requester            User                    @relation("TicketRequester", fields: [requesterId], references: [id])
+  assignee             User?                   @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  createdBy            User                    @relation("TicketCreator", fields: [createdById], references: [id])
+  updatedBy            User?                   @relation("TicketUpdater", fields: [updatedById], references: [id])
+  messages             TicketMessage[]
+  events               TicketEvent[]
+  aiRuns               AiRun[]
+  knowledgeArticles    KnowledgeArticle[]
+  channelMessages      ChannelInboundMessage[]
+  serviceCatalogItem   ServiceCatalogItem?     @relation(fields: [serviceCatalogItemId], references: [id], onDelete: SetNull)
+  requestTemplate      RequestTemplate?        @relation(fields: [requestTemplateId], references: [id], onDelete: SetNull)
+  serviceCatalogItemId String?                 @map("service_catalog_item_id")
+  requestTemplateId    String?                 @map("request_template_id")
+  responseDueAt        DateTime?               @map("response_due_at")
+  resolutionDueAt      DateTime?               @map("resolution_due_at")
+
+  @@unique([workspaceId, number])
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@index([workspaceId, assigneeId])
+  @@index([workspaceId, requesterId])
+  @@index([workspaceId, serviceCatalogItemId])
+  @@index([workspaceId, requestTemplateId])
+  @@index([workspaceId, responseDueAt])
+  @@index([workspaceId, resolutionDueAt])
+  @@index([createdAt])
+  @@map("tickets")
+}
+
+model TicketMessage {
+  id          String                  @id @default(uuid())
+  workspaceId String                  @map("workspace_id")
+  ticketId    String                  @map("ticket_id")
+  authorId    String                  @map("author_id")
+  visibility  TicketMessageVisibility @default(PUBLIC)
+  body        String
+  createdAt   DateTime                @default(now()) @map("created_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  ticket    Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    User      @relation(fields: [authorId], references: [id])
+
+  @@index([workspaceId])
+  @@index([ticketId])
+  @@index([authorId])
+  @@map("ticket_messages")
+}
+
+model TicketEvent {
+  id          String          @id @default(uuid())
+  workspaceId String          @map("workspace_id")
+  ticketId    String          @map("ticket_id")
+  actorId     String?         @map("actor_id")
+  type        TicketEventType
+  fromValue   String?         @map("from_value")
+  toValue     String?         @map("to_value")
+  metadata    Json?
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  ticket    Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actor     User?     @relation(fields: [actorId], references: [id])
+
+  @@index([workspaceId])
+  @@index([ticketId])
+  @@index([actorId])
+  @@index([type])
+  @@map("ticket_events")
+}
+
+model AiRun {
+  id                  String       @id @default(uuid())
+  workspaceId         String       @map("workspace_id")
+  ticketId            String       @map("ticket_id")
+  actorId             String?      @map("actor_id")
+  action              AiActionType
+  provider            String
+  model               String
+  promptVersion       String       @map("prompt_version")
+  status              AiRunStatus
+  inputHash           String       @map("input_hash")
+  output              Json
+  confidence          Float
+  riskLevel           String       @default("LOW") @map("risk_level")
+  latencyMs           Int          @map("latency_ms")
+  inputTokens         Int          @default(0) @map("input_tokens")
+  outputTokens        Int          @default(0) @map("output_tokens")
+  estimatedCostMicros Int          @default(0) @map("estimated_cost_micros")
+  createdAt           DateTime     @default(now()) @map("created_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  ticket    Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actor     User?     @relation(fields: [actorId], references: [id])
+
+  @@index([workspaceId])
+  @@index([workspaceId, ticketId])
+  @@index([workspaceId, action])
+  @@index([actorId])
+  @@map("ai_runs")
+}
+
+model KnowledgeArticle {
+  id             String              @id @default(uuid())
+  workspaceId    String              @map("workspace_id")
+  sourceTicketId String?             @map("source_ticket_id")
+  sourceType     KnowledgeSourceType @default(MANUAL) @map("source_type")
+  title          String
+  problem        String
+  resolution     String
+  verification   String
+  rollback       String?
+  status         KnowledgeStatus     @default(DRAFT)
+  visibility     KnowledgeVisibility @default(INTERNAL)
+  createdById    String              @map("created_by_id")
+  publishedById  String?             @map("published_by_id")
+  publishedAt    DateTime?           @map("published_at")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  sourceTicket Ticket?   @relation(fields: [sourceTicketId], references: [id], onDelete: SetNull)
+  createdBy    User      @relation("KnowledgeCreator", fields: [createdById], references: [id])
+  publishedBy  User?     @relation("KnowledgePublisher", fields: [publishedById], references: [id])
+
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@index([workspaceId, visibility])
+  @@index([workspaceId, sourceTicketId])
+  @@index([createdById])
+  @@index([publishedById])
+  @@map("knowledge_articles")
+}
+
+model ServiceCatalogItem {
+  id                      String               @id @default(uuid())
+  workspaceId             String               @map("workspace_id")
+  name                    String
+  description             String
+  category                String?
+  defaultPriority         TicketPriority       @default(P3) @map("default_priority")
+  responseTargetMinutes   Int                  @default(240) @map("response_target_minutes")
+  resolutionTargetMinutes Int                  @default(1440) @map("resolution_target_minutes")
+  status                  ServiceCatalogStatus @default(ACTIVE)
+  createdAt               DateTime             @default(now()) @map("created_at")
+  updatedAt               DateTime             @updatedAt @map("updated_at")
+
+  workspace Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  templates RequestTemplate[]
+  tickets   Ticket[]
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@map("service_catalog_items")
+}
+
+model RequestTemplate {
+  id                   String                @id @default(uuid())
+  workspaceId          String                @map("workspace_id")
+  serviceCatalogItemId String                @map("service_catalog_item_id")
+  name                 String
+  description          String?
+  defaultTitle         String                @map("default_title")
+  defaultDescription   String                @map("default_description")
+  defaultPriority      TicketPriority        @default(P3) @map("default_priority")
+  defaultCategory      String?               @map("default_category")
+  status               RequestTemplateStatus @default(ACTIVE)
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @updatedAt @map("updated_at")
+
+  workspace          Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  serviceCatalogItem ServiceCatalogItem @relation(fields: [serviceCatalogItemId], references: [id], onDelete: Cascade)
+  tickets            Ticket[]
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@index([workspaceId, serviceCatalogItemId])
+  @@map("request_templates")
+}
+
+model WorkspaceWorkingHours {
+  id               String             @id @default(uuid())
+  workspaceId      String             @unique @map("workspace_id")
+  timezone         String             @default("Asia/Shanghai")
+  workdays         Int[]              @default([1, 2, 3, 4, 5])
+  startMinuteOfDay Int                @default(540) @map("start_minute_of_day")
+  endMinuteOfDay   Int                @default(1080) @map("end_minute_of_day")
+  holidayDates     Json?              @map("holiday_dates")
+  status           WorkingHoursStatus @default(ACTIVE)
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, status])
+  @@map("workspace_working_hours")
+}
+
+model ChannelConnection {
+  id          String                  @id @default(uuid())
+  workspaceId String                  @map("workspace_id")
+  type        ChannelType
+  name        String
+  tokenHash   String                  @map("token_hash")
+  status      ChannelConnectionStatus @default(ACTIVE)
+  createdById String                  @map("created_by_id")
+  createdAt   DateTime                @default(now()) @map("created_at")
+  updatedAt   DateTime                @updatedAt @map("updated_at")
+
+  workspace       Workspace               @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy       User                    @relation("ChannelConnectionCreator", fields: [createdById], references: [id])
+  inboundMessages ChannelInboundMessage[]
+
+  @@unique([workspaceId, type, name])
+  @@index([workspaceId])
+  @@index([workspaceId, type])
+  @@index([workspaceId, status])
+  @@index([createdById])
+  @@map("channel_connections")
+}
+
+model ChannelInboundMessage {
+  id                String                      @id @default(uuid())
+  workspaceId       String                      @map("workspace_id")
+  connectionId      String                      @map("connection_id")
+  ticketId          String?                     @map("ticket_id")
+  externalMessageId String                      @map("external_message_id")
+  externalUserId    String                      @map("external_user_id")
+  externalUserName  String?                     @map("external_user_name")
+  subject           String
+  body              String
+  payload           Json
+  status            ChannelInboundMessageStatus @default(RECEIVED)
+  receivedAt        DateTime                    @default(now()) @map("received_at")
+
+  workspace  Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  connection ChannelConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  ticket     Ticket?           @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+
+  @@unique([connectionId, externalMessageId])
+  @@index([workspaceId])
+  @@index([connectionId])
+  @@index([ticketId])
+  @@index([workspaceId, status])
+  @@index([receivedAt])
+  @@map("channel_inbound_messages")
+}
+
+model WorkspaceInvitation {
+  id           String                    @id @default(uuid())
+  workspaceId  String                    @map("workspace_id")
+  email        String?
+  roleType     RoleType                  @default(REQUESTER) @map("role_type")
+  tokenHash    String                    @unique @map("token_hash")
+  status       WorkspaceInvitationStatus @default(PENDING)
+  invitedById  String                    @map("invited_by_id")
+  acceptedById String?                   @map("accepted_by_id")
+  expiresAt    DateTime                  @map("expires_at")
+  acceptedAt   DateTime?                 @map("accepted_at")
+  createdAt    DateTime                  @default(now()) @map("created_at")
+  updatedAt    DateTime                  @updatedAt @map("updated_at")
+
+  workspace  Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy  User      @relation("InvitationInviter", fields: [invitedById], references: [id])
+  acceptedBy User?     @relation("InvitationAcceptedBy", fields: [acceptedById], references: [id])
+
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@index([invitedById])
+  @@index([acceptedById])
+  @@index([expiresAt])
+  @@map("workspace_invitations")
+}
+
+model WorkspaceSubscription {
+  id                 String                      @id @default(uuid())
+  workspaceId        String                      @map("workspace_id")
+  planCode           BillingPlanCode             @map("plan_code")
+  billingCycle       BillingCycle                @default(MONTHLY) @map("billing_cycle")
+  status             WorkspaceSubscriptionStatus @default(ACTIVE)
+  startedAt          DateTime                    @default(now()) @map("started_at")
+  currentPeriodStart DateTime                    @map("current_period_start")
+  currentPeriodEnd   DateTime                    @map("current_period_end")
+  canceledAt         DateTime?                   @map("canceled_at")
+  createdById        String                      @map("created_by_id")
+  createdAt          DateTime                    @default(now()) @map("created_at")
+  updatedAt          DateTime                    @updatedAt @map("updated_at")
+
+  workspace Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User           @relation("SubscriptionCreator", fields: [createdById], references: [id])
+  orders    PaymentOrder[]
+
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@index([workspaceId, planCode])
+  @@index([createdById])
+  @@map("workspace_subscriptions")
+}
+
+model PaymentOrder {
+  id             String             @id @default(uuid())
+  workspaceId    String             @map("workspace_id")
+  subscriptionId String?            @map("subscription_id")
+  planCode       BillingPlanCode    @map("plan_code")
+  billingCycle   BillingCycle       @default(MONTHLY) @map("billing_cycle")
+  amountCents    Int                @map("amount_cents")
+  currency       String             @default("CNY")
+  status         PaymentOrderStatus @default(PENDING)
+  requestedById  String             @map("requested_by_id")
+  activatedById  String?            @map("activated_by_id")
+  activatedAt    DateTime?          @map("activated_at")
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+
+  workspace    Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  subscription WorkspaceSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  requestedBy  User                   @relation("PaymentOrderRequester", fields: [requestedById], references: [id])
+  activatedBy  User?                  @relation("PaymentOrderActivator", fields: [activatedById], references: [id])
+
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@index([workspaceId, planCode])
+  @@index([subscriptionId])
+  @@index([requestedById])
+  @@index([activatedById])
+  @@map("payment_orders")
+}
+
+model BetaFeedback {
+  id          String               @id @default(uuid())
+  workspaceId String               @map("workspace_id")
+  reporterId  String               @map("reporter_id")
+  type        BetaFeedbackType
+  severity    BetaFeedbackSeverity @default(MEDIUM)
+  title       String
+  description String
+  status      BetaFeedbackStatus   @default(OPEN)
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  reporter  User      @relation("BetaFeedbackReporter", fields: [reporterId], references: [id])
+
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@index([workspaceId, type])
+  @@index([reporterId])
+  @@index([createdAt])
+  @@map("beta_feedback")
+}
+
+model WorkspaceFeatureFlag {
+  id              String   @id @default(uuid())
+  workspaceId     String   @map("workspace_id")
+  key             String
+  enabled         Boolean  @default(false)
+  description     String
+  changedByUserId String?  @map("changed_by_user_id")
+  changedAt       DateTime @default(now()) @map("changed_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  changedByUser User?     @relation("FeatureFlagChangedBy", fields: [changedByUserId], references: [id])
+
+  @@unique([workspaceId, key])
+  @@index([workspaceId])
+  @@index([workspaceId, enabled])
+  @@index([changedByUserId])
+  @@map("workspace_feature_flags")
 }

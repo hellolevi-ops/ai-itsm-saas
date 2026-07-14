@@ -13,6 +13,7 @@ import {
   type CreateWorkspaceFormData,
 } from '@/lib/validation';
 import { workspaceApi, extractApiError } from '@/lib/api';
+import { setCurrentWorkspace } from '@/lib/workspace-store';
 
 const TIMEZONES = [
   { value: 'Asia/Shanghai', label: '中国标准时间 (Asia/Shanghai)' },
@@ -81,10 +82,7 @@ export function CreateWorkspaceForm() {
         language: data.language,
       });
 
-      localStorage.setItem(
-        'current_workspace',
-        JSON.stringify(response.data.workspace)
-      );
+      setCurrentWorkspace(response.data.workspace);
 
       router.push('/');
     } catch (error) {

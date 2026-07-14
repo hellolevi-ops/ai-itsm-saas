@@ -8,7 +8,44 @@ import type {
   CreateWorkspaceResponse,
   GetWorkspacesResponse,
   GetMeResponse,
+  AddTicketMessageRequest,
   ApiResponse,
+  ChangeTicketStatusRequest,
+  CreateTicketRequest,
+  CreateTicketResponse,
+  ListTicketsResponse,
+  TicketDetailResponse,
+  TicketAiSuggestionResponse,
+  TicketMessageResponse,
+  KnowledgeDraftResponse,
+  ListKnowledgeResponse,
+  CreateRequestTemplateRequest,
+  CreateRequestTemplateResponse,
+  CreateServiceCatalogItemRequest,
+  CreateServiceCatalogItemResponse,
+  ServiceCatalogResponse,
+  ChannelConnection,
+  CreateWeComChannelRequest,
+  CreateWeComChannelResponse,
+  ListChannelsResponse,
+  ReceiveWeComMessageRequest,
+  ReceiveWeComMessageResponse,
+  AcceptInvitationRequest,
+  AcceptInvitationResponse,
+  ActivatePaymentOrderResponse,
+  BillingOverviewResponse,
+  CreatePaymentOrderRequest,
+  CreatePaymentOrderResponse,
+  CreateInvitationRequest,
+  CreateInvitationResponse,
+  ListInvitationsResponse,
+  CompliancePackageResponse,
+  BetaPackageResponse,
+  BetaWorkspaceReadinessResponse,
+  CreateBetaFeedbackRequest,
+  CreateBetaFeedbackResponse,
+  UpdateBetaFeatureFlagResponse,
+  ReleaseCandidatePackageResponse,
 } from '@/types/api';
 
 const apiClient = axios.create({
@@ -18,7 +55,23 @@ const apiClient = axios.create({
   },
 });
 
-apiClient.interceptors.request.use((config) => {
+let mockReadyPromise: Promise<void> | null = null;
+
+async function ensureMockReady() {
+  if (typeof window === 'undefined' || process.env.NEXT_PUBLIC_ENABLE_MOCK !== 'true') {
+    return;
+  }
+
+  if (!mockReadyPromise) {
+    mockReadyPromise = import('@/mocks/browser').then(({ enableMocking }) => enableMocking());
+  }
+
+  await mockReadyPromise;
+}
+
+apiClient.interceptors.request.use(async (config) => {
+  await ensureMockReady();
+
   const token = localStorage.getItem('access_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -69,9 +122,277 @@ export const workspaceApi = {
   },
 };
 
+export const ticketApi = {
+  async create(
+    workspaceId: string,
+    data: CreateTicketRequest,
+  ): Promise<ApiResponse<CreateTicketResponse>> {
+    const response = await apiClient.post<ApiResponse<CreateTicketResponse>>(
+      `/workspaces/${workspaceId}/tickets`,
+      data,
+    );
+    return response.data;
+  },
+
+  async list(workspaceId: string): Promise<ApiResponse<ListTicketsResponse>> {
+    const response = await apiClient.get<ApiResponse<ListTicketsResponse>>(
+      `/workspaces/${workspaceId}/tickets`,
+    );
+    return response.data;
+  },
+
+  async detail(workspaceId: string, ticketId: string): Promise<ApiResponse<TicketDetailResponse>> {
+    const response = await apiClient.get<ApiResponse<TicketDetailResponse>>(
+      `/workspaces/${workspaceId}/tickets/${ticketId}`,
+    );
+    return response.data;
+  },
+
+  async addMessage(
+    workspaceId: string,
+    ticketId: string,
+    data: AddTicketMessageRequest,
+  ): Promise<ApiResponse<TicketMessageResponse>> {
+    const response = await apiClient.post<ApiResponse<TicketMessageResponse>>(
+      `/workspaces/${workspaceId}/tickets/${ticketId}/messages`,
+      data,
+    );
+    return response.data;
+  },
+
+  async changeStatus(
+    workspaceId: string,
+    ticketId: string,
+    data: ChangeTicketStatusRequest,
+  ): Promise<ApiResponse<CreateTicketResponse>> {
+    const response = await apiClient.post<ApiResponse<CreateTicketResponse>>(
+      `/workspaces/${workspaceId}/tickets/${ticketId}/status`,
+      data,
+    );
+    return response.data;
+  },
+
+  async generateSuggestions(
+    workspaceId: string,
+    ticketId: string,
+  ): Promise<ApiResponse<TicketAiSuggestionResponse>> {
+    const response = await apiClient.post<ApiResponse<TicketAiSuggestionResponse>>(
+      `/workspaces/${workspaceId}/tickets/${ticketId}/ai-suggestions`,
+    );
+    return response.data;
+  },
+
+  async createKnowledgeDraft(
+    workspaceId: string,
+    ticketId: string,
+  ): Promise<ApiResponse<KnowledgeDraftResponse>> {
+    const response = await apiClient.post<ApiResponse<KnowledgeDraftResponse>>(
+      `/workspaces/${workspaceId}/tickets/${ticketId}/knowledge-drafts`,
+    );
+    return response.data;
+  },
+};
+
+export const knowledgeApi = {
+  async list(workspaceId: string, q?: string): Promise<ApiResponse<ListKnowledgeResponse>> {
+    const response = await apiClient.get<ApiResponse<ListKnowledgeResponse>>(
+      `/workspaces/${workspaceId}/knowledge`,
+      { params: q ? { q } : undefined },
+    );
+    return response.data;
+  },
+
+  async publish(
+    workspaceId: string,
+    articleId: string,
+  ): Promise<ApiResponse<KnowledgeDraftResponse>> {
+    const response = await apiClient.post<ApiResponse<KnowledgeDraftResponse>>(
+      `/workspaces/${workspaceId}/knowledge/${articleId}/publish`,
+      { visibility: 'REQUESTER' },
+    );
+    return response.data;
+  },
+};
+
+export const serviceCatalogApi = {
+  async list(workspaceId: string): Promise<ApiResponse<ServiceCatalogResponse>> {
+    const response = await apiClient.get<ApiResponse<ServiceCatalogResponse>>(
+      `/workspaces/${workspaceId}/service-catalog`,
+    );
+    return response.data;
+  },
+
+  async createItem(
+    workspaceId: string,
+    data: CreateServiceCatalogItemRequest,
+  ): Promise<ApiResponse<CreateServiceCatalogItemResponse>> {
+    const response = await apiClient.post<ApiResponse<CreateServiceCatalogItemResponse>>(
+      `/workspaces/${workspaceId}/service-catalog/items`,
+      data,
+    );
+    return response.data;
+  },
+
+  async createTemplate(
+    workspaceId: string,
+    data: CreateRequestTemplateRequest,
+  ): Promise<ApiResponse<CreateRequestTemplateResponse>> {
+    const response = await apiClient.post<ApiResponse<CreateRequestTemplateResponse>>(
+      `/workspaces/${workspaceId}/service-catalog/templates`,
+      data,
+    );
+    return response.data;
+  },
+};
+
+export const channelApi = {
+  async list(workspaceId: string): Promise<ApiResponse<ListChannelsResponse>> {
+    const response = await apiClient.get<ApiResponse<ListChannelsResponse>>(
+      `/workspaces/${workspaceId}/channels`,
+    );
+    return response.data;
+  },
+
+  async createWeCom(
+    workspaceId: string,
+    data: CreateWeComChannelRequest,
+  ): Promise<ApiResponse<CreateWeComChannelResponse>> {
+    const response = await apiClient.post<ApiResponse<CreateWeComChannelResponse>>(
+      `/workspaces/${workspaceId}/channels/wecom`,
+      data,
+    );
+    return response.data;
+  },
+
+  async receiveWeComMessage(
+    channel: ChannelConnection,
+    token: string,
+    data: ReceiveWeComMessageRequest,
+  ): Promise<ApiResponse<ReceiveWeComMessageResponse>> {
+    const response = await apiClient.post<ApiResponse<ReceiveWeComMessageResponse>>(
+      `/channels/wecom/${channel.id}/messages`,
+      data,
+      { headers: { 'X-Channel-Token': token } },
+    );
+    return response.data;
+  },
+};
+
+export const invitationApi = {
+  async list(workspaceId: string): Promise<ApiResponse<ListInvitationsResponse>> {
+    const response = await apiClient.get<ApiResponse<ListInvitationsResponse>>(
+      `/workspaces/${workspaceId}/invitations`,
+    );
+    return response.data;
+  },
+
+  async create(
+    workspaceId: string,
+    data: CreateInvitationRequest,
+  ): Promise<ApiResponse<CreateInvitationResponse>> {
+    const response = await apiClient.post<ApiResponse<CreateInvitationResponse>>(
+      `/workspaces/${workspaceId}/invitations`,
+      data,
+    );
+    return response.data;
+  },
+
+  async accept(data: AcceptInvitationRequest): Promise<ApiResponse<AcceptInvitationResponse>> {
+    const response = await apiClient.post<ApiResponse<AcceptInvitationResponse>>(
+      '/invitations/accept',
+      data,
+    );
+    return response.data;
+  },
+};
+
+export const billingApi = {
+  async overview(workspaceId: string): Promise<ApiResponse<BillingOverviewResponse>> {
+    const response = await apiClient.get<ApiResponse<BillingOverviewResponse>>(
+      `/workspaces/${workspaceId}/billing`,
+    );
+    return response.data;
+  },
+
+  async createOrder(
+    workspaceId: string,
+    data: CreatePaymentOrderRequest,
+  ): Promise<ApiResponse<CreatePaymentOrderResponse>> {
+    const response = await apiClient.post<ApiResponse<CreatePaymentOrderResponse>>(
+      `/workspaces/${workspaceId}/billing/orders`,
+      data,
+    );
+    return response.data;
+  },
+
+  async activateOrder(
+    workspaceId: string,
+    orderId: string,
+  ): Promise<ApiResponse<ActivatePaymentOrderResponse>> {
+    const response = await apiClient.post<ApiResponse<ActivatePaymentOrderResponse>>(
+      `/workspaces/${workspaceId}/billing/orders/${orderId}/activate`,
+    );
+    return response.data;
+  },
+};
+
+export const complianceApi = {
+  async publicPackage(): Promise<ApiResponse<CompliancePackageResponse>> {
+    const response =
+      await apiClient.get<ApiResponse<CompliancePackageResponse>>('/compliance/public');
+    return response.data;
+  },
+};
+
+export const betaApi = {
+  async publicPackage(): Promise<ApiResponse<BetaPackageResponse>> {
+    const response = await apiClient.get<ApiResponse<BetaPackageResponse>>('/beta/public');
+    return response.data;
+  },
+
+  async readiness(workspaceId: string): Promise<ApiResponse<BetaWorkspaceReadinessResponse>> {
+    const response = await apiClient.get<ApiResponse<BetaWorkspaceReadinessResponse>>(
+      `/workspaces/${workspaceId}/beta`,
+    );
+    return response.data;
+  },
+
+  async createFeedback(
+    workspaceId: string,
+    data: CreateBetaFeedbackRequest,
+  ): Promise<ApiResponse<CreateBetaFeedbackResponse>> {
+    const response = await apiClient.post<ApiResponse<CreateBetaFeedbackResponse>>(
+      `/workspaces/${workspaceId}/beta/feedback`,
+      data,
+    );
+    return response.data;
+  },
+
+  async updateFeatureFlag(
+    workspaceId: string,
+    key: string,
+    enabled: boolean,
+  ): Promise<ApiResponse<UpdateBetaFeatureFlagResponse>> {
+    const response = await apiClient.post<ApiResponse<UpdateBetaFeatureFlagResponse>>(
+      `/workspaces/${workspaceId}/beta/feature-flags/${key}`,
+      { enabled },
+    );
+    return response.data;
+  },
+};
+
+export const releaseCandidateApi = {
+  async publicPackage(): Promise<ApiResponse<ReleaseCandidatePackageResponse>> {
+    const response = await apiClient.get<ApiResponse<ReleaseCandidatePackageResponse>>(
+      '/release-candidate/public',
+    );
+    return response.data;
+  },
+};
+
 export function extractApiError(error: unknown): string {
   if (axios.isAxiosError(error) && error.response?.data?.error) {
-    return error.response.data.error.message || '请求失败，请稍后重试';
+    return error.response.data.error.message || '????,?????';
   }
-  return '网络错误，请稍后重试';
+  return '????,?????';
 }

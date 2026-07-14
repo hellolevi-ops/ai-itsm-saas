@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { getRequiredEnv } from '@/config/env';
 import { PrismaModule } from '@/prisma/prisma.module';
 import { AuthController } from './controllers/auth.controller';
 import { AuthService } from './services/auth.service';
@@ -13,7 +14,7 @@ import { WorkspaceModule } from '../workspace/workspace.module';
     WorkspaceModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+      secret: getRequiredEnv('JWT_SECRET'),
       signOptions: { expiresIn: '1h' },
     }),
   ],

@@ -9,6 +9,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "pretest:e2e": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\"",
+    "test:e2e": "playwright test",
     "test:watch": "vitest",
     "test:ui": "vitest --ui"
   },
@@ -23,6 +25,7 @@
   },
   "devDependencies": {
     "@mswjs/http-middleware": "^0.10.3",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
