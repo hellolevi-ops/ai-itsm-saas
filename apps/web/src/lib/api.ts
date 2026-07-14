@@ -34,23 +34,17 @@ apiClient.interceptors.response.use(
       localStorage.removeItem('refresh_token');
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export const authApi = {
   async register(data: RegisterRequest): Promise<ApiResponse<RegisterResponse>> {
-    const response = await apiClient.post<ApiResponse<RegisterResponse>>(
-      '/auth/register',
-      data
-    );
+    const response = await apiClient.post<ApiResponse<RegisterResponse>>('/auth/register', data);
     return response.data;
   },
 
   async login(data: LoginRequest): Promise<ApiResponse<LoginResponse>> {
-    const response = await apiClient.post<ApiResponse<LoginResponse>>(
-      '/auth/login',
-      data
-    );
+    const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/login', data);
     return response.data;
   },
 
@@ -61,20 +55,16 @@ export const authApi = {
 };
 
 export const workspaceApi = {
-  async create(
-    data: CreateWorkspaceRequest
-  ): Promise<ApiResponse<CreateWorkspaceResponse>> {
+  async create(data: CreateWorkspaceRequest): Promise<ApiResponse<CreateWorkspaceResponse>> {
     const response = await apiClient.post<ApiResponse<CreateWorkspaceResponse>>(
       '/workspaces',
-      data
+      data,
     );
     return response.data;
   },
 
   async list(): Promise<ApiResponse<GetWorkspacesResponse>> {
-    const response = await apiClient.get<ApiResponse<GetWorkspacesResponse>>(
-      '/workspaces'
-    );
+    const response = await apiClient.get<ApiResponse<GetWorkspacesResponse>>('/workspaces');
     return response.data;
   },
 };
