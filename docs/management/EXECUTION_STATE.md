@@ -1,11 +1,11 @@
 # Execution State
 
-- Last updated: 2026-07-15 02:51 Asia/Shanghai
+- Last updated: 2026-07-15 03:14 Asia/Shanghai
 - Current branch: local snapshot plus GitHub branch `codex/m0-takeover-baseline`; base branch `develop`
-- Current commit: GitHub branch `codex/m0-takeover-baseline`; M6 validation recorded in this snapshot; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
+- Current commit: GitHub branch `codex/m0-takeover-baseline`; M7 validation recorded in this snapshot; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
 - Current phase: Milestone implementation after takeover
-- Current milestone: M6 - PLG activation and team spread
-- Current milestone status: ACCEPTED_LOCALLY - M6 invitation and teammate activation loop passes local gates; PR/CI review remains before merge
+- Current milestone: M7 - Plans, entitlements and commercial flow
+- Current milestone status: ACCEPTED_LOCALLY - M7 manual commercial loop and ticket quota enforcement pass local gates; PR/CI review remains before merge
 - Completed tasks:
   - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_自主接管与商业化开发总控执行书.md`.
   - Inspected the requested workspace path.
@@ -104,9 +104,17 @@
 - Added hashed invite token storage and target-tenant teammate creation on acceptance.
 - Added web `/team` page and `/invite/accept` page.
 - Added MSW invitation handlers and extended Playwright E2E to verify invite creation, teammate acceptance and continued core workflow.
+- Created `docs/contracts/BILLING_API.md`.
+- Created `docs/tasks/M7-plans-entitlements-commercial-flow.md`.
+- Added Prisma `WorkspaceSubscription` and `PaymentOrder` models.
+- Added migration `20260715053000_add_billing_entitlements`.
+- Implemented `src/modules/billing/**` with plan catalog, billing overview, manual order creation and manual activation.
+- Added owner/admin-only commercial writes and no real payment provider integration.
+- Added ticket quota enforcement to web and channel ticket creation paths through `BillingService`.
+- Added web `/billing` page, MSW billing handlers and E2E coverage for Free overview, Team manual order creation and manual activation.
 - Active tasks:
-  - Push M6 implementation and validation evidence to PR #2.
-  - Start M7 plans, entitlements and commercial flow contract after PR #2 is updated.
+  - Push M7 implementation and validation evidence to PR #2.
+  - Start M8 security, reliability and operations hardening contract after PR #2 is updated.
 - Blocked tasks:
   - `git fetch --all --tags --prune`
   - Local branch, remote and working tree checks
@@ -149,6 +157,8 @@
   - `psql` table inspection for `channel_connections`, `channel_inbound_messages`, `tickets`, `service_catalog_items`, `knowledge_articles` and `ai_runs`
   - M6 temporary PostgreSQL migration validation for seven migrations
   - `psql` table inspection for `workspace_invitations`, `channel_connections`, `channel_inbound_messages`, `tickets`, `service_catalog_items`, `knowledge_articles` and `ai_runs`
+  - M7 temporary PostgreSQL migration validation for eight migrations
+  - `psql` table inspection for `workspace_subscriptions`, `payment_orders`, `workspace_invitations`, `channel_connections`, `channel_inbound_messages`, `tickets`, `service_catalog_items`, `knowledge_articles` and `ai_runs`
   - M3 temporary PostgreSQL migration validation for four migrations
   - `psql` table inspection for `knowledge_articles`, `ai_runs`, `tickets` and `ticket_events`
   - `cd apps/web; npm audit --audit-level=moderate`
@@ -261,6 +271,17 @@
 - M6 migration validation passed: seven migrations through `20260715043000_add_workspace_invitations` applied to an empty PostgreSQL 18 database.
 - M6 migration created table `workspace_invitations`.
 - Secret scan after M6 implementation found no user-provided GitHub/OpenAI token in repository files; observed matches were dependency/document URL false positives.
+- Prisma schema validates after M7 billing model.
+- Root typecheck passed after M7 implementation.
+- Root lint passed after M7 implementation.
+- Root Jest tests passed after M7 implementation: 135/135.
+- Root build passed after M7 implementation.
+- Web lint, typecheck, Vitest, build and E2E passed after M7 implementation.
+- Web Vitest tests passed after M7 implementation: 69/69.
+- Web Playwright E2E passed after M7 implementation: 1/1.
+- M7 migration validation passed: eight migrations through `20260715053000_add_billing_entitlements` applied to an empty PostgreSQL 18 database.
+- M7 migration created tables `workspace_subscriptions` and `payment_orders`.
+- Secret scan after M7 implementation found no user-provided GitHub/OpenAI token in repository files; observed matches were dependency/document URL false positives.
 - Web Playwright E2E passed after M4 implementation: 1/1.
 - Secret scan after M4 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
 - Open P0 issues:
@@ -274,4 +295,4 @@
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Push M6 implementation to PR #2 through GitHub REST API.
+  - Push M7 implementation to PR #2 through GitHub REST API.

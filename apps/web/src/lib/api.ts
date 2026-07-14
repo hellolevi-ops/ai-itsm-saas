@@ -32,6 +32,10 @@ import type {
   ReceiveWeComMessageResponse,
   AcceptInvitationRequest,
   AcceptInvitationResponse,
+  ActivatePaymentOrderResponse,
+  BillingOverviewResponse,
+  CreatePaymentOrderRequest,
+  CreatePaymentOrderResponse,
   CreateInvitationRequest,
   CreateInvitationResponse,
   ListInvitationsResponse,
@@ -290,6 +294,36 @@ export const invitationApi = {
     const response = await apiClient.post<ApiResponse<AcceptInvitationResponse>>(
       '/invitations/accept',
       data,
+    );
+    return response.data;
+  },
+};
+
+export const billingApi = {
+  async overview(workspaceId: string): Promise<ApiResponse<BillingOverviewResponse>> {
+    const response = await apiClient.get<ApiResponse<BillingOverviewResponse>>(
+      `/workspaces/${workspaceId}/billing`,
+    );
+    return response.data;
+  },
+
+  async createOrder(
+    workspaceId: string,
+    data: CreatePaymentOrderRequest,
+  ): Promise<ApiResponse<CreatePaymentOrderResponse>> {
+    const response = await apiClient.post<ApiResponse<CreatePaymentOrderResponse>>(
+      `/workspaces/${workspaceId}/billing/orders`,
+      data,
+    );
+    return response.data;
+  },
+
+  async activateOrder(
+    workspaceId: string,
+    orderId: string,
+  ): Promise<ApiResponse<ActivatePaymentOrderResponse>> {
+    const response = await apiClient.post<ApiResponse<ActivatePaymentOrderResponse>>(
+      `/workspaces/${workspaceId}/billing/orders/${orderId}/activate`,
     );
     return response.data;
   },

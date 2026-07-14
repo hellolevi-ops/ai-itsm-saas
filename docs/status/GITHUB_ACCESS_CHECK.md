@@ -122,7 +122,7 @@ Security note:
 
 Remaining limitations:
 
-- Temporary PostgreSQL migration validation has passed through M6; staging/production migration remains future release work.
+- Temporary PostgreSQL migration validation has passed through M7; staging/production migration remains future release work.
 - Production release was not attempted.
 
 ## Latest Local M6 Validation
@@ -156,3 +156,34 @@ Security note:
 - M6 adds invitation tokens as server-side hashes and never returns `token_hash`.
 - Invite creation is owner/admin-only and cannot grant owner/admin roles.
 - `npm audit --audit-level=moderate` still reports Next's transitive PostCSS advisory; forced fix would install Next 9.3.3 and was not applied.
+
+## Latest Local M7 Validation
+
+- Checked at: 2026-07-15 03:14 Asia/Shanghai
+- Draft PR: `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2`
+- Branch: `codex/m0-takeover-baseline`
+- Token stored in this repository: No
+
+Validation evidence after M7:
+
+| Gate | Result |
+|---|---|
+| `npm run prisma:generate` | PASS |
+| `npm exec prisma -- validate` with local `DATABASE_URL` | PASS |
+| Root `npm run typecheck` | PASS |
+| Root `npm run lint:check` | PASS |
+| Root `npm test -- --runInBand` | PASS, 135/135 tests |
+| Root `npm run build` | PASS |
+| Web `npm run typecheck` | PASS |
+| Web `npm run lint` | PASS |
+| Web `npm test` | PASS, 69/69 tests |
+| Web `npm run build` | PASS |
+| Web `npm run test:e2e` | PASS, 1/1 |
+| Temporary PostgreSQL migration validation | PASS, 8 migrations through `20260715053000_add_billing_entitlements` |
+| Secret scan | PASS, no committed GitHub/OpenAI token found |
+
+Security note:
+
+- M7 uses manual/mock order activation only; no real payment provider, invoice system or production commercial resource is connected.
+- Ticket quota is enforced on the server before web and channel ticket creation.
+- Package naming differs across product docs (`Pro` vs `Team/Growth/Business`) and is tracked as a product follow-up before production pricing copy.

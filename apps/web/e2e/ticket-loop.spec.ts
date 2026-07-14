@@ -31,6 +31,33 @@ test('requester can submit, track, reply to and progress a ticket', async ({ pag
   await page.getByTestId('create-workspace-form').getByRole('button').click();
   await expect(page).toHaveURL('http://localhost:3001/');
 
+  await page.goto('/billing');
+  await expect(page.getByTestId('billing-overview')).toContainText('Free');
+  await expect(page.getByTestId('plan-list')).toContainText('Team');
+  const billingOrderForm = page.getByTestId('billing-order-form');
+  await billingOrderForm.getByLabel('Billing plan').selectOption('TEAM');
+  await billingOrderForm.getByLabel('Billing cycle').selectOption('MONTHLY');
+  const createOrderResponsePromise = page.waitForResponse(
+    (response) =>
+      /\/api\/v1\/workspaces\/[^/]+\/billing\/orders$/.test(new URL(response.url()).pathname) &&
+      response.request().method() === 'POST',
+  );
+  await billingOrderForm.getByRole('button', { name: 'Create order' }).click();
+  const createOrderResponse = await createOrderResponsePromise;
+  expect(createOrderResponse.status()).toBe(201);
+  await expect(page.getByTestId('billing-orders')).toContainText('PENDING');
+  const activateOrderResponsePromise = page.waitForResponse(
+    (response) =>
+      /\/api\/v1\/workspaces\/[^/]+\/billing\/orders\/[^/]+\/activate$/.test(
+        new URL(response.url()).pathname,
+      ) && response.request().method() === 'POST',
+  );
+  await page.getByRole('button', { name: 'Activate' }).click();
+  const activateOrderResponse = await activateOrderResponsePromise;
+  expect(activateOrderResponse.status()).toBe(200);
+  await expect(page.getByTestId('billing-overview')).toContainText('Team');
+  await expect(page.getByTestId('billing-overview')).toContainText('1000');
+
   const teammateEmail = `teammate-${suffix}@example.com`;
   await page.goto('/team');
   const invitationForm = page.getByTestId('team-invite-form');

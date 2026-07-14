@@ -8,6 +8,7 @@ import { KnowledgeModule } from './modules/knowledge/knowledge.module';
 import { ServiceCatalogModule } from './modules/service-catalog/service-catalog.module';
 import { ChannelModule } from './modules/channel/channel.module';
 import { InvitationModule } from './modules/invitation/invitation.module';
+import { BillingModule } from './modules/billing/billing.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { InvitationModule } from './modules/invitation/invitation.module';
     KnowledgeModule,
     ChannelModule,
     InvitationModule,
+    BillingModule,
   ],
 })
 export class AppModule {}

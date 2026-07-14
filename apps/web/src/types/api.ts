@@ -393,3 +393,86 @@ export interface AcceptInvitationResponse {
   workspace: Workspace;
   invitation: WorkspaceInvitation;
 }
+
+export type BillingPlanCode = 'FREE' | 'TEAM' | 'GROWTH' | 'BUSINESS';
+export type BillingCycle = 'MONTHLY' | 'YEARLY';
+export type WorkspaceSubscriptionStatus = 'ACTIVE' | 'CANCELED' | 'EXPIRED';
+export type PaymentOrderStatus = 'PENDING' | 'ACTIVATED' | 'CANCELED';
+
+export interface BillingPlan {
+  code: BillingPlanCode;
+  name: string;
+  monthly_amount_cents: number;
+  yearly_amount_cents: number;
+  currency: 'CNY';
+  limits: {
+    agents: number;
+    monthly_tickets: number;
+    monthly_ai_actions: number;
+    channels: number;
+  };
+}
+
+export interface BillingEntitlements {
+  plan_code: BillingPlanCode;
+  limits: BillingPlan['limits'];
+  usage: {
+    monthly_tickets_used: number;
+  };
+  remaining: {
+    monthly_tickets: number;
+  };
+}
+
+export interface WorkspaceSubscription {
+  id: string;
+  workspace_id: string;
+  plan_code: BillingPlanCode;
+  billing_cycle: BillingCycle;
+  status: WorkspaceSubscriptionStatus;
+  current_period_start: string;
+  current_period_end: string;
+  canceled_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaymentOrder {
+  id: string;
+  workspace_id: string;
+  subscription_id: string | null;
+  plan_code: BillingPlanCode;
+  billing_cycle: BillingCycle;
+  amount_cents: number;
+  currency: 'CNY';
+  status: PaymentOrderStatus;
+  requested_by_id: string;
+  activated_by_id: string | null;
+  activated_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BillingOverviewResponse {
+  plans: BillingPlan[];
+  subscription: WorkspaceSubscription | null;
+  current_plan: BillingPlan;
+  entitlements: BillingEntitlements;
+  orders: PaymentOrder[];
+}
+
+export interface CreatePaymentOrderRequest {
+  plan_code: Exclude<BillingPlanCode, 'FREE'>;
+  billing_cycle: BillingCycle;
+}
+
+export interface CreatePaymentOrderResponse {
+  order: PaymentOrder;
+}
+
+export interface ActivatePaymentOrderResponse {
+  order: PaymentOrder;
+  subscription: WorkspaceSubscription;
+  current_plan: BillingPlan;
+  entitlements: BillingEntitlements;
+}

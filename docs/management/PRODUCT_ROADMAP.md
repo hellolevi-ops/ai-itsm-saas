@@ -52,8 +52,16 @@ Goal: Owner/admin invitation creation, one-time invite links, public acceptance,
 
 Out of scope: real email delivery, invite revocation UI, SSO/SCIM, onboarding analytics and production release.
 
-## M7-M11
+## M7 - Plans, Entitlements and Commercial Flow
 
-Status: M7_NEXT
+Status: ACCEPTED_LOCALLY
 
-Continue in the order defined by the control document: plans/entitlements, security/ops, compliance preparation, beta readiness, and Release Candidate.
+Goal: Plan catalog, workspace subscriptions, manual payment orders, owner/admin commercial controls and server-side quota enforcement.
+
+Out of scope: real payment provider integration, automatic renewal, refunds, real invoicing, tax/legal final judgment and production release.
+
+## M8-M11
+
+Status: M8_NEXT
+
+Continue in the order defined by the control document: security/ops, compliance preparation, beta readiness, and Release Candidate.

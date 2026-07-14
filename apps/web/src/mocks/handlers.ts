@@ -157,6 +157,52 @@ type MockWorkspaceInvitation = {
   updated_at: string;
 };
 
+type MockBillingPlanCode = 'FREE' | 'TEAM' | 'GROWTH' | 'BUSINESS';
+type MockBillingCycle = 'MONTHLY' | 'YEARLY';
+
+type MockBillingPlan = {
+  code: MockBillingPlanCode;
+  name: string;
+  monthly_amount_cents: number;
+  yearly_amount_cents: number;
+  currency: 'CNY';
+  limits: {
+    agents: number;
+    monthly_tickets: number;
+    monthly_ai_actions: number;
+    channels: number;
+  };
+};
+
+type MockWorkspaceSubscription = {
+  id: string;
+  workspace_id: string;
+  plan_code: MockBillingPlanCode;
+  billing_cycle: MockBillingCycle;
+  status: 'ACTIVE' | 'CANCELED' | 'EXPIRED';
+  current_period_start: string;
+  current_period_end: string;
+  canceled_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type MockPaymentOrder = {
+  id: string;
+  workspace_id: string;
+  subscription_id: string | null;
+  plan_code: MockBillingPlanCode;
+  billing_cycle: MockBillingCycle;
+  amount_cents: number;
+  currency: 'CNY';
+  status: 'PENDING' | 'ACTIVATED' | 'CANCELED';
+  requested_by_id: string;
+  activated_by_id: string | null;
+  activated_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 function loadMockMap<T>(key: string): Map<string, T> {
   if (typeof localStorage === 'undefined') return new Map();
 
@@ -185,6 +231,43 @@ const requestTemplates = loadMockMap<MockRequestTemplate>('msw:requestTemplates'
 const channelConnections = loadMockMap<MockChannelConnection>('msw:channelConnections');
 const channelInboundMessages = loadMockMap<MockChannelInboundMessage>('msw:channelInboundMessages');
 const workspaceInvitations = loadMockMap<MockWorkspaceInvitation>('msw:workspaceInvitations');
+const workspaceSubscriptions = loadMockMap<MockWorkspaceSubscription>('msw:workspaceSubscriptions');
+const paymentOrders = loadMockMap<MockPaymentOrder>('msw:paymentOrders');
+
+const billingPlans: Record<MockBillingPlanCode, MockBillingPlan> = {
+  FREE: {
+    code: 'FREE',
+    name: 'Free',
+    monthly_amount_cents: 0,
+    yearly_amount_cents: 0,
+    currency: 'CNY',
+    limits: { agents: 3, monthly_tickets: 100, monthly_ai_actions: 100, channels: 1 },
+  },
+  TEAM: {
+    code: 'TEAM',
+    name: 'Team',
+    monthly_amount_cents: 29900,
+    yearly_amount_cents: 299000,
+    currency: 'CNY',
+    limits: { agents: 5, monthly_tickets: 1000, monthly_ai_actions: 1500, channels: 2 },
+  },
+  GROWTH: {
+    code: 'GROWTH',
+    name: 'Growth',
+    monthly_amount_cents: 89900,
+    yearly_amount_cents: 899000,
+    currency: 'CNY',
+    limits: { agents: 15, monthly_tickets: 5000, monthly_ai_actions: 8000, channels: 4 },
+  },
+  BUSINESS: {
+    code: 'BUSINESS',
+    name: 'Business',
+    monthly_amount_cents: 249900,
+    yearly_amount_cents: 2499000,
+    currency: 'CNY',
+    limits: { agents: 30, monthly_tickets: 20000, monthly_ai_actions: 30000, channels: 8 },
+  },
+};
 
 function getUserFromRequest(request: Request) {
   const authHeader = request.headers.get('Authorization');
@@ -214,6 +297,62 @@ function safeInvitation(invitation: MockWorkspaceInvitation) {
     created_at: invitation.created_at,
     updated_at: invitation.updated_at,
   };
+}
+
+function currentBillingPlan(workspaceId: string) {
+  const now = Date.now();
+  const subscription = Array.from(workspaceSubscriptions.values())
+    .filter(
+      (candidate) =>
+        candidate.workspace_id === workspaceId &&
+        candidate.status === 'ACTIVE' &&
+        new Date(candidate.current_period_end).getTime() > now,
+    )
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
+  return {
+    subscription: subscription || null,
+    plan: subscription ? billingPlans[subscription.plan_code] : billingPlans.FREE,
+  };
+}
+
+function billingUsage(workspaceId: string) {
+  const now = new Date();
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).getTime();
+  const monthlyTickets = Array.from(tickets.values()).filter(
+    (ticket) =>
+      ticket.workspace_id === workspaceId && new Date(ticket.created_at).getTime() >= monthStart,
+  ).length;
+  return { monthly_tickets_used: monthlyTickets };
+}
+
+function billingOverview(workspaceId: string, includeOrders: boolean) {
+  const { subscription, plan } = currentBillingPlan(workspaceId);
+  const usage = billingUsage(workspaceId);
+  const orders = includeOrders
+    ? Array.from(paymentOrders.values())
+        .filter((order) => order.workspace_id === workspaceId)
+        .sort((a, b) => b.created_at.localeCompare(a.created_at))
+    : [];
+  return {
+    plans: Object.values(billingPlans),
+    subscription,
+    current_plan: plan,
+    entitlements: {
+      plan_code: plan.code,
+      limits: plan.limits,
+      usage,
+      remaining: {
+        monthly_tickets: Math.max(0, plan.limits.monthly_tickets - usage.monthly_tickets_used),
+      },
+    },
+    orders,
+  };
+}
+
+function assertCanCreateTicket(workspaceId: string) {
+  const { plan } = currentBillingPlan(workspaceId);
+  const usage = billingUsage(workspaceId);
+  return usage.monthly_tickets_used < plan.limits.monthly_tickets;
 }
 
 export const handlers = [
@@ -558,6 +697,192 @@ export const handlers = [
     });
   }),
 
+  http.get('/api/v1/workspaces/:workspaceId/billing', async ({ request, params }) => {
+    await delay(150);
+    const user = getUserFromRequest(request);
+    const workspaceId = params.workspaceId as string;
+    const workspace = workspaces.get(workspaceId);
+    if (!user || !workspace || !isWorkspaceMember(workspaceId, user.id)) {
+      return HttpResponse.json(
+        {
+          error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+          request_id: generateRequestId(),
+        },
+        { status: user ? 403 : 401 },
+      );
+    }
+
+    return HttpResponse.json({
+      data: billingOverview(workspaceId, workspace.owner_id === user.id),
+      request_id: generateRequestId(),
+    });
+  }),
+
+  http.post('/api/v1/workspaces/:workspaceId/billing/orders', async ({ request, params }) => {
+    await delay(200);
+    const user = getUserFromRequest(request);
+    const workspaceId = params.workspaceId as string;
+    const workspace = workspaces.get(workspaceId);
+    if (!user || !workspace || !isWorkspaceMember(workspaceId, user.id)) {
+      return HttpResponse.json(
+        {
+          error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+          request_id: generateRequestId(),
+        },
+        { status: user ? 403 : 401 },
+      );
+    }
+    if (workspace.owner_id !== user.id) {
+      return HttpResponse.json(
+        {
+          error: { code: 'FORBIDDEN', message: 'Only owners can manage billing in mock mode' },
+          request_id: generateRequestId(),
+        },
+        { status: 403 },
+      );
+    }
+    const body = (await request.json()) as {
+      plan_code: MockBillingPlanCode;
+      billing_cycle: MockBillingCycle;
+    };
+    if (body.plan_code === 'FREE') {
+      return HttpResponse.json(
+        {
+          error: { code: 'INVALID_PLAN', message: 'Free plan does not require a payment order' },
+          request_id: generateRequestId(),
+        },
+        { status: 400 },
+      );
+    }
+    const plan = billingPlans[body.plan_code];
+    const now = new Date().toISOString();
+    const order: MockPaymentOrder = {
+      id: generateId(),
+      workspace_id: workspaceId,
+      subscription_id: null,
+      plan_code: body.plan_code,
+      billing_cycle: body.billing_cycle,
+      amount_cents:
+        body.billing_cycle === 'YEARLY' ? plan.yearly_amount_cents : plan.monthly_amount_cents,
+      currency: 'CNY',
+      status: 'PENDING',
+      requested_by_id: user.id,
+      activated_by_id: null,
+      activated_at: null,
+      created_at: now,
+      updated_at: now,
+    };
+    paymentOrders.set(order.id, order);
+    persistMockMap('msw:paymentOrders', paymentOrders);
+
+    return HttpResponse.json(
+      {
+        data: { order },
+        request_id: generateRequestId(),
+      },
+      { status: 201 },
+    );
+  }),
+
+  http.post(
+    '/api/v1/workspaces/:workspaceId/billing/orders/:orderId/activate',
+    async ({ request, params }) => {
+      await delay(200);
+      const user = getUserFromRequest(request);
+      const workspaceId = params.workspaceId as string;
+      const orderId = params.orderId as string;
+      const workspace = workspaces.get(workspaceId);
+      if (!user || !workspace || !isWorkspaceMember(workspaceId, user.id)) {
+        return HttpResponse.json(
+          {
+            error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+            request_id: generateRequestId(),
+          },
+          { status: user ? 403 : 401 },
+        );
+      }
+      if (workspace.owner_id !== user.id) {
+        return HttpResponse.json(
+          {
+            error: { code: 'FORBIDDEN', message: 'Only owners can manage billing in mock mode' },
+            request_id: generateRequestId(),
+          },
+          { status: 403 },
+        );
+      }
+      const order = paymentOrders.get(orderId);
+      if (!order || order.workspace_id !== workspaceId) {
+        return HttpResponse.json(
+          {
+            error: { code: 'ORDER_NOT_FOUND', message: 'Payment order not found' },
+            request_id: generateRequestId(),
+          },
+          { status: 404 },
+        );
+      }
+      if (order.status !== 'PENDING') {
+        return HttpResponse.json(
+          {
+            error: { code: 'ORDER_NOT_PENDING', message: 'Payment order is not pending' },
+            request_id: generateRequestId(),
+          },
+          { status: 409 },
+        );
+      }
+      const now = new Date();
+      const periodEnd = new Date(now);
+      periodEnd.setMonth(periodEnd.getMonth() + (order.billing_cycle === 'YEARLY' ? 12 : 1));
+      Array.from(workspaceSubscriptions.values())
+        .filter(
+          (subscription) =>
+            subscription.workspace_id === workspaceId && subscription.status === 'ACTIVE',
+        )
+        .forEach((subscription) => {
+          workspaceSubscriptions.set(subscription.id, {
+            ...subscription,
+            status: 'CANCELED',
+            canceled_at: now.toISOString(),
+            updated_at: now.toISOString(),
+          });
+        });
+      const subscription: MockWorkspaceSubscription = {
+        id: generateId(),
+        workspace_id: workspaceId,
+        plan_code: order.plan_code,
+        billing_cycle: order.billing_cycle,
+        status: 'ACTIVE',
+        current_period_start: now.toISOString(),
+        current_period_end: periodEnd.toISOString(),
+        canceled_at: null,
+        created_at: now.toISOString(),
+        updated_at: now.toISOString(),
+      };
+      workspaceSubscriptions.set(subscription.id, subscription);
+      const activatedOrder: MockPaymentOrder = {
+        ...order,
+        subscription_id: subscription.id,
+        status: 'ACTIVATED',
+        activated_by_id: user.id,
+        activated_at: now.toISOString(),
+        updated_at: now.toISOString(),
+      };
+      paymentOrders.set(order.id, activatedOrder);
+      persistMockMap('msw:workspaceSubscriptions', workspaceSubscriptions);
+      persistMockMap('msw:paymentOrders', paymentOrders);
+
+      const overview = billingOverview(workspaceId, true);
+      return HttpResponse.json({
+        data: {
+          order: activatedOrder,
+          subscription,
+          current_plan: overview.current_plan,
+          entitlements: overview.entitlements,
+        },
+        request_id: generateRequestId(),
+      });
+    },
+  ),
+
   http.post('/api/v1/workspaces/:workspaceId/tickets', async ({ request, params }) => {
     await delay(300);
     const user = getUserFromRequest(request);
@@ -569,6 +894,22 @@ export const handlers = [
           request_id: generateRequestId(),
         },
         { status: user ? 403 : 401 },
+      );
+    }
+    if (!assertCanCreateTicket(workspaceId)) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'PLAN_LIMIT_REACHED',
+            message: 'Plan ticket limit reached',
+            details: {
+              limit: currentBillingPlan(workspaceId).plan.limits.monthly_tickets,
+              used: billingUsage(workspaceId).monthly_tickets_used,
+            },
+          },
+          request_id: generateRequestId(),
+        },
+        { status: 409 },
       );
     }
 
@@ -1115,6 +1456,22 @@ export const handlers = [
         },
         request_id: generateRequestId(),
       });
+    }
+    if (!assertCanCreateTicket(channel.workspace_id)) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'PLAN_LIMIT_REACHED',
+            message: 'Plan ticket limit reached',
+            details: {
+              limit: currentBillingPlan(channel.workspace_id).plan.limits.monthly_tickets,
+              used: billingUsage(channel.workspace_id).monthly_tickets_used,
+            },
+          },
+          request_id: generateRequestId(),
+        },
+        { status: 409 },
+      );
     }
 
     const now = new Date().toISOString();

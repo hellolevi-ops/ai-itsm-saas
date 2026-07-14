@@ -18,6 +18,7 @@ import {
 import { randomUUID } from 'node:crypto';
 import { WorkspaceMemberService } from '@/modules/workspace/services/workspace-member.service';
 import { ServiceCatalogService } from '@/modules/service-catalog/service-catalog.service';
+import { BillingService } from '@/modules/billing/billing.service';
 import {
   AddTicketMessageDto,
   AssignTicketDto,
@@ -62,10 +63,12 @@ export class TicketService {
     private readonly ticketRepository: TicketRepository,
     private readonly memberService: WorkspaceMemberService,
     private readonly serviceCatalogService: ServiceCatalogService,
+    private readonly billingService: BillingService,
   ) {}
 
   async create(workspaceId: string, actor: TicketActor, dto: CreateTicketDto) {
     await this.requireMember(workspaceId, actor);
+    await this.billingService.assertTicketCreationAllowed(workspaceId);
     const number = await this.nextTicketNumber(workspaceId);
     const template = dto.request_template_id
       ? await this.serviceCatalogService.getTemplateForTicket(workspaceId, dto.request_template_id)
@@ -105,6 +108,7 @@ export class TicketService {
   }
 
   async createFromChannel(workspaceId: string, input: CreateTicketFromChannelInput) {
+    await this.billingService.assertTicketCreationAllowed(workspaceId);
     const number = await this.nextTicketNumber(workspaceId);
     const ticket = await this.ticketRepository.createWithEvent(
       {

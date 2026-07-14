@@ -8,7 +8,7 @@
 | Base Branch | `develop` |
 | Base Commit | `3b20d49bd68c836ba059e50426ec07b371b04c40` |
 | Codex Branch | `codex/m0-takeover-baseline` |
-| Codex Commit | PR branch `codex/m0-takeover-baseline`; M6 validation recorded in this snapshot |
+| Codex Commit | PR branch `codex/m0-takeover-baseline`; M7 validation recorded in this snapshot |
 | Draft PR | `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2` |
 | Database | PostgreSQL |
 | Build Status | PASS |
@@ -20,19 +20,19 @@
 | API Server | 3000 | Not started in this checkpoint |
 | Web UI | 3001 | Started by Playwright during E2E, then test runner stopped it |
 | PostgreSQL local service | 5432 | Present, not used for validation |
-| Temporary PostgreSQL | 55439 | Reserved for M6 migration validation, then stopped and removed after validation |
+| Temporary PostgreSQL | 55440 | Reserved for M7 migration validation, then stopped and removed after validation |
 | Redis | 6379 | Not verified |
 
 ## Migration Status
 
-Latest migration: `20260715043000_add_workspace_invitations`
+Latest migration: `20260715053000_add_billing_entitlements`
 
 Validation:
 
-- Empty temporary PostgreSQL 18 database migration: PASS for seven migrations through M6
+- Empty temporary PostgreSQL 18 database migration: PASS for eight migrations through M7
 - `prisma migrate deploy`: PASS
 - `prisma migrate status`: PASS, schema up to date
-- Tables created include: `_prisma_migrations`, `roles`, `tenants`, `users`, `workspace_members`, `workspaces`, `tickets`, `ticket_messages`, `ticket_events`, `ai_runs`, `knowledge_articles`, `service_catalog_items`, `request_templates`, `workspace_working_hours`, `channel_connections`, `channel_inbound_messages`, `workspace_invitations`
+- Tables created include: `_prisma_migrations`, `roles`, `tenants`, `users`, `workspace_members`, `workspaces`, `tickets`, `ticket_messages`, `ticket_events`, `ai_runs`, `knowledge_articles`, `service_catalog_items`, `request_templates`, `workspace_working_hours`, `channel_connections`, `channel_inbound_messages`, `workspace_invitations`, `workspace_subscriptions`, `payment_orders`
 
 ## Available Features
 
@@ -71,21 +71,26 @@ Validation:
 - Invite tokens stored as hashes and never returned after creation
 - Web team page for invite-link generation
 - Web invite acceptance page for teammate self-serve onboarding
+- Server-side billing plan catalog for Free, Team, Growth and Business
+- Workspace subscription and manual payment order models
+- Owner/admin billing overview, manual order creation and manual activation APIs
+- Server-side monthly ticket quota enforcement before web and channel ticket creation
+- Web billing page for plan, usage, order creation and activation
 
 ## Quality Baseline
 
 - Root typecheck: PASS
 - Root lint: PASS
-- Root Jest tests: PASS, 127/127
+- Root Jest tests: PASS, 135/135
 - Root build: PASS
 - Web typecheck: PASS
 - Web lint: PASS
 - Web Vitest tests: PASS, 69/69
 - Web Playwright E2E: PASS, 1/1
 - Web build: PASS
-- Temporary PostgreSQL migration validation: PASS, 7 migrations through `20260715043000_add_workspace_invitations`
+- Temporary PostgreSQL migration validation: PASS, 8 migrations through `20260715053000_add_billing_entitlements`
 - Secret scan: PASS, no committed GitHub/OpenAI token found
-- Total automated tests: PASS, 197/197 including Playwright E2E
+- Total automated tests: PASS, 205/205 including Playwright E2E
 - M1 backend ticket module: PASS, 88/88 backend tests
 - M1/M2 web ticket components: PASS, 66/66 frontend tests
 
@@ -99,6 +104,7 @@ Validation:
 - `docs/contracts/SERVICE_CATALOG_API.md` - M4 service catalog, request template and SLA target contract
 - `docs/contracts/CHANNEL_API.md` - M5 WeCom mock channel and inbound webhook contract
 - `docs/contracts/INVITATION_API.md` - M6 workspace invitation and team-spread contract
+- `docs/contracts/BILLING_API.md` - M7 plan, entitlement and manual-order contract
 
 ## M1 Progress
 
@@ -196,13 +202,30 @@ Validation:
 - Web: `/team` creates invite links; `/invite/accept` registers the teammate into the invited workspace.
 - Browser E2E: registration, workspace creation, invite creation, invite acceptance, WeCom mock channel, inbound WECOM ticket, service item, request template, templated ticket, AI suggestion, message, resolve, knowledge draft, publish and self-service search all pass.
 
+## M7 Progress
+
+- Contract: `docs/contracts/BILLING_API.md`.
+- Task file: `docs/tasks/M7-plans-entitlements-commercial-flow.md`.
+- Prisma models: `WorkspaceSubscription` and `PaymentOrder`.
+- Migration: `20260715053000_add_billing_entitlements`.
+- Backend: `src/modules/billing/**` with plan catalog, billing overview, manual order creation and manual activation.
+- Endpoints:
+  - `GET /api/v1/workspaces/:workspaceId/billing`
+  - `POST /api/v1/workspaces/:workspaceId/billing/orders`
+  - `POST /api/v1/workspaces/:workspaceId/billing/orders/:orderId/activate`
+- Safety: owner/admin-only commercial writes; no real payment provider; ticket quota enforced server-side through `BillingService` before web and channel ticket creation.
+- Tests: billing service tests cover default Free entitlements, manual order creation, requester rejection, Free order rejection, activation, missing orders and Free ticket-limit rejection.
+- Web: `/billing` displays current plan, usage, plan catalog, manual order creation and activation.
+- Browser E2E: registration, workspace creation, Free billing overview, Team manual order activation, invite creation, invite acceptance, WeCom mock channel, inbound WECOM ticket, service item, request template, templated ticket, AI suggestion, message, resolve, knowledge draft, publish and self-service search all pass.
+
 ## Known Security/Audit Notes
 
 - Web `npm audit --audit-level=moderate`: 2 moderate findings from Next's transitive PostCSS dependency.
 - `npm audit fix --force` proposes a breaking downgrade to Next 9.3.3, so it was not applied automatically.
-- Secret scan after M6 found no committed GitHub/OpenAI token; matches were dependency/document URL false positives.
+- Secret scan after M7 found no committed GitHub/OpenAI token; matches were dependency/document URL false positives.
 - M5 still uses only mock channel tokens; no real WeCom or production secret is required.
 - M6 invite links are displayed in-app for local PLG validation only; no real email provider or production onboarding system is used.
+- M7 uses manual/mock commercial activation only; no real payment provider, invoice system, tax workflow or production commerce resource is connected.
 
 ## Tech Stack
 
