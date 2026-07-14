@@ -137,7 +137,7 @@
 - Added web `/release-candidate` center, MSW support and E2E coverage.
 - Added `.github/workflows/ci.yml`, `scripts/rc-check.mjs` and `npm run rc:check`.
 - Active tasks:
-  - Push M11 remote CI timezone fix to PR #2 and verify GitHub Actions.
+  - Pause for human/external production-release hold items after M11 RC evidence push.
 - Blocked tasks:
   - `git fetch --all --tags --prune`
   - Local branch, remote and working tree checks
@@ -370,6 +370,7 @@
 - Post-fix web validation passed: typecheck, lint, Vitest 69/69, build and Playwright 1/1.
 - GitHub Actions CI then failed on Linux Prettier because the E2E assertion edit introduced CRLF characters on two lines; fixed by running Prettier over the edited web ticket files.
 - Post-format validation passed: root lint and web Playwright 1/1.
+- GitHub Actions CI passed on PR head `80301a5d938921057baa415720eaec3103434a02`: push run `29367266015` and pull_request run `29367270791`.
 - Web Playwright E2E passed after M4 implementation: 1/1.
 - Secret scan after M4 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
 - Open P0 issues:
@@ -384,4 +385,4 @@
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Push M11 remote CI formatting fix to PR #2, verify GitHub Actions, then pause with human/external production-release hold items.
+  - Pause with human/external production-release hold items; do not merge, deploy to production, approve legal conclusions, buy external resources or run irreversible production migrations without explicit approval.
