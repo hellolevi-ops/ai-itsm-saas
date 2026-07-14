@@ -1,11 +1,11 @@
 # Execution State
 
-- Last updated: 2026-07-15 01:25 Asia/Shanghai
+- Last updated: 2026-07-15 02:03 Asia/Shanghai
 - Current branch: local snapshot plus GitHub branch `codex/m0-takeover-baseline`; base branch `develop`
-- Current commit: GitHub branch includes M3 at `40d89d69d0b36a4ae22f9fd05fe670f5f2ae8095`; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
+- Current commit: GitHub branch `codex/m0-takeover-baseline`; M4 validation recorded in this snapshot; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
 - Current phase: Milestone implementation after takeover
 - Current milestone: M4 - Service management basics
-- Current milestone status: NEXT - M3 knowledge and self-service is accepted locally; PR/CI review remains before merge
+- Current milestone status: ACCEPTED_LOCALLY - M4 service management basics passes local gates; PR/CI review remains before merge
 - Completed tasks:
   - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_自主接管与商业化开发总控执行书.md`.
   - Inspected the requested workspace path.
@@ -75,8 +75,18 @@
   - Added backend M3 tests for staff-only drafting, resolved/closed gate, internal-note exclusion, requester visibility and workspace-scoped repository access.
   - Added web ticket detail draft/publish controls and `/knowledge` self-service list/search page.
   - Extended Playwright E2E to verify draft creation, publish and self-service knowledge search.
+- Created `docs/contracts/SERVICE_CATALOG_API.md`.
+- Created `docs/tasks/M4-service-management-basics.md`.
+- Added Prisma `ServiceCatalogItem`, `RequestTemplate` and `WorkspaceWorkingHours` models.
+- Added migration `20260715021500_add_service_catalog`.
+- Added ticket fields for service catalog item, request template, response due and resolution due timestamps.
+- Implemented `src/modules/service-catalog/**` with service catalog item and request template APIs.
+- Extended ticket creation to accept same-workspace active `request_template_id` and calculate SLA target timestamps.
+- Added backend M4 tests for staff-only management, same-workspace validation, active catalog listing, working-hours SLA calculation and template-driven ticket creation.
+- Added web `/service-catalog` page, ticket template selector and service target detail panel.
+- Extended Playwright E2E to verify service item creation, request template creation and templated ticket submission.
 - Active tasks:
-  - Start M4 service management basics contract after PR #2 is updated.
+  - Start M5 first China channel contract after PR #2 is updated.
 - Blocked tasks:
   - `git fetch --all --tags --prune`
   - Local branch, remote and working tree checks
@@ -112,6 +122,9 @@
   - `cd apps/web; npm test`
   - `cd apps/web; npm run build`
   - `cd apps/web; npm run test:e2e`
+  - M4 temporary PostgreSQL migration validation for five migrations
+  - `psql` table inspection for `service_catalog_items`, `request_templates`, `workspace_working_hours`, `knowledge_articles`, `ai_runs` and `tickets`
+  - M4 secret scan for GitHub/OpenAI token patterns
   - M3 temporary PostgreSQL migration validation for four migrations
   - `psql` table inspection for `knowledge_articles`, `ai_runs`, `tickets` and `ticket_events`
   - `cd apps/web; npm audit --audit-level=moderate`
@@ -196,6 +209,17 @@
   - Web Vitest tests passed after M3 implementation: 68/68.
   - Web Playwright E2E passed after M3 implementation: 1/1.
   - Secret scan after M3 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
+- Prisma schema validates after M4 service catalog model.
+- M4 migration validation passed: migrations `20260714113121_init`, `20260714230500_add_ticket_loop`, `20260715004500_add_ai_runs`, `20260715013000_add_knowledge_articles` and `20260715021500_add_service_catalog` applied to an empty PostgreSQL 18 database.
+- M4 migration created tables `service_catalog_items`, `request_templates` and `workspace_working_hours`.
+- Root typecheck passed after M4 implementation.
+- Root lint passed after M4 implementation.
+- Root Jest tests passed after M4 implementation: 114/114.
+- Root build passed after M4 implementation.
+- Web lint, typecheck, Vitest, build and E2E passed after M4 implementation.
+- Web Vitest tests passed after M4 implementation: 69/69.
+- Web Playwright E2E passed after M4 implementation: 1/1.
+- Secret scan after M4 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
 - Open P0 issues:
   - None for executable source validation.
 - Open P1 issues:
@@ -207,4 +231,4 @@
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Begin M4 service management basics contract planning.
+  - Start M5 first China channel contract after PR #2 is updated.

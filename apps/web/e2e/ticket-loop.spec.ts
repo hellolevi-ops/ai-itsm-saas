@@ -31,6 +31,32 @@ test('requester can submit, track, reply to and progress a ticket', async ({ pag
   await page.getByTestId('create-workspace-form').getByRole('button').click();
   await expect(page).toHaveURL('http://localhost:3001/');
 
+  await page.goto('/service-catalog');
+  const serviceItemForm = page.getByTestId('service-item-form');
+  await serviceItemForm.getByPlaceholder('Service name').fill('Access requests');
+  await serviceItemForm.getByPlaceholder('Category').fill('access');
+  await serviceItemForm
+    .getByPlaceholder('Description')
+    .fill('Access requests for business applications and employee systems.');
+  await serviceItemForm.getByLabel('Response target minutes').fill('60');
+  await serviceItemForm.getByLabel('Resolution target minutes').fill('480');
+  await serviceItemForm.getByRole('button', { name: 'Add service' }).click();
+  await expect(page.getByRole('heading', { name: 'Access requests' })).toBeVisible();
+
+  const requestTemplateForm = page.getByTestId('request-template-form');
+  await requestTemplateForm.locator('select[name="service_catalog_item_id"]').selectOption({
+    label: 'Access requests',
+  });
+  await requestTemplateForm.getByPlaceholder('Template name').fill('VPN access request');
+  await requestTemplateForm.getByPlaceholder('Default title').fill('VPN access is unavailable');
+  await requestTemplateForm.getByPlaceholder('Default category').fill('network');
+  await requestTemplateForm
+    .getByPlaceholder('Default description')
+    .fill('Remote users cannot connect to the VPN from Windows laptops.');
+  await requestTemplateForm.locator('select[name="default_priority"]').selectOption('P2');
+  await requestTemplateForm.getByRole('button', { name: 'Add template' }).click();
+  await expect(page.getByText('VPN access request')).toBeVisible();
+
   await page.goto('/tickets/new');
   const authState = await page.evaluate(() => ({
     token: localStorage.getItem('access_token'),
@@ -39,12 +65,15 @@ test('requester can submit, track, reply to and progress a ticket', async ({ pag
   expect(authState.token).toContain('mock_access_token_');
   expect(authState.workspace).toContain('Acme Ops');
   await expect(page.getByTestId('ticket-submit-form')).toBeVisible();
-  await page.getByLabel('Title').fill('VPN access is unavailable');
   await page
-    .getByLabel('Description')
-    .fill('Remote users cannot connect to the VPN from Windows laptops.');
-  await page.getByLabel('Priority').selectOption('P2');
-  await page.getByLabel('Category').fill('network');
+    .getByLabel('Request template')
+    .selectOption({ label: 'Access requests / VPN access request' });
+  await expect(page.getByLabel('Title')).toHaveValue('VPN access is unavailable');
+  await expect(page.getByLabel('Description')).toHaveValue(
+    'Remote users cannot connect to the VPN from Windows laptops.',
+  );
+  await expect(page.getByLabel('Priority')).toHaveValue('P2');
+  await expect(page.getByLabel('Category')).toHaveValue('network');
   const createTicketResponsePromise = page.waitForResponse(
     (response) =>
       response.url().includes('/api/v1/workspaces/') &&
@@ -60,6 +89,9 @@ test('requester can submit, track, reply to and progress a ticket', async ({ pag
   await expect(page.getByRole('heading', { name: 'VPN access is unavailable' })).toBeVisible();
   await expect(page.getByText('Remote users cannot connect to the VPN')).toBeVisible();
   await expect(page.getByText('NEW')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Service targets' })).toBeVisible();
+  await expect(page.getByText('Custom request')).not.toBeVisible();
+  await expect(page.getByText('Not set')).not.toBeVisible();
 
   const listTicketsResponsePromise = page.waitForResponse(
     (response) =>

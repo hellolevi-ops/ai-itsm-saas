@@ -5,8 +5,17 @@ import { AuthModule } from './modules/auth/auth.module';
 import { TicketModule } from './modules/ticket/ticket.module';
 import { AiModule } from './modules/ai/ai.module';
 import { KnowledgeModule } from './modules/knowledge/knowledge.module';
+import { ServiceCatalogModule } from './modules/service-catalog/service-catalog.module';
 
 @Module({
-  imports: [PrismaModule, WorkspaceModule, AuthModule, TicketModule, AiModule, KnowledgeModule],
+  imports: [
+    PrismaModule,
+    WorkspaceModule,
+    AuthModule,
+    ServiceCatalogModule,
+    TicketModule,
+    AiModule,
+    KnowledgeModule,
+  ],
 })
 export class AppModule {}

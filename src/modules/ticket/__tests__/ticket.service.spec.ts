@@ -7,6 +7,7 @@ import {
   TicketStatus,
 } from '@prisma/client';
 import { WorkspaceMemberService } from '@/modules/workspace/services/workspace-member.service';
+import { ServiceCatalogService } from '@/modules/service-catalog/service-catalog.service';
 import { TicketRepository } from '../repositories/ticket.repository';
 import { TicketService } from '../ticket.service';
 
@@ -37,6 +38,7 @@ describe('TicketService', () => {
   let service: TicketService;
   let ticketRepository: jest.Mocked<TicketRepository>;
   let memberService: jest.Mocked<WorkspaceMemberService>;
+  let serviceCatalogService: jest.Mocked<ServiceCatalogService>;
 
   beforeEach(() => {
     ticketRepository = {
@@ -53,8 +55,13 @@ describe('TicketService', () => {
       findByUserIdAndWorkspaceId: jest.fn(),
       findByIdWithRole: jest.fn(),
     } as any;
+    serviceCatalogService = {
+      getTemplateForTicket: jest.fn(),
+      getWorkingHoursForTicket: jest.fn(),
+      calculateDueDates: jest.fn(),
+    } as any;
 
-    service = new TicketService(ticketRepository, memberService);
+    service = new TicketService(ticketRepository, memberService, serviceCatalogService);
   });
 
   const mockMemberRole = (roleType: RoleType, userId = 'requester-001') => {
@@ -98,6 +105,62 @@ describe('TicketService', () => {
       }),
     );
     expect((result.data.ticket as any).number).toBe('TCK-000001');
+  });
+
+  it('creates a ticket from a same-workspace request template with SLA due dates', async () => {
+    mockMemberRole(RoleType.REQUESTER);
+    ticketRepository.count.mockResolvedValue(0);
+    ticketRepository.createWithEvent.mockResolvedValue({
+      ...baseTicket,
+      serviceCatalogItemId: 'svc-001',
+      requestTemplateId: 'tpl-001',
+      responseDueAt: new Date('2026-07-15T03:00:00.000Z'),
+      resolutionDueAt: new Date('2026-07-15T10:00:00.000Z'),
+    });
+    serviceCatalogService.getTemplateForTicket.mockResolvedValue({
+      id: 'tpl-001',
+      serviceCatalogItemId: 'svc-001',
+      defaultPriority: TicketPriority.P2,
+      defaultCategory: 'access',
+      serviceCatalogItem: {
+        id: 'svc-001',
+        responseTargetMinutes: 60,
+        resolutionTargetMinutes: 480,
+      },
+    } as any);
+    serviceCatalogService.getWorkingHoursForTicket.mockResolvedValue({
+      id: 'hours-001',
+      workspaceId: 'ws-001',
+    } as any);
+    serviceCatalogService.calculateDueDates.mockReturnValue({
+      responseDueAt: new Date('2026-07-15T03:00:00.000Z'),
+      resolutionDueAt: new Date('2026-07-15T10:00:00.000Z'),
+    });
+
+    const result = await service.create(
+      'ws-001',
+      { id: 'requester-001', tenantId: 'tenant-001' },
+      {
+        title: 'Payroll access reset',
+        description: 'Cannot access payroll.',
+        request_template_id: 'tpl-001',
+      },
+    );
+
+    expect(serviceCatalogService.getTemplateForTicket).toHaveBeenCalledWith('ws-001', 'tpl-001');
+    expect(serviceCatalogService.getWorkingHoursForTicket).toHaveBeenCalledWith('ws-001');
+    expect(ticketRepository.createWithEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        serviceCatalogItem: { connect: { id: 'svc-001' } },
+        requestTemplate: { connect: { id: 'tpl-001' } },
+        priority: TicketPriority.P2,
+        category: 'access',
+        responseDueAt: new Date('2026-07-15T03:00:00.000Z'),
+        resolutionDueAt: new Date('2026-07-15T10:00:00.000Z'),
+      }),
+      expect.any(Object),
+    );
+    expect((result.data.ticket as any).request_template_id).toBe('tpl-001');
   });
 
   it('limits requester list to own tickets even when mine=false', async () => {

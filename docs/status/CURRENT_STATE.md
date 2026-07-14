@@ -8,7 +8,7 @@
 | Base Branch | `develop` |
 | Base Commit | `3b20d49bd68c836ba059e50426ec07b371b04c40` |
 | Codex Branch | `codex/m0-takeover-baseline` |
-| Codex Commit | PR branch `codex/m0-takeover-baseline` includes M3 at `40d89d69d0b36a4ae22f9fd05fe670f5f2ae8095` |
+| Codex Commit | PR branch `codex/m0-takeover-baseline`; M4 validation recorded in this snapshot |
 | Draft PR | `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2` |
 | Database | PostgreSQL |
 | Build Status | PASS |
@@ -20,19 +20,19 @@
 | API Server | 3000 | Not started in this checkpoint |
 | Web UI | 3001 | Started by Playwright during E2E, then test runner stopped it |
 | PostgreSQL local service | 5432 | Present, not used for validation |
-| Temporary PostgreSQL | 55436 | Started for M3 migration validation, then stopped and removed |
+| Temporary PostgreSQL | 55437 | Started for M4 migration validation, then stopped and removed |
 | Redis | 6379 | Not verified |
 
 ## Migration Status
 
-Latest migration: `20260715013000_add_knowledge_articles`
+Latest migration: `20260715021500_add_service_catalog`
 
 Validation:
 
-- Empty temporary PostgreSQL 18 database migration: PASS for four migrations through M3
+- Empty temporary PostgreSQL 18 database migration: PASS for five migrations through M4
 - `prisma migrate deploy`: PASS
 - `prisma migrate status`: PASS, schema up to date
-- Tables created: `_prisma_migrations`, `roles`, `tenants`, `users`, `workspace_members`, `workspaces`, `tickets`, `ticket_messages`, `ticket_events`, `ai_runs`, `knowledge_articles`
+- Tables created include: `_prisma_migrations`, `roles`, `tenants`, `users`, `workspace_members`, `workspaces`, `tickets`, `ticket_messages`, `ticket_events`, `ai_runs`, `knowledge_articles`, `service_catalog_items`, `request_templates`, `workspace_working_hours`
 
 ## Available Features
 
@@ -56,19 +56,25 @@ Validation:
 - Requester-safe knowledge list/detail API that only exposes published requester-visible articles
 - Web ticket detail knowledge draft and publish controls
 - Web knowledge list/search page for self-service articles
+- Service catalog Lite with staff-managed service items and request templates
+- Working-hours Lite for SLA target calculation
+- Ticket creation from request templates with service catalog linkage and response/resolution due timestamps
+- Web service catalog page for item/template creation
+- Web ticket submit template selector with title, description, priority and category prefill
+- Web ticket detail service target panel
 
 ## Quality Baseline
 
 - Root typecheck: PASS
 - Root lint: PASS
-- Root Jest tests: PASS, 104/104
+- Root Jest tests: PASS, 114/114
 - Root build: PASS
 - Web typecheck: PASS
 - Web lint: PASS
-- Web Vitest tests: PASS, 68/68
+- Web Vitest tests: PASS, 69/69
 - Web Playwright E2E: PASS, 1/1
 - Web build: PASS
-- Total automated tests: PASS, 173/173 including Playwright E2E
+- Total automated tests: PASS, 184/184 including Playwright E2E
 - M1 backend ticket module: PASS, 88/88 backend tests
 - M1/M2 web ticket components: PASS, 66/66 frontend tests
 
@@ -79,6 +85,7 @@ Validation:
 - `apps/web/` - Next.js frontend application
 - `prisma/` - Database schema and migrations
 - `docs/contracts/TICKET_API.md` - M1 ticket API and permission contract
+- `docs/contracts/SERVICE_CATALOG_API.md` - M4 service catalog, request template and SLA target contract
 
 ## M1 Progress
 
@@ -125,10 +132,29 @@ Validation:
 - Web: ticket detail can create and publish a knowledge draft; `/knowledge` lists/searches requester-visible published articles.
 - Browser E2E: registration, workspace creation, ticket, AI suggestion, message, resolve, knowledge draft, publish and self-service search all pass.
 
+## M4 Progress
+
+- Contract: `docs/contracts/SERVICE_CATALOG_API.md`.
+- Task file: `docs/tasks/M4-service-management-basics.md`.
+- Prisma models: `ServiceCatalogItem`, `RequestTemplate`, `WorkspaceWorkingHours`.
+- Migration: `20260715021500_add_service_catalog`.
+- Ticket additions: `service_catalog_item_id`, `request_template_id`, `response_due_at`, `resolution_due_at`.
+- Backend: `src/modules/service-catalog/**` with repository, service, controller and module wiring.
+- Endpoints:
+  - `GET /api/v1/workspaces/:workspaceId/service-catalog`
+  - `POST /api/v1/workspaces/:workspaceId/service-catalog/items`
+  - `POST /api/v1/workspaces/:workspaceId/service-catalog/templates`
+  - Existing `POST /api/v1/workspaces/:workspaceId/tickets` accepts `request_template_id`.
+- Safety: staff-only catalog/template writes; active same-workspace template validation; requester-safe catalog read.
+- Tests: service/repository tests for staff restrictions, same-workspace validation and SLA target calculation; ticket service test for template-driven ticket creation.
+- Web: `/service-catalog` creates items/templates; `/tickets/new` applies templates; ticket detail shows service targets.
+- Browser E2E: registration, workspace creation, service item, request template, templated ticket, AI suggestion, message, resolve, knowledge draft, publish and self-service search all pass.
+
 ## Known Security/Audit Notes
 
 - Web `npm audit --audit-level=moderate`: 2 moderate findings from Next's transitive PostCSS dependency.
 - `npm audit fix --force` proposes a breaking downgrade to Next 9.3.3, so it was not applied automatically.
+- Secret scan after M4 found no committed GitHub token; matches were dependency/document URL false positives.
 
 ## Tech Stack
 

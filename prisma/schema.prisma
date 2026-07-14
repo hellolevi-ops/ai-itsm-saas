@@ -80,19 +80,34 @@ enum KnowledgeSourceType {
   MANUAL
 }
 
+enum ServiceCatalogStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum RequestTemplateStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum WorkingHoursStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model Tenant {
-  id        String   @id @default(uuid())
+  id        String          @id @default(uuid())
   name      String
-  slug      String   @unique
+  slug      String          @unique
   status    WorkspaceStatus @default(ACTIVE)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
 
   workspaces Workspace[]
   users      User[]
 
-  @@map("tenants")
   @@index([status])
+  @@map("tenants")
 }
 
 model User {
@@ -105,47 +120,50 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  tenant           Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  workspaceMembers WorkspaceMember[]
-  requestedTickets Ticket[] @relation("TicketRequester")
-  assignedTickets  Ticket[] @relation("TicketAssignee")
-  createdTickets   Ticket[] @relation("TicketCreator")
-  updatedTickets   Ticket[] @relation("TicketUpdater")
-  ticketMessages   TicketMessage[]
-  ticketEvents     TicketEvent[]
-  aiRuns           AiRun[]
-  knowledgeArticles KnowledgeArticle[] @relation("KnowledgeCreator")
+  tenant             Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  workspaceMembers   WorkspaceMember[]
+  requestedTickets   Ticket[]           @relation("TicketRequester")
+  assignedTickets    Ticket[]           @relation("TicketAssignee")
+  createdTickets     Ticket[]           @relation("TicketCreator")
+  updatedTickets     Ticket[]           @relation("TicketUpdater")
+  ticketMessages     TicketMessage[]
+  ticketEvents       TicketEvent[]
+  aiRuns             AiRun[]
+  knowledgeArticles  KnowledgeArticle[] @relation("KnowledgeCreator")
   publishedKnowledge KnowledgeArticle[] @relation("KnowledgePublisher")
 
-  @@map("users")
   @@unique([tenantId, email])
   @@index([tenantId])
+  @@map("users")
 }
 
 model Workspace {
-  id          String           @id @default(uuid())
-  tenantId    String           @map("tenant_id")
-  name        String
-  slug        String
-  timezone    String           @default("Asia/Shanghai")
-  language    String           @default("zh-CN")
-  status      WorkspaceStatus  @default(ACTIVE)
-  createdAt   DateTime         @default(now()) @map("created_at")
-  updatedAt   DateTime         @updatedAt @map("updated_at")
+  id        String          @id @default(uuid())
+  tenantId  String          @map("tenant_id")
+  name      String
+  slug      String
+  timezone  String          @default("Asia/Shanghai")
+  language  String          @default("zh-CN")
+  status    WorkspaceStatus @default(ACTIVE)
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
 
-  tenant  Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  members WorkspaceMember[]
-  roles   Role[]
-  tickets Ticket[]
-  ticketMessages TicketMessage[]
-  ticketEvents TicketEvent[]
-  aiRuns       AiRun[]
-  knowledgeArticles KnowledgeArticle[]
+  tenant              Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  members             WorkspaceMember[]
+  roles               Role[]
+  tickets             Ticket[]
+  ticketMessages      TicketMessage[]
+  ticketEvents        TicketEvent[]
+  aiRuns              AiRun[]
+  knowledgeArticles   KnowledgeArticle[]
+  serviceCatalogItems ServiceCatalogItem[]
+  requestTemplates    RequestTemplate[]
+  workingHours        WorkspaceWorkingHours?
 
-  @@map("workspaces")
   @@unique([tenantId, slug])
   @@index([tenantId])
   @@index([status])
+  @@map("workspaces")
 }
 
 model WorkspaceMember {
@@ -161,10 +179,10 @@ model WorkspaceMember {
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   role      Role      @relation(fields: [roleId], references: [id])
 
-  @@map("workspace_members")
   @@unique([workspaceId, userId])
   @@index([workspaceId])
   @@index([userId])
+  @@map("workspace_members")
 }
 
 model Role {
@@ -180,9 +198,9 @@ model Role {
   workspace Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   members   WorkspaceMember[]
 
-  @@map("roles")
   @@unique([workspaceId, name])
   @@index([workspaceId])
+  @@map("roles")
 }
 
 model Ticket {
@@ -205,23 +223,33 @@ model Ticket {
   createdAt   DateTime       @default(now()) @map("created_at")
   updatedAt   DateTime       @updatedAt @map("updated_at")
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  requester User      @relation("TicketRequester", fields: [requesterId], references: [id])
-  assignee  User?     @relation("TicketAssignee", fields: [assigneeId], references: [id])
-  createdBy User      @relation("TicketCreator", fields: [createdById], references: [id])
-  updatedBy User?     @relation("TicketUpdater", fields: [updatedById], references: [id])
-  messages  TicketMessage[]
-  events    TicketEvent[]
-  aiRuns    AiRun[]
-  knowledgeArticles KnowledgeArticle[]
+  workspace            Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  requester            User                @relation("TicketRequester", fields: [requesterId], references: [id])
+  assignee             User?               @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  createdBy            User                @relation("TicketCreator", fields: [createdById], references: [id])
+  updatedBy            User?               @relation("TicketUpdater", fields: [updatedById], references: [id])
+  messages             TicketMessage[]
+  events               TicketEvent[]
+  aiRuns               AiRun[]
+  knowledgeArticles    KnowledgeArticle[]
+  serviceCatalogItem   ServiceCatalogItem? @relation(fields: [serviceCatalogItemId], references: [id], onDelete: SetNull)
+  requestTemplate      RequestTemplate?    @relation(fields: [requestTemplateId], references: [id], onDelete: SetNull)
+  serviceCatalogItemId String?             @map("service_catalog_item_id")
+  requestTemplateId    String?             @map("request_template_id")
+  responseDueAt        DateTime?           @map("response_due_at")
+  resolutionDueAt      DateTime?           @map("resolution_due_at")
 
-  @@map("tickets")
   @@unique([workspaceId, number])
   @@index([workspaceId])
   @@index([workspaceId, status])
   @@index([workspaceId, assigneeId])
   @@index([workspaceId, requesterId])
+  @@index([workspaceId, serviceCatalogItemId])
+  @@index([workspaceId, requestTemplateId])
+  @@index([workspaceId, responseDueAt])
+  @@index([workspaceId, resolutionDueAt])
   @@index([createdAt])
+  @@map("tickets")
 }
 
 model TicketMessage {
@@ -237,10 +265,10 @@ model TicketMessage {
   ticket    Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   author    User      @relation(fields: [authorId], references: [id])
 
-  @@map("ticket_messages")
   @@index([workspaceId])
   @@index([ticketId])
   @@index([authorId])
+  @@map("ticket_messages")
 }
 
 model TicketEvent {
@@ -258,42 +286,42 @@ model TicketEvent {
   ticket    Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   actor     User?     @relation(fields: [actorId], references: [id])
 
-  @@map("ticket_events")
   @@index([workspaceId])
   @@index([ticketId])
   @@index([actorId])
   @@index([type])
+  @@map("ticket_events")
 }
 
 model AiRun {
-  id                 String       @id @default(uuid())
-  workspaceId        String       @map("workspace_id")
-  ticketId           String       @map("ticket_id")
-  actorId            String?      @map("actor_id")
-  action             AiActionType
-  provider           String
-  model              String
-  promptVersion      String       @map("prompt_version")
-  status             AiRunStatus
-  inputHash          String       @map("input_hash")
-  output             Json
-  confidence         Float
-  riskLevel          String       @default("LOW") @map("risk_level")
-  latencyMs          Int          @map("latency_ms")
-  inputTokens        Int          @default(0) @map("input_tokens")
-  outputTokens       Int          @default(0) @map("output_tokens")
-  estimatedCostMicros Int         @default(0) @map("estimated_cost_micros")
-  createdAt          DateTime     @default(now()) @map("created_at")
+  id                  String       @id @default(uuid())
+  workspaceId         String       @map("workspace_id")
+  ticketId            String       @map("ticket_id")
+  actorId             String?      @map("actor_id")
+  action              AiActionType
+  provider            String
+  model               String
+  promptVersion       String       @map("prompt_version")
+  status              AiRunStatus
+  inputHash           String       @map("input_hash")
+  output              Json
+  confidence          Float
+  riskLevel           String       @default("LOW") @map("risk_level")
+  latencyMs           Int          @map("latency_ms")
+  inputTokens         Int          @default(0) @map("input_tokens")
+  outputTokens        Int          @default(0) @map("output_tokens")
+  estimatedCostMicros Int          @default(0) @map("estimated_cost_micros")
+  createdAt           DateTime     @default(now()) @map("created_at")
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   ticket    Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   actor     User?     @relation(fields: [actorId], references: [id])
 
-  @@map("ai_runs")
   @@index([workspaceId])
   @@index([workspaceId, ticketId])
   @@index([workspaceId, action])
   @@index([actorId])
+  @@map("ai_runs")
 }
 
 model KnowledgeArticle {
@@ -319,11 +347,77 @@ model KnowledgeArticle {
   createdBy    User      @relation("KnowledgeCreator", fields: [createdById], references: [id])
   publishedBy  User?     @relation("KnowledgePublisher", fields: [publishedById], references: [id])
 
-  @@map("knowledge_articles")
   @@index([workspaceId])
   @@index([workspaceId, status])
   @@index([workspaceId, visibility])
   @@index([workspaceId, sourceTicketId])
   @@index([createdById])
   @@index([publishedById])
+  @@map("knowledge_articles")
+}
+
+model ServiceCatalogItem {
+  id                      String               @id @default(uuid())
+  workspaceId             String               @map("workspace_id")
+  name                    String
+  description             String
+  category                String?
+  defaultPriority         TicketPriority       @default(P3) @map("default_priority")
+  responseTargetMinutes   Int                  @default(240) @map("response_target_minutes")
+  resolutionTargetMinutes Int                  @default(1440) @map("resolution_target_minutes")
+  status                  ServiceCatalogStatus @default(ACTIVE)
+  createdAt               DateTime             @default(now()) @map("created_at")
+  updatedAt               DateTime             @updatedAt @map("updated_at")
+
+  workspace Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  templates RequestTemplate[]
+  tickets   Ticket[]
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@map("service_catalog_items")
+}
+
+model RequestTemplate {
+  id                   String                @id @default(uuid())
+  workspaceId          String                @map("workspace_id")
+  serviceCatalogItemId String                @map("service_catalog_item_id")
+  name                 String
+  description          String?
+  defaultTitle         String                @map("default_title")
+  defaultDescription   String                @map("default_description")
+  defaultPriority      TicketPriority        @default(P3) @map("default_priority")
+  defaultCategory      String?               @map("default_category")
+  status               RequestTemplateStatus @default(ACTIVE)
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @updatedAt @map("updated_at")
+
+  workspace          Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  serviceCatalogItem ServiceCatalogItem @relation(fields: [serviceCatalogItemId], references: [id], onDelete: Cascade)
+  tickets            Ticket[]
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@index([workspaceId, serviceCatalogItemId])
+  @@map("request_templates")
+}
+
+model WorkspaceWorkingHours {
+  id               String             @id @default(uuid())
+  workspaceId      String             @unique @map("workspace_id")
+  timezone         String             @default("Asia/Shanghai")
+  workdays         Int[]              @default([1, 2, 3, 4, 5])
+  startMinuteOfDay Int                @default(540) @map("start_minute_of_day")
+  endMinuteOfDay   Int                @default(1080) @map("end_minute_of_day")
+  holidayDates     Json?              @map("holiday_dates")
+  status           WorkingHoursStatus @default(ACTIVE)
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, status])
+  @@map("workspace_working_hours")
 }

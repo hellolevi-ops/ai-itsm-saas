@@ -19,6 +19,11 @@ import type {
   TicketMessageResponse,
   KnowledgeDraftResponse,
   ListKnowledgeResponse,
+  CreateRequestTemplateRequest,
+  CreateRequestTemplateResponse,
+  CreateServiceCatalogItemRequest,
+  CreateServiceCatalogItemResponse,
+  ServiceCatalogResponse,
 } from '@/types/api';
 
 const apiClient = axios.create({
@@ -182,6 +187,37 @@ export const knowledgeApi = {
     const response = await apiClient.post<ApiResponse<KnowledgeDraftResponse>>(
       `/workspaces/${workspaceId}/knowledge/${articleId}/publish`,
       { visibility: 'REQUESTER' },
+    );
+    return response.data;
+  },
+};
+
+export const serviceCatalogApi = {
+  async list(workspaceId: string): Promise<ApiResponse<ServiceCatalogResponse>> {
+    const response = await apiClient.get<ApiResponse<ServiceCatalogResponse>>(
+      `/workspaces/${workspaceId}/service-catalog`,
+    );
+    return response.data;
+  },
+
+  async createItem(
+    workspaceId: string,
+    data: CreateServiceCatalogItemRequest,
+  ): Promise<ApiResponse<CreateServiceCatalogItemResponse>> {
+    const response = await apiClient.post<ApiResponse<CreateServiceCatalogItemResponse>>(
+      `/workspaces/${workspaceId}/service-catalog/items`,
+      data,
+    );
+    return response.data;
+  },
+
+  async createTemplate(
+    workspaceId: string,
+    data: CreateRequestTemplateRequest,
+  ): Promise<ApiResponse<CreateRequestTemplateResponse>> {
+    const response = await apiClient.post<ApiResponse<CreateRequestTemplateResponse>>(
+      `/workspaces/${workspaceId}/service-catalog/templates`,
+      data,
     );
     return response.data;
   },

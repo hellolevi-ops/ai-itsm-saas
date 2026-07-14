@@ -44,6 +44,10 @@ type MockTicket = {
   resolved_at: string | null;
   closed_at: string | null;
   reopen_count: number;
+  service_catalog_item_id: string | null;
+  request_template_id: string | null;
+  response_due_at: string | null;
+  resolution_due_at: string | null;
 };
 
 type MockTicketMessage = {
@@ -83,6 +87,35 @@ type MockKnowledgeArticle = {
   updated_at: string;
 };
 
+type MockServiceCatalogItem = {
+  id: string;
+  workspace_id: string;
+  name: string;
+  description: string;
+  category: string | null;
+  default_priority: 'P1' | 'P2' | 'P3' | 'P4';
+  response_target_minutes: number;
+  resolution_target_minutes: number;
+  status: 'ACTIVE' | 'INACTIVE';
+  created_at: string;
+  updated_at: string;
+};
+
+type MockRequestTemplate = {
+  id: string;
+  workspace_id: string;
+  service_catalog_item_id: string;
+  name: string;
+  description: string | null;
+  default_title: string;
+  default_description: string;
+  default_priority: 'P1' | 'P2' | 'P3' | 'P4';
+  default_category: string | null;
+  status: 'ACTIVE' | 'INACTIVE';
+  created_at: string;
+  updated_at: string;
+};
+
 function loadMockMap<T>(key: string): Map<string, T> {
   if (typeof localStorage === 'undefined') return new Map();
 
@@ -106,6 +139,8 @@ const tickets = loadMockMap<MockTicket>('msw:tickets');
 const ticketMessages = loadMockMap<MockTicketMessage[]>('msw:ticketMessages');
 const ticketEvents = loadMockMap<MockTicketEvent[]>('msw:ticketEvents');
 const knowledgeArticles = loadMockMap<MockKnowledgeArticle>('msw:knowledgeArticles');
+const serviceCatalogItems = loadMockMap<MockServiceCatalogItem>('msw:serviceCatalogItems');
+const requestTemplates = loadMockMap<MockRequestTemplate>('msw:requestTemplates');
 
 function getUserFromRequest(request: Request) {
   const authHeader = request.headers.get('Authorization');
@@ -482,11 +517,32 @@ export const handlers = [
       description: string;
       priority?: 'P1' | 'P2' | 'P3' | 'P4';
       category?: string;
+      request_template_id?: string;
     };
+    const template = body.request_template_id
+      ? requestTemplates.get(body.request_template_id)
+      : null;
+    const serviceItem =
+      template && template.workspace_id === workspaceId
+        ? serviceCatalogItems.get(template.service_catalog_item_id)
+        : null;
+    if (
+      body.request_template_id &&
+      (!template || !serviceItem || serviceItem.workspace_id !== workspaceId)
+    ) {
+      return HttpResponse.json(
+        {
+          error: { code: 'REQUEST_TEMPLATE_NOT_FOUND', message: 'Request template not found' },
+          request_id: generateRequestId(),
+        },
+        { status: 404 },
+      );
+    }
     const workspaceTickets = Array.from(tickets.values()).filter(
       (ticket) => ticket.workspace_id === workspaceId,
     );
     const now = new Date().toISOString();
+    const nowTime = Date.now();
     const ticket = {
       id: generateId(),
       workspace_id: workspaceId,
@@ -495,8 +551,8 @@ export const handlers = [
       description: body.description,
       source: 'WEB' as const,
       status: 'NEW' as const,
-      priority: body.priority || 'P3',
-      category: body.category || null,
+      priority: body.priority || template?.default_priority || 'P3',
+      category: body.category || template?.default_category || null,
       requester_id: user.id,
       assignee_id: null,
       created_at: now,
@@ -504,6 +560,14 @@ export const handlers = [
       resolved_at: null,
       closed_at: null,
       reopen_count: 0,
+      service_catalog_item_id: serviceItem?.id || null,
+      request_template_id: template?.id || null,
+      response_due_at: serviceItem
+        ? new Date(nowTime + serviceItem.response_target_minutes * 60_000).toISOString()
+        : null,
+      resolution_due_at: serviceItem
+        ? new Date(nowTime + serviceItem.resolution_target_minutes * 60_000).toISOString()
+        : null,
     };
     tickets.set(ticket.id, ticket);
     ticketMessages.set(ticket.id, []);
@@ -526,6 +590,154 @@ export const handlers = [
       { status: 201 },
     );
   }),
+
+  http.get('/api/v1/workspaces/:workspaceId/service-catalog', async ({ request, params }) => {
+    await delay(200);
+    const user = getUserFromRequest(request);
+    const workspaceId = params.workspaceId as string;
+    if (!user || !isWorkspaceMember(workspaceId, user.id)) {
+      return HttpResponse.json(
+        {
+          error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+          request_id: generateRequestId(),
+        },
+        { status: user ? 403 : 401 },
+      );
+    }
+
+    const items = Array.from(serviceCatalogItems.values())
+      .filter((item) => item.workspace_id === workspaceId && item.status === 'ACTIVE')
+      .sort((a, b) => a.name.localeCompare(b.name));
+    const templates = Array.from(requestTemplates.values())
+      .filter((template) => template.workspace_id === workspaceId && template.status === 'ACTIVE')
+      .map((template) => ({
+        ...template,
+        service_catalog_item: serviceCatalogItems.get(template.service_catalog_item_id)!,
+      }))
+      .filter((template) => template.service_catalog_item?.status === 'ACTIVE')
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    return HttpResponse.json({
+      data: {
+        service_catalog_items: items,
+        request_templates: templates,
+      },
+      request_id: generateRequestId(),
+    });
+  }),
+
+  http.post(
+    '/api/v1/workspaces/:workspaceId/service-catalog/items',
+    async ({ request, params }) => {
+      await delay(200);
+      const user = getUserFromRequest(request);
+      const workspaceId = params.workspaceId as string;
+      if (!user || !isWorkspaceMember(workspaceId, user.id)) {
+        return HttpResponse.json(
+          {
+            error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+            request_id: generateRequestId(),
+          },
+          { status: user ? 403 : 401 },
+        );
+      }
+      const body = (await request.json()) as {
+        name: string;
+        description: string;
+        category?: string;
+        default_priority?: 'P1' | 'P2' | 'P3' | 'P4';
+        response_target_minutes?: number;
+        resolution_target_minutes?: number;
+      };
+      const now = new Date().toISOString();
+      const item = {
+        id: generateId(),
+        workspace_id: workspaceId,
+        name: body.name,
+        description: body.description,
+        category: body.category || null,
+        default_priority: body.default_priority || 'P3',
+        response_target_minutes: body.response_target_minutes || 240,
+        resolution_target_minutes: body.resolution_target_minutes || 1440,
+        status: 'ACTIVE' as const,
+        created_at: now,
+        updated_at: now,
+      };
+      serviceCatalogItems.set(item.id, item);
+      persistMockMap('msw:serviceCatalogItems', serviceCatalogItems);
+
+      return HttpResponse.json(
+        {
+          data: { service_catalog_item: item },
+          request_id: generateRequestId(),
+        },
+        { status: 201 },
+      );
+    },
+  ),
+
+  http.post(
+    '/api/v1/workspaces/:workspaceId/service-catalog/templates',
+    async ({ request, params }) => {
+      await delay(200);
+      const user = getUserFromRequest(request);
+      const workspaceId = params.workspaceId as string;
+      if (!user || !isWorkspaceMember(workspaceId, user.id)) {
+        return HttpResponse.json(
+          {
+            error: { code: 'FORBIDDEN', message: 'Workspace access denied' },
+            request_id: generateRequestId(),
+          },
+          { status: user ? 403 : 401 },
+        );
+      }
+      const body = (await request.json()) as {
+        service_catalog_item_id: string;
+        name: string;
+        description?: string;
+        default_title: string;
+        default_description: string;
+        default_priority?: 'P1' | 'P2' | 'P3' | 'P4';
+        default_category?: string;
+      };
+      const item = serviceCatalogItems.get(body.service_catalog_item_id);
+      if (!item || item.workspace_id !== workspaceId || item.status !== 'ACTIVE') {
+        return HttpResponse.json(
+          {
+            error: { code: 'SERVICE_NOT_FOUND', message: 'Service catalog item not found' },
+            request_id: generateRequestId(),
+          },
+          { status: 404 },
+        );
+      }
+
+      const now = new Date().toISOString();
+      const template = {
+        id: generateId(),
+        workspace_id: workspaceId,
+        service_catalog_item_id: item.id,
+        name: body.name,
+        description: body.description || null,
+        default_title: body.default_title,
+        default_description: body.default_description,
+        default_priority: body.default_priority || item.default_priority,
+        default_category: body.default_category || item.category,
+        status: 'ACTIVE' as const,
+        created_at: now,
+        updated_at: now,
+      };
+      requestTemplates.set(template.id, template);
+      persistMockMap('msw:requestTemplates', requestTemplates);
+
+      return HttpResponse.json(
+        {
+          data: { request_template: { ...template, service_catalog_item: item } },
+          request_id: generateRequestId(),
+        },
+        { status: 201 },
+      );
+    },
+  ),
 
   http.get('/api/v1/workspaces/:workspaceId/tickets', async ({ request, params }) => {
     await delay(200);

@@ -16,6 +16,7 @@ import {
 } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { WorkspaceMemberService } from '@/modules/workspace/services/workspace-member.service';
+import { ServiceCatalogService } from '@/modules/service-catalog/service-catalog.service';
 import {
   AddTicketMessageDto,
   AssignTicketDto,
@@ -48,19 +49,40 @@ export class TicketService {
   constructor(
     private readonly ticketRepository: TicketRepository,
     private readonly memberService: WorkspaceMemberService,
+    private readonly serviceCatalogService: ServiceCatalogService,
   ) {}
 
   async create(workspaceId: string, actor: TicketActor, dto: CreateTicketDto) {
     await this.requireMember(workspaceId, actor);
     const number = await this.nextTicketNumber(workspaceId);
+    const template = dto.request_template_id
+      ? await this.serviceCatalogService.getTemplateForTicket(workspaceId, dto.request_template_id)
+      : null;
+    const workingHours = template
+      ? await this.serviceCatalogService.getWorkingHoursForTicket(workspaceId)
+      : null;
+    const dueDates = template
+      ? this.serviceCatalogService.calculateDueDates(
+          template.serviceCatalogItem,
+          workingHours ?? undefined,
+        )
+      : { responseDueAt: null, resolutionDueAt: null };
     const ticket = await this.ticketRepository.createWithEvent(
       {
         workspace: { connect: { id: workspaceId } },
         number,
         title: dto.title,
         description: dto.description,
-        priority: dto.priority ?? TicketPriority.P3,
-        category: dto.category,
+        priority: dto.priority ?? template?.defaultPriority ?? TicketPriority.P3,
+        category: dto.category ?? template?.defaultCategory,
+        responseDueAt: dueDates.responseDueAt,
+        resolutionDueAt: dueDates.resolutionDueAt,
+        ...(template
+          ? {
+              serviceCatalogItem: { connect: { id: template.serviceCatalogItemId } },
+              requestTemplate: { connect: { id: template.id } },
+            }
+          : {}),
         requester: { connect: { id: actor.id } },
         createdBy: { connect: { id: actor.id } },
       },
@@ -359,6 +381,10 @@ export class TicketService {
       resolved_at: ticket.resolvedAt,
       closed_at: ticket.closedAt,
       reopen_count: ticket.reopenCount,
+      service_catalog_item_id: ticket.serviceCatalogItemId,
+      request_template_id: ticket.requestTemplateId,
+      response_due_at: ticket.responseDueAt,
+      resolution_due_at: ticket.resolutionDueAt,
     };
   }
 

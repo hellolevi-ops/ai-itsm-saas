@@ -1,11 +1,26 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { TicketSubmitForm } from '@/components/tickets/TicketSubmitForm';
+import { Alert } from '@/components/ui/Alert';
+import { extractApiError, serviceCatalogApi } from '@/lib/api';
 import { useCurrentWorkspace } from '@/lib/workspace-store';
+import type { RequestTemplate } from '@/types/api';
 
 export default function NewTicketPage() {
   const workspace = useCurrentWorkspace();
+  const [requestTemplates, setRequestTemplates] = useState<RequestTemplate[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!workspace) return;
+
+    serviceCatalogApi
+      .list(workspace.id)
+      .then((response) => setRequestTemplates(response.data.request_templates))
+      .catch((err) => setError(extractApiError(err)));
+  }, [workspace]);
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-8">
@@ -19,9 +34,10 @@ export default function NewTicketPage() {
             Queue
           </Link>
         </div>
+        {error && <Alert type="error" message={error} className="mb-4" />}
         <div className="border border-gray-200 bg-white p-6">
           {workspace ? (
-            <TicketSubmitForm workspaceId={workspace.id} />
+            <TicketSubmitForm workspaceId={workspace.id} requestTemplates={requestTemplates} />
           ) : (
             <div className="text-sm text-gray-600">
               Create or select a workspace before submitting tickets.

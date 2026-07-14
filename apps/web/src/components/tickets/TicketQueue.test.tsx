@@ -20,6 +20,10 @@ const ticket: Ticket = {
   resolved_at: null,
   closed_at: null,
   reopen_count: 0,
+  service_catalog_item_id: null,
+  request_template_id: null,
+  response_due_at: null,
+  resolution_due_at: null,
 };
 
 describe('TicketQueue', () => {

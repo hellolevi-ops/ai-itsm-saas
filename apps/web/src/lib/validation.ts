@@ -53,6 +53,7 @@ export const ticketCreateSchema = z.object({
     .max(10000, 'Description must be 10000 characters or less'),
   priority: z.enum(['P1', 'P2', 'P3', 'P4']),
   category: z.string().trim().max(80, 'Category must be 80 characters or less').optional(),
+  request_template_id: z.string().optional(),
 });
 
 export type TicketCreateFormData = z.infer<typeof ticketCreateSchema>;

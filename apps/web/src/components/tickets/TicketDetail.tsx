@@ -288,6 +288,33 @@ export function TicketDetail({ workspaceId, ticket, messages, events }: TicketDe
           </div>
         </div>
         <div className="border border-gray-200 bg-white p-5">
+          <h2 className="text-sm font-semibold text-gray-900">Service targets</h2>
+          <div className="mt-4 space-y-3 text-sm">
+            <div>
+              <div className="text-xs font-medium uppercase text-gray-500">Template</div>
+              <div className="mt-1 text-gray-900">
+                {currentTicket.request_template_id || 'Custom request'}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs font-medium uppercase text-gray-500">Response due</div>
+              <div className="mt-1 text-gray-900">
+                {currentTicket.response_due_at
+                  ? new Date(currentTicket.response_due_at).toLocaleString()
+                  : 'Not set'}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs font-medium uppercase text-gray-500">Resolution due</div>
+              <div className="mt-1 text-gray-900">
+                {currentTicket.resolution_due_at
+                  ? new Date(currentTicket.resolution_due_at).toLocaleString()
+                  : 'Not set'}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="border border-gray-200 bg-white p-5">
           <h2 className="text-sm font-semibold text-gray-900">Timeline</h2>
           <div className="mt-4 space-y-3">
             {events.map((event) => (

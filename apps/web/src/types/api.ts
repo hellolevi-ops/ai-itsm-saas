@@ -100,6 +100,10 @@ export interface Ticket {
   resolved_at: string | null;
   closed_at: string | null;
   reopen_count: number;
+  service_catalog_item_id: string | null;
+  request_template_id: string | null;
+  response_due_at: string | null;
+  resolution_due_at: string | null;
 }
 
 export interface TicketMessage {
@@ -126,6 +130,7 @@ export interface CreateTicketRequest {
   description: string;
   priority?: TicketPriority;
   category?: string;
+  request_template_id?: string;
 }
 
 export interface UpdateTicketRequest {
@@ -229,4 +234,66 @@ export interface ListKnowledgeResponse {
   articles: KnowledgeArticle[];
   page: number;
   page_size: number;
+}
+
+export interface ServiceCatalogItem {
+  id: string;
+  workspace_id: string;
+  name: string;
+  description: string;
+  category: string | null;
+  default_priority: TicketPriority;
+  response_target_minutes: number;
+  resolution_target_minutes: number;
+  status: 'ACTIVE' | 'INACTIVE';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RequestTemplate {
+  id: string;
+  workspace_id: string;
+  service_catalog_item_id: string;
+  name: string;
+  description: string | null;
+  default_title: string;
+  default_description: string;
+  default_priority: TicketPriority;
+  default_category: string | null;
+  status: 'ACTIVE' | 'INACTIVE';
+  service_catalog_item: ServiceCatalogItem;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ServiceCatalogResponse {
+  service_catalog_items: ServiceCatalogItem[];
+  request_templates: RequestTemplate[];
+}
+
+export interface CreateServiceCatalogItemRequest {
+  name: string;
+  description: string;
+  category?: string;
+  default_priority?: TicketPriority;
+  response_target_minutes?: number;
+  resolution_target_minutes?: number;
+}
+
+export interface CreateRequestTemplateRequest {
+  service_catalog_item_id: string;
+  name: string;
+  description?: string;
+  default_title: string;
+  default_description: string;
+  default_priority?: TicketPriority;
+  default_category?: string;
+}
+
+export interface CreateServiceCatalogItemResponse {
+  service_catalog_item: ServiceCatalogItem;
+}
+
+export interface CreateRequestTemplateResponse {
+  request_template: RequestTemplate;
 }

@@ -8,14 +8,15 @@
 ## P1
 
 - Make Git CLI available or use a connector path that supports branch and commit operations.
-- Update draft PR #2 with M3 implementation and validation evidence.
+- Update draft PR #2 with M4 implementation and validation evidence.
 - Resolve Jest ESM config warning.
 - Add CI workflow for root and web gates if absent.
 - Broaden M1 backend tests from service/repository unit coverage to controller/integration coverage.
 - Review Next transitive PostCSS moderate audit advisory; avoid `npm audit fix --force` because it proposes a breaking Next downgrade.
 - Broaden M2 backend tests from service/provider unit coverage to controller/integration coverage.
 - Broaden M3 backend tests from service/repository unit coverage to controller/integration coverage.
-- Start M4 service management basics contract: service catalog Lite, request templates, SLA and controlled dynamic forms.
+- Broaden M4 backend tests from service/repository unit coverage to controller/integration coverage.
+- Start M5 first China channel contract and channel adapter spike.
 - Add knowledge article detail/publish management screens beyond the ticket-detail shortcut.
 - Add RAG citation contract after service catalog basics, still behind AI Gateway and tenant filters.
 

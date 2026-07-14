@@ -29,6 +29,10 @@ export class CreateTicketDto {
   @IsString()
   @Length(1, 80)
   category?: string;
+
+  @IsOptional()
+  @IsUUID()
+  request_template_id?: string;
 }
 
 export class ListTicketsQueryDto {

@@ -28,8 +28,16 @@ Goal: Knowledge articles, draft generation from resolved tickets, staff publish 
 
 Out of scope: paid model provider, external vector database, bulk import, complex CMS workflow, and production release.
 
-## M4-M11
+## M4 - Service Management Basics
 
-Status: M4_NEXT
+Status: ACCEPTED_LOCALLY
 
-Continue in the order defined by the control document: service management basics, first China channel, PLG activation, plans/entitlements, security/ops, compliance preparation, beta readiness, and Release Candidate.
+Goal: Service catalog Lite, request templates, controlled ticket template defaults, working-hours Lite and deterministic response/resolution target timestamps.
+
+Out of scope: BPMN, CMDB, full ITIL modeling, low-code form builder, SLA pause/escalation automation and production release.
+
+## M5-M11
+
+Status: M5_NEXT
+
+Continue in the order defined by the control document: first China channel, PLG activation, plans/entitlements, security/ops, compliance preparation, beta readiness, and Release Candidate.

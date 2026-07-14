@@ -6,7 +6,7 @@
 | M1 Minimal ticket loop | ACCEPTED_LOCALLY | Backend module, web submit/queue/detail flows, unit tests and Playwright E2E are in place; local gates passed. | Keep PR #2 draft until CI/review policy is decided. |
 | M2 AI-assisted tickets | ACCEPTED_LOCALLY | AI Gateway, mock provider, structured suggestion endpoint, `ai_runs` audit, web panel, unit tests and E2E are in place; local gates passed. | Keep PR #2 draft until CI/review policy is decided. |
 | M3 Knowledge and self-service | ACCEPTED_LOCALLY | Knowledge article model, draft-from-ticket API, publish API, requester-safe list/detail rules, web draft/publish/search flow, unit tests, E2E and migration validation passed. | Keep PR #2 draft until CI/review policy is decided. |
-| M4 Service management basics | NEXT | Core ticket, AI suggestion and knowledge baselines are available. | Draft service catalog Lite, request template and SLA contract. |
+| M4 Service management basics | ACCEPTED_LOCALLY | Service catalog Lite, request templates, working-hours Lite, SLA target timestamps, web catalog/template flow, unit tests and E2E are in place; local gates passed. | Keep PR #2 draft until CI/review policy is decided. |
 | M5 First China channel | NOT_STARTED | No channel adapter implementation yet. | M4 accepted. |
 | M6 PLG activation and team spread | NOT_STARTED | Signup foundation exists, activation loop incomplete. | M5 accepted. |
 | M7 Plans, entitlements and commercial flow | NOT_STARTED | No entitlement or order domain implementation yet. | M6 accepted. |
