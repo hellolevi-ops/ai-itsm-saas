@@ -139,7 +139,9 @@ export function TicketDetail({ workspaceId, ticket, messages, events }: TicketDe
               currentMessages.map((message) => (
                 <div key={message.id} className="border border-gray-200 p-3">
                   <div className="mb-2 flex items-center justify-between text-xs text-gray-500">
-                    <span>{message.visibility === 'INTERNAL' ? 'Internal note' : 'Public reply'}</span>
+                    <span>
+                      {message.visibility === 'INTERNAL' ? 'Internal note' : 'Public reply'}
+                    </span>
                     <span>{new Date(message.created_at).toLocaleString()}</span>
                   </div>
                   <p className="whitespace-pre-wrap text-sm text-gray-800">{message.body}</p>
@@ -210,9 +212,7 @@ export function TicketDetail({ workspaceId, ticket, messages, events }: TicketDe
               </div>
               <div>
                 <div className="text-xs font-medium uppercase text-gray-500">Reply draft</div>
-                <p className="mt-1 whitespace-pre-wrap text-gray-800">
-                  {aiSuggestion.reply_draft}
-                </p>
+                <p className="mt-1 whitespace-pre-wrap text-gray-800">{aiSuggestion.reply_draft}</p>
               </div>
               {aiSuggestion.requires_human_review && (
                 <div className="border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
