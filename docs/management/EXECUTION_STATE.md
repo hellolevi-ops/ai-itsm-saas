@@ -1,11 +1,11 @@
 # Execution State
 
-- Last updated: 2026-07-14 22:45 Asia/Shanghai
-- Current branch: API verified upstream `develop`; local workspace is a recovered source snapshot with no `.git`
-- Current commit: API verified upstream `develop` HEAD `3b20d49bd68c836ba059e50426ec07b371b04c40`; local commit UNKNOWN
+- Last updated: 2026-07-14 23:04 Asia/Shanghai
+- Current branch: local snapshot plus GitHub branch `codex/m0-takeover-baseline`; base branch `develop`
+- Current commit: GitHub branch commit `ca2ab7868b9605c8628bc7a28ff5f47721507958`; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
 - Current phase: Phase 0 / Phase 1 takeover
 - Current milestone: M0 - Takeover and baseline security
-- Current milestone status: IN_PROGRESS - source recovered and executable Phase 0 quality gates passed; Git working tree and live DB validation pending
+- Current milestone status: ACCEPTED_WITH_RISK - source recovered, PR opened, quality gates passed, and temporary DB migration validation passed
 - Completed tasks:
   - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_???????????????.md`.
   - Inspected the requested workspace path.
@@ -33,15 +33,19 @@
   - Validated Prisma schema with a local placeholder `DATABASE_URL`.
   - Removed hardcoded JWT runtime fallback secret and added `.env.example`.
   - Fixed generated-file lint issues and Next Turbopack root warning.
+  - Created GitHub branch `codex/m0-takeover-baseline` from verified `develop` HEAD.
+  - Created draft PR `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2`.
+  - Initialized a temporary PostgreSQL 18 cluster under `%TEMP%`.
+  - Applied migration `20260714113121_init` to an empty temporary database.
+  - Verified `prisma migrate status` reports schema up to date.
+  - Stopped and removed the temporary PostgreSQL cluster.
 - Active tasks:
-  - Establish a real Git working tree or GitHub API commit workflow for the local changes.
-  - Verify migrations against a non-production PostgreSQL database.
-  - Continue Phase 1/M0 documentation and security hardening.
+  - Update draft PR #2 with live migration evidence and final M0 status.
+  - Start M1 ticket domain contract and implementation planning.
 - Blocked tasks:
   - `git fetch --all --tags --prune`
   - Local branch, remote and working tree checks
-  - Git commit, branch push, and PR creation
-  - Live migration application against PostgreSQL
+  - Browser-level E2E automation for register/login/create workspace
 - Latest validation commands:
   - `git status --short --branch`
   - `git branch --show-current`
@@ -70,6 +74,11 @@
   - `cd apps/web; npm run lint`
   - `cd apps/web; npm test`
   - `cd apps/web; npm run build`
+  - GitHub REST API git refs, blobs, tree, commit and pull request creation for `codex/m0-takeover-baseline`
+  - Temporary PostgreSQL 18 cluster initialization with `initdb`
+  - `prisma migrate deploy`
+  - `prisma migrate status`
+  - `psql` table inspection
 - Latest validation results:
   - `git` is not recognized in the current PowerShell PATH.
   - `gh` is not available in the current PowerShell PATH.
@@ -90,15 +99,19 @@
   - Total automated tests passed: 136/136.
   - Prisma schema validates when `DATABASE_URL` is provided.
   - Secret scan found no user-provided GitHub token in repository files.
+  - GitHub branch `codex/m0-takeover-baseline` created at `ca2ab7868b9605c8628bc7a28ff5f47721507958`.
+  - Draft PR #2 opened against `develop`.
+  - Temporary PostgreSQL migration validation passed: migration `20260714113121_init` applied to empty database and schema reported up to date.
+  - Temporary PostgreSQL cluster was stopped and removed.
 - Open P0 issues:
   - None for executable source validation.
 - Open P1 issues:
   - P1-ENV-001: Git CLI is unavailable in PATH; Git phase checks and commits cannot run locally.
   - P1-ENV-003: Local source snapshot has no `.git` metadata.
-  - P1-DB-001: Live PostgreSQL migration verification has not run.
+  - None blocking M1 entry.
 - External dependencies:
   - Local Git installation or a working Git-capable environment.
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Commit the validated local changes through a real Git workflow or GitHub API commit path, then run live DB migration verification in a non-production PostgreSQL environment.
+  - Push the updated M0 migration evidence to PR #2, then begin M1 ticket-loop contract freezing.

@@ -20,6 +20,10 @@ Local Git limitations:
 
 - Local workspace has recovered source files but no `.git` directory.
 - `git` is unavailable in PATH, so `git status`, local branch checks, remotes, fetch, tags and commits cannot be executed locally.
+- A GitHub API branch and draft PR were created to preserve the validated local changes:
+  - Branch: `codex/m0-takeover-baseline`
+  - Commit: `ca2ab7868b9605c8628bc7a28ff5f47721507958`
+  - PR: `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2`
 
 ## Local Evidence Search
 
@@ -75,11 +79,12 @@ Quality gate success rate: 10/10 executable gates passed.
 | Root build | PASS |
 | Web typecheck/lint | PASS |
 | Web Vitest tests and build | PASS, 58/58 tests |
+| Empty PostgreSQL migration validation | PASS |
 
 Notes:
 
 - Jest still prints a warning that `jest.config.ts` is an ES module while the root package is not marked `"type": "module"`. Tests pass.
-- Live database migration application was not attempted because no local PostgreSQL service or non-production `DATABASE_URL` was provided.
+- Live database migration application was verified against a temporary local PostgreSQL 18 cluster on port 55432. The cluster was stopped and removed after validation.
 - Production release was not attempted.
 
 ## Fixes Applied During Takeover
@@ -92,13 +97,26 @@ Notes:
 - Updated web ESLint ignore list for generated `public/mockServiceWorker.js`.
 - Configured `apps/web/next.config.ts` `turbopack.root` to remove ambiguous Next workspace-root inference.
 
+## Migration Validation
+
+Temporary database evidence:
+
+- PostgreSQL 18 temporary cluster initialized under `%TEMP%`.
+- Database: `ai_itsm_migration_check`.
+- Command: `prisma migrate deploy`.
+- Result: migration `20260714113121_init` applied successfully.
+- Command: `prisma migrate status`.
+- Result: database schema is up to date.
+- Tables observed: `_prisma_migrations`, `roles`, `tenants`, `users`, `workspace_members`, `workspaces`.
+- Cleanup: temporary cluster stopped and temp directory removed.
+
 ## P0/P1
 
 - P0: Phase 0 executable quality gates passed on recovered source snapshot.
 - P1: Local `.git` metadata is still unavailable.
 - P1: Git CLI is unavailable in PATH.
-- P1: Live DB migration verification remains pending.
+- P1: Live DB migration verification completed against an isolated temporary PostgreSQL database.
 
 ## M0 Entry Decision
 
-M0 is mostly passable for code quality and baseline security on the recovered source snapshot. Full M0 cannot be closed until a real Git working tree is available or changes are committed through a GitHub API workflow, and until a non-production PostgreSQL database is used for migration verification.
+M0 is accepted with residual risk. The validated changes have been preserved in draft PR #2. Proceed to M1 planning and implementation while keeping PR #2 draft until review/CI policy is decided.

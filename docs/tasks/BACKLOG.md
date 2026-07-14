@@ -8,10 +8,10 @@
 ## P1
 
 - Make Git CLI available or use a connector path that supports branch and commit operations.
-- Commit validated local changes to `hellolevi-ops/ai-itsm-saas` through Git or GitHub API.
-- Run Prisma migrations against a non-production PostgreSQL database.
+- Update draft PR #2 with live migration evidence and final M0 status.
 - Resolve Jest ESM config warning.
 - Add CI workflow for root and web gates if absent.
+- Begin M1 ticket domain contract and implementation tasks.
 
 ## P2
 
