@@ -260,7 +260,8 @@ Security note:
 - Draft PR: `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2`
 - Branch: `codex/m0-takeover-baseline`
 - Latest M10 implementation commit pushed by GitHub REST API: `d5c2212c18c9a7dd35f0384ccc0d071e1215f5c8`
-- PR head verification: pending follow-up API check after evidence commit
+- Latest M10 evidence commit pushed by GitHub REST API: `26fd00926a3de7b0a0bbe4bdb80cd0fe27f82c60`
+- PR head verification: PASS after M10 evidence push
 - Token stored in this repository: No
 
 Validation evidence after M10:
