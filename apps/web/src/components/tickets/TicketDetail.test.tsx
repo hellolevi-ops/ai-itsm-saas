@@ -281,6 +281,6 @@ describe('TicketDetail', () => {
     await waitFor(() => {
       expect(mockPublish).toHaveBeenCalledWith('ws-1', 'article-1');
     });
-    expect(screen.getByText('PUBLISHED 路 REQUESTER')).toBeInTheDocument();
+    expect(screen.getByTestId('knowledge-draft-status')).toHaveTextContent('PUBLISHED / REQUESTER');
   });
 });
