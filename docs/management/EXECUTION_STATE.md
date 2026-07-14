@@ -1,11 +1,11 @@
 # Execution State
 
-- Last updated: 2026-07-15 03:25 Asia/Shanghai
+- Last updated: 2026-07-15 03:45 Asia/Shanghai
 - Current branch: local snapshot plus GitHub branch `codex/m0-takeover-baseline`; base branch `develop`
 - Current commit: GitHub branch `codex/m0-takeover-baseline`; M8 validation recorded in this snapshot; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
 - Current phase: Milestone implementation after takeover
-- Current milestone: M8 - Security, reliability and operations
-- Current milestone status: ACCEPTED_LOCALLY - M8 health probes, request correlation and security headers pass local gates; PR/CI review remains before merge
+- Current milestone: M9 - China compliance preparation
+- Current milestone status: ACCEPTED_LOCALLY - M9 compliance drafts, public metadata API and web compliance center pass local gates; PR/CI review remains before merge
 - Completed tasks:
   - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_自主接管与商业化开发总控执行书.md`.
   - Inspected the requested workspace path.
@@ -118,9 +118,13 @@
 - Added Prisma-backed database readiness check.
 - Added global request id and baseline security header middlewares.
 - Added ops/middleware unit tests and MSW/E2E health probe verification.
+- Created `docs/contracts/COMPLIANCE_API.md`.
+- Created `docs/tasks/M9-china-compliance-preparation.md`.
+- Created `docs/compliance/**` draft package for professional review.
+- Implemented `src/modules/compliance/**` with public compliance metadata APIs.
+- Added web `/legal` compliance center, MSW support and E2E coverage.
 - Active tasks:
-  - Push M8 implementation and validation evidence to PR #2.
-  - Start M9 China compliance preparation after PR #2 is updated.
+  - Push M9 implementation and validation evidence to PR #2.
 - Blocked tasks:
   - `git fetch --all --tags --prune`
   - Local branch, remote and working tree checks
@@ -166,6 +170,8 @@
   - M7 temporary PostgreSQL migration validation for eight migrations
   - `psql` table inspection for `workspace_subscriptions`, `payment_orders`, `workspace_invitations`, `channel_connections`, `channel_inbound_messages`, `tickets`, `service_catalog_items`, `knowledge_articles` and `ai_runs`
   - M8 temporary PostgreSQL migration validation for eight migrations
+  - M9 temporary PostgreSQL migration validation for eight migrations
+  - M9 secret scan for GitHub/OpenAI token patterns
   - health probe E2E fetches for `/api/v1/health/live` and `/api/v1/health/ready`
   - M3 temporary PostgreSQL migration validation for four migrations
   - `psql` table inspection for `knowledge_articles`, `ai_runs`, `tickets` and `ticket_events`
@@ -299,6 +305,18 @@
 - Web Playwright E2E passed after M8 implementation: 1/1.
 - M8 migration validation passed: eight migrations through `20260715053000_add_billing_entitlements` applied to an empty PostgreSQL 18 database.
 - Secret scan after M8 implementation found no user-provided GitHub/OpenAI token in repository files; observed matches were dependency/document URL and `service-desk-api` false positives.
+- Root typecheck passed after M9 implementation.
+- Root lint passed after M9 implementation.
+- Root Jest tests passed after M9 implementation: 144/144.
+- Root build passed after M9 implementation.
+- Web typecheck passed after M9 implementation.
+- Web lint passed after M9 implementation.
+- Web Vitest tests passed after M9 implementation: 69/69.
+- Web build passed after M9 implementation.
+- Web Playwright E2E passed after M9 implementation: 1/1.
+- Prisma schema validates after M9 implementation.
+- M9 migration validation passed: eight migrations through `20260715053000_add_billing_entitlements` applied to an empty PostgreSQL 18 database.
+- Secret scan after M9 implementation found no user-provided GitHub/OpenAI token in repository files; observed matches were dependency/document URL and `service-desk-api` false positives.
 - Web Playwright E2E passed after M4 implementation: 1/1.
 - Secret scan after M4 implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
 - Open P0 issues:
@@ -312,4 +330,4 @@
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Push M8 implementation to PR #2 through GitHub REST API.
+  - Push M9 implementation to PR #2 through GitHub REST API.

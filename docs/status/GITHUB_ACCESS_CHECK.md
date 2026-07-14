@@ -221,3 +221,33 @@ Security note:
 - M8 adds public health probes, request id propagation and baseline browser security headers.
 - Secret scan false positives include dependency/document URLs and the literal service name `lingxi-service-desk-api`, not secrets.
 - No production monitoring provider, backup storage, alerting tool or deployment change was connected.
+
+## Latest Local M9 Validation
+
+- Checked at: 2026-07-15 03:45 Asia/Shanghai
+- Draft PR: `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2`
+- Branch: `codex/m0-takeover-baseline`
+- Token stored in this repository: No
+
+Validation evidence after M9:
+
+| Gate | Result |
+|---|---|
+| `npm exec prisma -- validate` with local `DATABASE_URL` | PASS |
+| Root `npm run typecheck` | PASS |
+| Root `npm run lint:check` | PASS |
+| Root `npm test -- --runInBand` | PASS, 144/144 tests |
+| Root `npm run build` | PASS |
+| Web `npm run typecheck` | PASS |
+| Web `npm run lint` | PASS |
+| Web `npm test` | PASS, 69/69 tests |
+| Web `npm run build` | PASS |
+| Web `npm run test:e2e` | PASS, 1/1 |
+| Temporary PostgreSQL migration validation | PASS, 8 migrations through M9 |
+| Secret scan | PASS, no committed GitHub/OpenAI token found |
+
+Security note:
+
+- M9 adds compliance drafts and metadata only; no final legal judgment, filing, paid external review, customer data transfer or production release was performed.
+- The web build no longer depends on fetching Google Fonts during production build.
+- Secret scan false positives include dependency/document URLs and the literal service name `lingxi-service-desk-api`, not secrets.

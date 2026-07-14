@@ -253,4 +253,12 @@ test('requester can submit, track, reply to and progress a ticket', async ({ pag
   await expect(page.getByRole('heading', { name: 'Knowledge' })).toBeVisible();
   await page.getByPlaceholder('Search knowledge').fill('VPN');
   await expect(page.getByText('How to resolve: VPN access is unavailable')).toBeVisible();
+
+  await page.goto('/legal');
+  await expect(page.getByRole('heading', { name: 'Compliance Center' })).toBeVisible();
+  await expect(page.getByTestId('compliance-center')).toContainText('Draft for review');
+  await expect(page.getByTestId('compliance-documents')).toContainText('Privacy Policy Draft');
+  await expect(page.getByTestId('compliance-documents')).toContainText(
+    'Generative AI and Content Labeling Checklist',
+  );
 });

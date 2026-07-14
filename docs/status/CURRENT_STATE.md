@@ -8,7 +8,7 @@
 | Base Branch | `develop` |
 | Base Commit | `3b20d49bd68c836ba059e50426ec07b371b04c40` |
 | Codex Branch | `codex/m0-takeover-baseline` |
-| Codex Commit | PR branch `codex/m0-takeover-baseline`; M8 validation recorded in this snapshot |
+| Codex Commit | PR branch `codex/m0-takeover-baseline`; M9 validation recorded in this snapshot |
 | Draft PR | `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2` |
 | Database | PostgreSQL |
 | Build Status | PASS |
@@ -20,7 +20,7 @@
 | API Server | 3000 | Not started in this checkpoint |
 | Web UI | 3001 | Started by Playwright during E2E, then test runner stopped it |
 | PostgreSQL local service | 5432 | Present, not used for validation |
-| Temporary PostgreSQL | 55441 | Reserved for M8 migration validation, then stopped and removed after validation |
+| Temporary PostgreSQL | 55442 | Reserved for M9 migration validation, then stopped and removed after validation |
 | Redis | 6379 | Not verified |
 
 ## Migration Status
@@ -29,7 +29,7 @@ Latest migration: `20260715053000_add_billing_entitlements`
 
 Validation:
 
-- Empty temporary PostgreSQL 18 database migration: PASS for eight migrations through M8
+- Empty temporary PostgreSQL 18 database migration: PASS for eight migrations through M9
 - `prisma migrate deploy`: PASS
 - `prisma migrate status`: PASS, schema up to date
 - Tables created include: `_prisma_migrations`, `roles`, `tenants`, `users`, `workspace_members`, `workspaces`, `tickets`, `ticket_messages`, `ticket_events`, `ai_runs`, `knowledge_articles`, `service_catalog_items`, `request_templates`, `workspace_working_hours`, `channel_connections`, `channel_inbound_messages`, `workspace_invitations`, `workspace_subscriptions`, `payment_orders`
@@ -80,12 +80,15 @@ Validation:
 - Prisma-backed database readiness check
 - Global `X-Request-Id` response header with inbound request id preservation
 - Baseline browser security response headers on all routes
+- Public compliance package metadata API
+- Web compliance center at `/legal`
+- China-market compliance drafts and review checklists marked as not effective and professional-review-required
 
 ## Quality Baseline
 
 - Root typecheck: PASS
 - Root lint: PASS
-- Root Jest tests: PASS, 141/141
+- Root Jest tests: PASS, 144/144
 - Root build: PASS
 - Web typecheck: PASS
 - Web lint: PASS
@@ -94,7 +97,7 @@ Validation:
 - Web build: PASS
 - Temporary PostgreSQL migration validation: PASS, 8 migrations through M8
 - Secret scan: PASS, no committed GitHub/OpenAI token found; `service-desk-api` is a `sk-` substring false positive
-- Total automated tests: PASS, 211/211 including Playwright E2E
+- Total automated tests: PASS, 214/214 including Playwright E2E
 - M1 backend ticket module: PASS, 88/88 backend tests
 - M1/M2 web ticket components: PASS, 66/66 frontend tests
 
@@ -110,6 +113,7 @@ Validation:
 - `docs/contracts/INVITATION_API.md` - M6 workspace invitation and team-spread contract
 - `docs/contracts/BILLING_API.md` - M7 plan, entitlement and manual-order contract
 - `docs/contracts/OPERATIONS_API.md` - M8 health, request correlation and security header contract
+- `docs/contracts/COMPLIANCE_API.md` - M9 compliance package metadata contract
 
 ## M1 Progress
 
@@ -239,6 +243,33 @@ Validation:
 - Web/MSW: mock health handlers support local browser verification.
 - Browser E2E: main path now verifies live/ready probes before registration, billing, invite, channel, ticket, AI and knowledge flows.
 
+## M9 Progress
+
+- Contract: `docs/contracts/COMPLIANCE_API.md`.
+- Task file: `docs/tasks/M9-china-compliance-preparation.md`.
+- Draft package: `docs/compliance/**`.
+- Backend: `src/modules/compliance/**` with public compliance metadata APIs.
+- Endpoints:
+  - `GET /api/v1/compliance/public`
+  - `GET /api/v1/compliance/documents/:slug`
+- Materials:
+  - user agreement draft
+  - privacy policy draft
+  - personal information collection list
+  - third-party service list
+  - data retention, deletion and export policy
+  - AI usage disclosure
+  - model provider data review matrix
+  - data processing agreement draft
+  - security incident and complaint process
+  - SLA statement draft
+  - ICP, public security and MLPS applicability checklist
+  - generative AI and content labeling checklist
+- Safety: every material is marked review-required, not legally effective and not production-effective.
+- Web: `/legal` renders the compliance center and review boundary.
+- Browser E2E: main path now verifies the compliance center after knowledge self-service.
+- Validation: root typecheck/lint/Jest/build, web typecheck/lint/Vitest/build/E2E, Prisma validate, temporary PostgreSQL migration validation and secret scan all pass.
+
 ## Known Security/Audit Notes
 
 - Web `npm audit --audit-level=moderate`: 2 moderate findings from Next's transitive PostCSS dependency.
@@ -248,6 +279,8 @@ Validation:
 - M6 invite links are displayed in-app for local PLG validation only; no real email provider or production onboarding system is used.
 - M7 uses manual/mock commercial activation only; no real payment provider, invoice system, tax workflow or production commerce resource is connected.
 - M8 adds local executable operations primitives only; no production monitoring provider, backup storage, alerting tool or deployment change is connected.
+- M9 adds draft compliance materials only; no final legal judgment, filing, external legal resource or production release was performed.
+- M9 also removes the external Google Fonts build dependency so the web production build no longer needs network font fetches.
 
 ## Tech Stack
 

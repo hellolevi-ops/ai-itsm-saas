@@ -476,3 +476,31 @@ export interface ActivatePaymentOrderResponse {
   current_plan: BillingPlan;
   entitlements: BillingEntitlements;
 }
+
+export type ComplianceDocumentStatus = 'DRAFT_FOR_REVIEW' | 'EXTERNAL_REVIEW_REQUIRED';
+
+export type ComplianceDocumentCategory =
+  'TERMS' | 'PRIVACY' | 'DATA_RIGHTS' | 'AI' | 'SECURITY' | 'OPERATIONS' | 'FILING';
+
+export interface ComplianceDocument {
+  slug: string;
+  title: string;
+  category: ComplianceDocumentCategory;
+  status: ComplianceDocumentStatus;
+  owner: string;
+  review_required: true;
+  effective_status: 'NOT_EFFECTIVE';
+  repository_path: string;
+  summary: string;
+}
+
+export interface CompliancePackageResponse {
+  package_version: string;
+  jurisdiction: 'CN';
+  status: 'DRAFT_FOR_PROFESSIONAL_REVIEW';
+  professional_review_required: true;
+  legal_final_judgment: false;
+  production_effective: false;
+  last_updated_at: string;
+  documents: ComplianceDocument[];
+}

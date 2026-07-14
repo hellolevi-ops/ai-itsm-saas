@@ -20,6 +20,6 @@ Only `VERIFIED` counts as technically complete.
 | Performance capacity | NOT_STARTED | Baseline load test recorded. | None. | Capacity unknown. | No |
 | CI/CD | NOT_STARTED | Reproducible CI passes. | No workflow found in recovered tree. | CI must be added before release readiness. | Yes |
 | Rollback | NOT_STARTED | Rollback path rehearsed. | None. | No rollback evidence; M8 records health checks but no rollback rehearsal. | Yes |
-| Compliance materials | NOT_STARTED | Draft materials marked for professional review. | None. | Legal final review external. | No |
+| Compliance materials | PARTIAL | Draft materials marked for professional review. | M9 compliance draft package, `COMPLIANCE_API.md`, public compliance API and `/legal` compliance center. | Final legal review, filings and production legal approval remain external/manual. | No |
 | Customer support operations | NOT_STARTED | Support workflow and feedback loop ready. | None. | Not needed before core loop. | No |
 | Beta evidence | NOT_STARTED | Beta usage and feedback recorded. | None. | Requires product first. | Yes |

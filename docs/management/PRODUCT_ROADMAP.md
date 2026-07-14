@@ -68,8 +68,16 @@ Goal: Health probes, request correlation and baseline browser security headers v
 
 Out of scope: paid monitoring, production alerting, production deployment, destructive restore drills and external security certification.
 
-## M9-M11
+## M9 - China Compliance Preparation
 
-Status: M9_NEXT
+Status: ACCEPTED_LOCALLY
 
-Continue in the order defined by the control document: compliance preparation, beta readiness, and Release Candidate.
+Goal: Draft China-market compliance materials for professional review and expose a public compliance center/API that clearly marks all materials as draft-only and not legally effective.
+
+Out of scope: final legal judgment, ICP/public-security/MLPS filings, paid external legal resources, production legal copy approval and production release.
+
+## M10-M11
+
+Status: M10_NEXT
+
+Continue in the order defined by the control document: beta readiness and Release Candidate.

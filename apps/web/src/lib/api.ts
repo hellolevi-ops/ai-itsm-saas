@@ -39,6 +39,7 @@ import type {
   CreateInvitationRequest,
   CreateInvitationResponse,
   ListInvitationsResponse,
+  CompliancePackageResponse,
 } from '@/types/api';
 
 const apiClient = axios.create({
@@ -325,6 +326,14 @@ export const billingApi = {
     const response = await apiClient.post<ApiResponse<ActivatePaymentOrderResponse>>(
       `/workspaces/${workspaceId}/billing/orders/${orderId}/activate`,
     );
+    return response.data;
+  },
+};
+
+export const complianceApi = {
+  async publicPackage(): Promise<ApiResponse<CompliancePackageResponse>> {
+    const response =
+      await apiClient.get<ApiResponse<CompliancePackageResponse>>('/compliance/public');
     return response.data;
   },
 };
