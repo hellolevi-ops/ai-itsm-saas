@@ -2,7 +2,7 @@
 
 - Last updated: 2026-07-15 01:25 Asia/Shanghai
 - Current branch: local snapshot plus GitHub branch `codex/m0-takeover-baseline`; base branch `develop`
-- Current commit: GitHub branch includes M2 at `5f73c2b347ea36858a44bbfb2e2d7c1d59f75360`; local snapshot includes M3 pending push; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
+- Current commit: GitHub branch includes M3 at `40d89d69d0b36a4ae22f9fd05fe670f5f2ae8095`; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
 - Current phase: Milestone implementation after takeover
 - Current milestone: M4 - Service management basics
 - Current milestone status: NEXT - M3 knowledge and self-service is accepted locally; PR/CI review remains before merge
@@ -76,7 +76,6 @@
   - Added web ticket detail draft/publish controls and `/knowledge` self-service list/search page.
   - Extended Playwright E2E to verify draft creation, publish and self-service knowledge search.
 - Active tasks:
-  - Push M3 knowledge/self-service implementation and validation evidence to draft PR #2.
   - Start M4 service management basics contract after PR #2 is updated.
 - Blocked tasks:
   - `git fetch --all --tags --prune`
@@ -208,4 +207,4 @@
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Push current M3 implementation to PR #2, then begin M4 service management basics contract planning.
+  - Begin M4 service management basics contract planning.

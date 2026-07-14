@@ -8,7 +8,7 @@
 | Base Branch | `develop` |
 | Base Commit | `3b20d49bd68c836ba059e50426ec07b371b04c40` |
 | Codex Branch | `codex/m0-takeover-baseline` |
-| Codex Commit | PR branch `codex/m0-takeover-baseline` includes M2; local snapshot now includes M3 knowledge/self-service pending push |
+| Codex Commit | PR branch `codex/m0-takeover-baseline` includes M3 at `40d89d69d0b36a4ae22f9fd05fe670f5f2ae8095` |
 | Draft PR | `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2` |
 | Database | PostgreSQL |
 | Build Status | PASS |
