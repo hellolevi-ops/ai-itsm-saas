@@ -16,6 +16,8 @@ interface TicketDetailProps {
 
 export function TicketDetail({ workspaceId, ticket, messages, events }: TicketDetailProps) {
   const router = useRouter();
+  const [currentTicket, setCurrentTicket] = useState(ticket);
+  const [currentMessages, setCurrentMessages] = useState(messages);
   const [body, setBody] = useState('');
   const [visibility, setVisibility] = useState<'PUBLIC' | 'INTERNAL'>('PUBLIC');
   const [error, setError] = useState<string | null>(null);
@@ -27,10 +29,11 @@ export function TicketDetail({ workspaceId, ticket, messages, events }: TicketDe
     setError(null);
     setIsSubmitting(true);
     try {
-      await ticketApi.addMessage(workspaceId, ticket.id, {
+      const response = await ticketApi.addMessage(workspaceId, currentTicket.id, {
         visibility,
         body,
       });
+      setCurrentMessages((existing) => [...existing, response.data.message]);
       setBody('');
       router.refresh();
     } catch (err) {
@@ -44,7 +47,8 @@ export function TicketDetail({ workspaceId, ticket, messages, events }: TicketDe
     setError(null);
     setIsChangingStatus(true);
     try {
-      await ticketApi.changeStatus(workspaceId, ticket.id, { status });
+      const response = await ticketApi.changeStatus(workspaceId, currentTicket.id, { status });
+      setCurrentTicket(response.data.ticket);
       router.refresh();
     } catch (err) {
       setError(extractApiError(err));
@@ -60,23 +64,25 @@ export function TicketDetail({ workspaceId, ticket, messages, events }: TicketDe
         <div className="border border-gray-200 bg-white p-5">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="font-mono text-xs text-gray-500">{ticket.number}</p>
-              <h1 className="mt-1 text-xl font-semibold text-gray-900">{ticket.title}</h1>
+              <p className="font-mono text-xs text-gray-500">{currentTicket.number}</p>
+              <h1 className="mt-1 text-xl font-semibold text-gray-900">{currentTicket.title}</h1>
             </div>
             <span className="border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700">
-              {ticket.status}
+              {currentTicket.status}
             </span>
           </div>
-          <p className="mt-4 whitespace-pre-wrap text-sm text-gray-700">{ticket.description}</p>
+          <p className="mt-4 whitespace-pre-wrap text-sm text-gray-700">
+            {currentTicket.description}
+          </p>
         </div>
 
         <div className="border border-gray-200 bg-white p-5">
           <h2 className="text-sm font-semibold text-gray-900">Conversation</h2>
           <div className="mt-4 space-y-3">
-            {messages.length === 0 ? (
+            {currentMessages.length === 0 ? (
               <p className="text-sm text-gray-500">No replies yet.</p>
             ) : (
-              messages.map((message) => (
+              currentMessages.map((message) => (
                 <div key={message.id} className="border border-gray-200 p-3">
                   <div className="mb-2 flex items-center justify-between text-xs text-gray-500">
                     <span>{message.visibility === 'INTERNAL' ? 'Internal note' : 'Public reply'}</span>

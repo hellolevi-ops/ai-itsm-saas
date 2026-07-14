@@ -11,8 +11,9 @@
 - Update draft PR #2 with live migration evidence and final M0 status.
 - Resolve Jest ESM config warning.
 - Add CI workflow for root and web gates if absent.
-- Add browser-level M1 E2E for requester submit and agent close flow.
 - Broaden M1 backend tests from service/repository unit coverage to controller/integration coverage.
+- Review Next transitive PostCSS moderate audit advisory; avoid `npm audit fix --force` because it proposes a breaking Next downgrade.
+- Start M2 AI-assisted ticket contract and implementation plan.
 
 ## P2
 

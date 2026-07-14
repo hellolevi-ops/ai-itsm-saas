@@ -1,18 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
 import { TicketSubmitForm } from '@/components/tickets/TicketSubmitForm';
-import type { Workspace } from '@/types/api';
-
-function readCurrentWorkspace(): Workspace | null {
-  if (typeof window === 'undefined') return null;
-  const raw = localStorage.getItem('current_workspace');
-  return raw ? (JSON.parse(raw) as Workspace) : null;
-}
+import { useCurrentWorkspace } from '@/lib/workspace-store';
 
 export default function NewTicketPage() {
-  const [workspace] = useState<Workspace | null>(() => readCurrentWorkspace());
+  const workspace = useCurrentWorkspace();
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-8">

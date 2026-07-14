@@ -9,66 +9,83 @@ const generateId = () =>
 
 const generateRequestId = () => 'req_' + Math.random().toString(36).substring(2, 15);
 
-const users = new Map<
-  string,
-  { id: string; email: string; password: string; name: string | null; created_at: string }
->();
-const workspaces = new Map<
-  string,
-  {
-    id: string;
-    name: string;
-    slug: string;
-    timezone: string;
-    language: string;
-    owner_id: string;
-    created_at: string;
+type MockUser = {
+  id: string;
+  email: string;
+  password: string;
+  name: string | null;
+  created_at: string;
+};
+
+type MockWorkspace = {
+  id: string;
+  name: string;
+  slug: string;
+  timezone: string;
+  language: string;
+  owner_id: string;
+  created_at: string;
+};
+
+type MockTicket = {
+  id: string;
+  workspace_id: string;
+  number: string;
+  title: string;
+  description: string;
+  source: 'WEB';
+  status: 'NEW' | 'TRIAGE' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED' | 'REOPENED';
+  priority: 'P1' | 'P2' | 'P3' | 'P4';
+  category: string | null;
+  requester_id: string;
+  assignee_id: string | null;
+  created_at: string;
+  updated_at: string;
+  resolved_at: string | null;
+  closed_at: string | null;
+  reopen_count: number;
+};
+
+type MockTicketMessage = {
+  id: string;
+  ticket_id: string;
+  author_id: string;
+  visibility: 'PUBLIC' | 'INTERNAL';
+  body: string;
+  created_at: string;
+};
+
+type MockTicketEvent = {
+  id: string;
+  type: string;
+  actor_id: string | null;
+  from_value: string | null;
+  to_value: string | null;
+  created_at: string;
+};
+
+function loadMockMap<T>(key: string): Map<string, T> {
+  if (typeof localStorage === 'undefined') return new Map();
+
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? new Map(JSON.parse(raw) as [string, T][]) : new Map();
+  } catch {
+    return new Map();
   }
->();
-const workspaceMembers = new Map<string, string[]>();
-const tickets = new Map<
-  string,
-  {
-    id: string;
-    workspace_id: string;
-    number: string;
-    title: string;
-    description: string;
-    source: 'WEB';
-    status: 'NEW' | 'TRIAGE' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED' | 'REOPENED';
-    priority: 'P1' | 'P2' | 'P3' | 'P4';
-    category: string | null;
-    requester_id: string;
-    assignee_id: string | null;
-    created_at: string;
-    updated_at: string;
-    resolved_at: string | null;
-    closed_at: string | null;
-    reopen_count: number;
-  }
->();
-const ticketMessages = new Map<
-  string,
-  {
-    id: string;
-    ticket_id: string;
-    author_id: string;
-    visibility: 'PUBLIC' | 'INTERNAL';
-    body: string;
-    created_at: string;
-  }[]
->();
-const ticketEvents = new Map<
-  string,
-  {
-    id: string;
-    type: string;
-    actor_id: string | null;
-    from_value: string | null;
-    to_value: string | null;
-    created_at: string;
-  }[]
->();
+}
+
+function persistMockMap<T>(key: string, map: Map<string, T>) {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.setItem(key, JSON.stringify(Array.from(map.entries())));
+}
+
+const users = loadMockMap<MockUser>('msw:users');
+const workspaces = loadMockMap<MockWorkspace>('msw:workspaces');
+const workspaceMembers = loadMockMap<string[]>('msw:workspaceMembers');
+const tickets = loadMockMap<MockTicket>('msw:tickets');
+const ticketMessages = loadMockMap<MockTicketMessage[]>('msw:ticketMessages');
+const ticketEvents = loadMockMap<MockTicketEvent[]>('msw:ticketEvents');
 
 function getUserFromRequest(request: Request) {
   const authHeader = request.headers.get('Authorization');
@@ -122,6 +139,7 @@ export const handlers = [
       created_at: now,
     };
     users.set(userId, user);
+    persistMockMap('msw:users', users);
 
     return HttpResponse.json(
       {
@@ -346,6 +364,8 @@ export const handlers = [
     };
     workspaces.set(workspaceId, workspace);
     workspaceMembers.set(workspaceId, [user.id]);
+    persistMockMap('msw:workspaces', workspaces);
+    persistMockMap('msw:workspaceMembers', workspaceMembers);
 
     return HttpResponse.json(
       {
@@ -477,6 +497,9 @@ export const handlers = [
         created_at: now,
       },
     ]);
+    persistMockMap('msw:tickets', tickets);
+    persistMockMap('msw:ticketMessages', ticketMessages);
+    persistMockMap('msw:ticketEvents', ticketEvents);
 
     return HttpResponse.json(
       { data: { ticket }, request_id: generateRequestId() },
@@ -584,6 +607,7 @@ export const handlers = [
         created_at: now,
       };
       ticketMessages.set(ticketId, [...(ticketMessages.get(ticketId) || []), message]);
+      persistMockMap('msw:ticketMessages', ticketMessages);
       ticketEvents.set(ticketId, [
         ...(ticketEvents.get(ticketId) || []),
         {
@@ -595,6 +619,7 @@ export const handlers = [
           created_at: now,
         },
       ]);
+      persistMockMap('msw:ticketEvents', ticketEvents);
       return HttpResponse.json({ data: { message }, request_id: generateRequestId() });
     },
   ),
@@ -636,6 +661,7 @@ export const handlers = [
         reopen_count: body.status === 'REOPENED' ? ticket.reopen_count + 1 : ticket.reopen_count,
       };
       tickets.set(ticketId, updated);
+      persistMockMap('msw:tickets', tickets);
       ticketEvents.set(ticketId, [
         ...(ticketEvents.get(ticketId) || []),
         {
@@ -647,6 +673,7 @@ export const handlers = [
           created_at: now,
         },
       ]);
+      persistMockMap('msw:ticketEvents', ticketEvents);
       return HttpResponse.json({ data: { ticket: updated }, request_id: generateRequestId() });
     },
   ),

@@ -11,10 +11,8 @@ export function MockProvider() {
     const initMsw = async () => {
       if (typeof window === 'undefined') return;
 
-      const { worker } = await import('@/mocks/browser');
-      await worker.start({
-        onUnhandledRequest: 'bypass',
-      });
+      const { enableMocking } = await import('@/mocks/browser');
+      await enableMocking();
     };
 
     initMsw();

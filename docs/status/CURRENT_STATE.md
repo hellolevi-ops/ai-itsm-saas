@@ -8,7 +8,7 @@
 | Base Branch | `develop` |
 | Base Commit | `3b20d49bd68c836ba059e50426ec07b371b04c40` |
 | Codex Branch | `codex/m0-takeover-baseline` |
-| Codex Commit | PR branch `codex/m0-takeover-baseline` includes M1 backend and web implementation |
+| Codex Commit | PR branch `codex/m0-takeover-baseline` includes M1 backend, web and E2E hardening |
 | Draft PR | `https://github.com/hellolevi-ops/ai-itsm-saas/pull/2` |
 | Database | PostgreSQL |
 | Build Status | PASS |
@@ -18,7 +18,7 @@
 | Service | Port | Status |
 |---|---:|---|
 | API Server | 3000 | Not started in this checkpoint |
-| Web UI | 3001 | Not started in this checkpoint |
+| Web UI | 3001 | Started by Playwright during E2E, then test runner stopped it |
 | PostgreSQL local service | 5432 | Present, not used for validation |
 | Temporary PostgreSQL | 55432 | Started for migration validation, then stopped and removed |
 | Redis | 6379 | Not verified |
@@ -46,6 +46,7 @@ Validation:
 - Runtime JWT secret now requires `JWT_SECRET`; no hardcoded fallback secret remains
 - Ticket submit, queue, detail, public/internal message and status-change backend APIs
 - Web ticket submit, queue and detail screens backed by the ticket API client and MSW development handlers
+- Browser-level M1 mock E2E for register, workspace creation, ticket submission, queue, detail, message and status progression
 
 ## Quality Baseline
 
@@ -56,8 +57,9 @@ Validation:
 - Web typecheck: PASS
 - Web lint: PASS
 - Web Vitest tests: PASS, 65/65
+- Web Playwright E2E: PASS, 1/1
 - Web build: PASS
-- Total automated tests: PASS, 153/153
+- Total automated tests: PASS, 154/154
 - M1 backend ticket module: PASS, 88/88 backend tests
 - M1 web ticket components: PASS, 65/65 frontend tests
 
@@ -81,7 +83,13 @@ Validation:
 - Ticket negative tests: requester cannot view another requester ticket, requester cannot create internal note, invalid transitions fail, assignee must be eligible same-workspace staff, repository reads/lists require `workspaceId`.
 - Frontend ticket API client, MSW handlers, submit form, queue and detail UI: implemented.
 - Frontend tests cover create redirect, validation, queue links, detail rendering, message add and status change.
-- Remaining M1 hardening: browser-level E2E and optional controller/integration coverage.
+- Browser E2E covers register, create workspace, submit ticket, queue visibility, detail view, message add and start-work status transition.
+- Remaining hardening: optional controller/integration coverage and CI wiring.
+
+## Known Security/Audit Notes
+
+- Web `npm audit --audit-level=moderate`: 2 moderate findings from Next's transitive PostCSS dependency.
+- `npm audit fix --force` proposes a breaking downgrade to Next 9.3.3, so it was not applied automatically.
 
 ## Tech Stack
 

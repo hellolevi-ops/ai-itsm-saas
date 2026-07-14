@@ -3,8 +3,8 @@
 | Milestone | Status | Evidence | Next Gate |
 |---|---|---|---|
 | M0 Takeover and baseline security | ACCEPTED | Repository recovered; `develop` baseline verified; draft PR #2 created; typecheck/lint/tests/build/migration validation passed. | Keep PR #2 draft until review/CI policy is decided. |
-| M1 Minimal ticket loop | IN_PROGRESS | Ticket contract, Prisma models, migration, backend module, web submit/queue/detail flows and automated tests are in place. | Add browser-level E2E and decide acceptance criteria for PR review/CI. |
-| M2 AI-assisted tickets | NOT_STARTED | No ticket domain baseline yet. | M1 accepted. |
+| M1 Minimal ticket loop | ACCEPTED_LOCALLY | Backend module, web submit/queue/detail flows, unit tests and Playwright E2E are in place; local gates passed. | Keep PR #2 draft until CI/review policy is decided. |
+| M2 AI-assisted tickets | NEXT | Ticket domain baseline is now available. | Draft AI triage/suggestion contract and guardrails. |
 | M3 Knowledge and self-service | NOT_STARTED | No knowledge domain implementation yet. | M2 accepted. |
 | M4 Service management basics | NOT_STARTED | No catalog/SLA/service management implementation yet. | M3 accepted. |
 | M5 First China channel | NOT_STARTED | No channel adapter implementation yet. | M4 accepted. |

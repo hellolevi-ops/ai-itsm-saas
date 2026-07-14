@@ -1,11 +1,11 @@
 # Execution State
 
-- Last updated: 2026-07-14 23:56 Asia/Shanghai
+- Last updated: 2026-07-15 00:38 Asia/Shanghai
 - Current branch: local snapshot plus GitHub branch `codex/m0-takeover-baseline`; base branch `develop`
 - Current commit: GitHub branch commit `ca2ab7868b9605c8628bc7a28ff5f47721507958`; base `develop` commit `3b20d49bd68c836ba059e50426ec07b371b04c40`
 - Current phase: Phase 0 / Phase 1 takeover
 - Current milestone: M1 - Minimal ticket loop
-- Current milestone status: IN_PROGRESS - M1 minimal ticket loop implemented across backend and web; browser-level E2E remains
+- Current milestone status: ACCEPTED_LOCALLY - M1 backend, web and browser-level E2E gates passed; PR/CI review remains before merge
 - Completed tasks:
   - Read the takeover control document from `C:\Users\Administrator\Desktop\CODEX_AI_ITSM_自主接管与商业化开发总控执行书.md`.
   - Inspected the requested workspace path.
@@ -54,13 +54,15 @@
   - Implemented M1 web ticket submit, queue and detail pages.
   - Added frontend ticket API client methods and MSW handlers for create/list/detail/message/status flows.
   - Added frontend ticket component tests for submit redirect, queue links, conversation rendering, message add and status change.
+  - Added Playwright E2E coverage for register, create workspace, submit ticket, view queue, open detail, add message and start work.
+  - Fixed M1 browser issues found by E2E: mock-worker startup race, localStorage hydration mismatch, mock state loss across full-page navigation, and client-detail status/message refresh.
 - Active tasks:
-  - Push M1 frontend ticket loop implementation and validation evidence to draft PR #2.
-  - Add browser-level M1 E2E for requester submit and agent close flow.
+  - Push M1 browser E2E hardening and validation evidence to draft PR #2.
+  - Start M2 AI-assisted ticket contract and implementation plan after PR #2 is updated.
 - Blocked tasks:
   - `git fetch --all --tags --prune`
   - Local branch, remote and working tree checks
-  - Browser-level E2E automation for register/login/create workspace
+  - None for M1 local acceptance.
 - Latest validation commands:
   - `git status --short --branch`
   - `git branch --show-current`
@@ -91,6 +93,8 @@
   - `cd apps/web; npm run lint`
   - `cd apps/web; npm test`
   - `cd apps/web; npm run build`
+  - `cd apps/web; npm run test:e2e`
+  - `cd apps/web; npm audit --audit-level=moderate`
   - GitHub REST API git refs, blobs, tree, commit and pull request creation for `codex/m0-takeover-baseline`
   - Temporary PostgreSQL 18 cluster initialization with `initdb`
   - `prisma migrate deploy`
@@ -142,15 +146,22 @@
   - Web Vitest tests passed after M1 web implementation: 65/65.
   - Web Next build passed after M1 web implementation.
   - Secret scan after M1 web implementation found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
+  - Web Playwright E2E passed after M1 hardening: 1/1.
+  - Root lint passed after M1 E2E hardening.
+  - Root Jest tests passed after M1 E2E hardening: 88/88.
+  - Root build passed after M1 E2E hardening.
+  - Web lint, typecheck, Vitest, build and E2E passed after M1 E2E hardening.
+  - Secret scan after M1 E2E hardening found no user-provided GitHub token in repository files; observed matches were dependency/document URL false positives.
+  - Web npm audit reports 2 moderate vulnerabilities from Next's transitive PostCSS dependency; `npm audit fix --force` proposes a breaking downgrade to Next 9.3.3, so no automatic fix was applied.
 - Open P0 issues:
   - None for executable source validation.
 - Open P1 issues:
   - P1-ENV-001: Git CLI is unavailable in PATH; Git phase checks and commits cannot run locally.
   - P1-ENV-003: Local source snapshot has no `.git` metadata.
-  - None blocking M1 entry.
+  - P1-SEC-001: Web npm audit reports Next transitive PostCSS moderate advisory; forced npm fix is destructive and requires framework/security review.
 - External dependencies:
   - Local Git installation or a working Git-capable environment.
 - Decisions required from user:
   - None for repository identity. The authoritative repository is `hellolevi-ops/ai-itsm-saas`.
 - Exact next action:
-  - Push current M1 frontend implementation to PR #2, then add browser-level E2E for the requester submit and agent resolution flow.
+  - Push current M1 browser E2E hardening to PR #2, then begin M2 AI-assisted ticket contract planning.

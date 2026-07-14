@@ -25,7 +25,23 @@ const apiClient = axios.create({
   },
 });
 
-apiClient.interceptors.request.use((config) => {
+let mockReadyPromise: Promise<void> | null = null;
+
+async function ensureMockReady() {
+  if (typeof window === 'undefined' || process.env.NEXT_PUBLIC_ENABLE_MOCK !== 'true') {
+    return;
+  }
+
+  if (!mockReadyPromise) {
+    mockReadyPromise = import('@/mocks/browser').then(({ enableMocking }) => enableMocking());
+  }
+
+  await mockReadyPromise;
+}
+
+apiClient.interceptors.request.use(async (config) => {
+  await ensureMockReady();
+
   const token = localStorage.getItem('access_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

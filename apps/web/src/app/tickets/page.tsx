@@ -3,22 +3,16 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { ticketApi, extractApiError } from '@/lib/api';
+import { useCurrentWorkspace } from '@/lib/workspace-store';
 import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import { TicketQueue } from '@/components/tickets/TicketQueue';
 import type { Ticket, Workspace } from '@/types/api';
 
-function readCurrentWorkspace(): Workspace | null {
-  if (typeof window === 'undefined') return null;
-  const raw = localStorage.getItem('current_workspace');
-  return raw ? (JSON.parse(raw) as Workspace) : null;
-}
-
 export default function TicketsPage() {
-  const [workspace] = useState<Workspace | null>(() => readCurrentWorkspace());
-  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const workspace: Workspace | null = useCurrentWorkspace();
+  const [tickets, setTickets] = useState<Ticket[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(() => Boolean(workspace));
 
   useEffect(() => {
     if (!workspace) return;
@@ -27,7 +21,6 @@ export default function TicketsPage() {
       .list(workspace.id)
       .then((response) => setTickets(response.data.tickets))
       .catch((err) => setError(extractApiError(err)))
-      .finally(() => setIsLoading(false));
   }, [workspace]);
 
   return (
@@ -49,12 +42,14 @@ export default function TicketsPage() {
             Create or select a workspace to view tickets.
           </div>
         )}
-        {workspace && isLoading && (
+        {workspace && tickets === null && (
           <div className="border border-gray-200 bg-white p-6 text-sm text-gray-600">
             Loading tickets...
           </div>
         )}
-        {workspace && !isLoading && <TicketQueue workspaceId={workspace.id} tickets={tickets} />}
+        {workspace && tickets !== null && (
+          <TicketQueue workspaceId={workspace.id} tickets={tickets} />
+        )}
       </div>
     </main>
   );
